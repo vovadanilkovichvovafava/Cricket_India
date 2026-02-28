@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(unzip -l cricket-bet-analyzer.zip)",
+      "Bash(unzip -p cricket-bet-analyzer.zip SETUP-GUIDE.md)",
+      "Bash(unzip -p cricket-bet-analyzer.zip start-dev.sh)",
+      "Bash(unzip -p cricket-bet-analyzer.zip web/src/features/matches/pages/Home.jsx)",
+      "Bash(unzip -p cricket-bet-analyzer.zip web/src/App.jsx)",
+      "Bash(unzip -o StartPuck/cricket-bet-analyzer.zip -d .)",
+      "Bash(npm install)",
+      "Bash(source ~/.zshrc)",
+      "Bash(brew install node)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(git init)",
+      "Bash(git add -A)",
+      "Bash(git commit -m \"Initial commit: Cricket Bet Analyzer IPL 2026 starter pack:*)"
+    ]
+  }
+}

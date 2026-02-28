@@ -1,0 +1,11 @@
+window.__APP_CONFIG__ = {
+  API_URL: '',
+  CRICKET_API_KEY: '',
+  ODDS_API_KEY: '',
+  GEO_SERVER_URL: '',
+  TRACKING_API: '',
+  OFFER_URL: '',
+  BOOKMAKER_NAME: '',
+  BOOKMAKER_LINK: '',
+  BOOKMAKER_BONUS: '',
+};
