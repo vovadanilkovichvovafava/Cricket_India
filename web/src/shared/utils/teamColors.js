@@ -1,14 +1,14 @@
 export const IPL_TEAMS = {
-  CSK: { name: 'Chennai Super Kings', short: 'CSK', color: '#FCCA06', bg: '#FCCA06', text: '#000' },
-  MI:  { name: 'Mumbai Indians', short: 'MI', color: '#004BA0', bg: '#004BA0', text: '#fff' },
-  RCB: { name: 'Royal Challengers Bengaluru', short: 'RCB', color: '#EC1C24', bg: '#EC1C24', text: '#fff' },
-  KKR: { name: 'Kolkata Knight Riders', short: 'KKR', color: '#3A225D', bg: '#3A225D', text: '#fff' },
-  DC:  { name: 'Delhi Capitals', short: 'DC', color: '#004C93', bg: '#004C93', text: '#fff' },
-  SRH: { name: 'Sunrisers Hyderabad', short: 'SRH', color: '#F7A721', bg: '#F7A721', text: '#000' },
-  RR:  { name: 'Rajasthan Royals', short: 'RR', color: '#EA1A85', bg: '#EA1A85', text: '#fff' },
-  PBKS: { name: 'Punjab Kings', short: 'PBKS', color: '#ED1B24', bg: '#ED1B24', text: '#fff' },
-  LSG: { name: 'Lucknow Super Giants', short: 'LSG', color: '#A72056', bg: '#A72056', text: '#fff' },
-  GT:  { name: 'Gujarat Titans', short: 'GT', color: '#1C1C1C', bg: '#1C1C1C', text: '#fff' },
+  CSK:  { name: 'Chennai Super Kings', short: 'CSK', city: 'Chennai', color: '#FCCA06', bg: '#FCCA06', text: '#000' },
+  MI:   { name: 'Mumbai Indians', short: 'MI', city: 'Mumbai', color: '#004BA0', bg: '#004BA0', text: '#fff' },
+  RCB:  { name: 'Royal Challengers Bengaluru', short: 'RCB', city: 'Bengaluru', color: '#EC1C24', bg: '#EC1C24', text: '#fff' },
+  KKR:  { name: 'Kolkata Knight Riders', short: 'KKR', city: 'Kolkata', color: '#3A225D', bg: '#3A225D', text: '#fff' },
+  DC:   { name: 'Delhi Capitals', short: 'DC', city: 'Delhi', color: '#004C93', bg: '#004C93', text: '#fff' },
+  SRH:  { name: 'Sunrisers Hyderabad', short: 'SRH', city: 'Hyderabad', color: '#F7A721', bg: '#F7A721', text: '#000' },
+  RR:   { name: 'Rajasthan Royals', short: 'RR', city: 'Jaipur', color: '#EA1A85', bg: '#EA1A85', text: '#fff' },
+  PBKS: { name: 'Punjab Kings', short: 'PBKS', city: 'Mohali', color: '#ED1B24', bg: '#ED1B24', text: '#fff' },
+  LSG:  { name: 'Lucknow Super Giants', short: 'LSG', city: 'Lucknow', color: '#A72056', bg: '#A72056', text: '#fff' },
+  GT:   { name: 'Gujarat Titans', short: 'GT', city: 'Ahmedabad', color: '#1C1C1C', bg: '#1C1C1C', text: '#fff' },
 };
 
 export function getTeamByName(name) {

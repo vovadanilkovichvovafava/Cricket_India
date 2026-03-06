@@ -17,28 +17,145 @@ async function request(path, options = {}) {
   return res.json();
 }
 
+// Normalize API match summary → frontend format
+function normalizeMatch(m) {
+  if (!m.home_team) return m; // already normalized or different format
+  return {
+    id: m.id,
+    home: m.home_team.code,
+    away: m.away_team.code,
+    homeName: m.home_team.name,
+    awayName: m.away_team.name,
+    homeColor: m.home_team.color || '#6B7280',
+    awayColor: m.away_team.color || '#6B7280',
+    homeImg: m.home_team.img,
+    awayImg: m.away_team.img,
+    name: m.name || '',
+    matchType: m.match_type || 't20',
+    date: m.date,
+    venue: m.venue || '',
+    city: m.city || '',
+    status: m.status,
+    statusText: m.status_text || '',
+    seriesId: m.series_id,
+    score: (m.score || []).map(s => ({
+      runs: s.runs,
+      wickets: s.wickets,
+      overs: s.overs,
+      inning: s.inning,
+    })),
+    odds: m.odds ? {
+      home: m.odds.best_home_odds ?? m.odds.bookmakers?.[0]?.home_odds ?? null,
+      away: m.odds.best_away_odds ?? m.odds.bookmakers?.[0]?.away_odds ?? null,
+    } : null,
+  };
+}
+
+// Normalize API match detail → frontend format
+function normalizeMatchDetail(m) {
+  if (!m.home_team) return m;
+  const base = normalizeMatch(m);
+  return {
+    ...base,
+    lineups: {
+      home: (m.home_lineup || []).map(p => `${p.name}${p.is_captain ? ' (c)' : ''}${p.role === 'wicket-keeper' ? ' (wk)' : ''}`),
+      away: (m.away_lineup || []).map(p => `${p.name}${p.is_captain ? ' (c)' : ''}${p.role === 'wicket-keeper' ? ' (wk)' : ''}`),
+    },
+    venueStats: m.venue_stats ? {
+      matches: m.venue_stats.matches_played || 0,
+      avgFirst: m.venue_stats.avg_first_innings_score,
+      avgSecond: m.venue_stats.avg_second_innings_score,
+      tossWinBat: Math.round(m.venue_stats.toss_bat_first_win_pct || 50),
+      chaseWin: Math.round(m.venue_stats.toss_bowl_first_win_pct || 45),
+    } : null,
+    h2h: m.head_to_head ? {
+      total: m.head_to_head.total_matches,
+      homeWins: m.head_to_head.home_wins,
+      awayWins: m.head_to_head.away_wins,
+      lastFive: m.head_to_head.last_5_results || [],
+    } : null,
+    oddsComparison: (m.odds?.bookmakers || []).map(b => ({
+      bookmaker: b.bookmaker,
+      home: b.home_odds,
+      away: b.away_odds,
+    })),
+    keyMatchups: m.key_matchups || [],
+    weatherForecast: m.weather_forecast,
+  };
+}
+
+// Normalize AI prediction → frontend format
+function normalizePrediction(p) {
+  if (!p.predicted_winner) return p;
+  return {
+    winner: p.predicted_winner,
+    confidence: Math.round((p.confidence || 0) * 100),
+    factors: (p.key_factors || []).map((f, i) => {
+      if (typeof f === 'string') {
+        return { label: f.split(' - ')[0] || f, impact: i < 2 ? 'positive' : 'neutral', detail: f };
+      }
+      return { label: f.factor || f, impact: f.impact || 'neutral', detail: f.detail || '' };
+    }),
+    valueBets: (p.value_bets || []).map(b => ({
+      market: b.market,
+      pick: b.pick || b.selection,
+      odds: b.odds,
+      value: b.reasoning || '',
+      confidence: typeof b.confidence === 'number' ? (b.confidence >= 0.7 ? 'High' : b.confidence >= 0.5 ? 'Medium' : 'Low') : (b.confidence || 'Medium'),
+    })),
+  };
+}
+
 const api = {
   // Auth
   register: (data) => request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   login: (data) => request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   getMe: () => request('/users/me'),
 
-  // Matches
-  getMatches: (params) => request(`/matches?${new URLSearchParams(params)}`),
-  getMatch: (id) => request(`/matches/${id}`),
-  getLiveMatches: () => request('/matches/live'),
+  // Matches (normalized)
+  getMatches: async (params) => {
+    const data = await request(`/cricket/matches?${new URLSearchParams(params || {})}`);
+    return Array.isArray(data) ? data.map(normalizeMatch) : data;
+  },
+  getMatch: async (id) => {
+    const data = await request(`/cricket/matches/${id}`);
+    return normalizeMatchDetail(data);
+  },
+  getLiveMatches: async () => {
+    const data = await request('/cricket/matches/live');
+    return Array.isArray(data) ? data.map(normalizeMatch) : data;
+  },
 
-  // Predictions
-  getPrediction: (matchId) => request(`/predictions/${matchId}`),
+  // Series
+  getSeries: async (params) => {
+    const data = await request(`/cricket/series?${new URLSearchParams(params || {})}`);
+    return Array.isArray(data) ? data : [];
+  },
+  getSeriesMatches: async (seriesId) => {
+    const data = await request(`/cricket/series/${seriesId}/matches`);
+    return Array.isArray(data) ? data.map(normalizeMatch) : [];
+  },
+
+  // Predictions (normalized)
+  getPrediction: async (matchId) => {
+    const data = await request(`/predictions/${matchId}`);
+    return normalizePrediction(data);
+  },
   getChatLimit: () => request('/predictions/chat-limit'),
   chat: (data) => request('/predictions/chat', { method: 'POST', body: JSON.stringify(data) }),
 
-  // Cricket-specific
-  getIPLSchedule: () => request('/cricket/ipl/schedule'),
-  getIPLStandings: () => request('/cricket/ipl/standings'),
-  getPlayerStats: (id) => request(`/cricket/player/${id}`),
-  getValueBets: () => request('/cricket/value-bets'),
-  getOddsComparison: (matchId) => request(`/cricket/odds/${matchId}`),
+  // Standings
+  getStandings: (seriesId) => seriesId
+    ? request(`/cricket/standings/${seriesId}`)
+    : request('/cricket/standings'),
+
+  // Players
+  searchPlayers: (query, offset = 0) =>
+    request(`/cricket/players/search?q=${encodeURIComponent(query)}&offset=${offset}`),
+  getPlayer: (playerId) => request(`/cricket/players/${playerId}`),
+
+  // Status
+  getStatus: () => request('/status'),
 };
 
 export default api;

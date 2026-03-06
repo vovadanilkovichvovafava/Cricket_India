@@ -2,16 +2,150 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  * { -webkit-tap-highlight-color: transparent; }
-  html { scroll-behavior: smooth; }
-  body { 
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    -webkit-font-smoothing: antialiased;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  font-family: 'Inter', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif;
+  background-color: #F0F2F5;
+  -webkit-font-smoothing: antialiased;
+}
+
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl p-4 shadow-sm;
+  }
+  .section-title {
+    @apply text-lg font-bold text-gray-900;
+  }
+  .badge {
+    @apply text-xs font-semibold px-2.5 py-0.5 rounded-full;
+  }
+  .badge-ipl {
+    @apply bg-blue-50 text-blue-700;
+  }
+  .badge-live {
+    @apply bg-red-100 text-red-600;
+  }
+  .badge-value {
+    @apply bg-green-100 text-green-700;
+  }
+  .shimmer {
+    @apply animate-pulse bg-gray-200 rounded-lg;
+  }
+  .bottom-nav-item {
+    @apply flex flex-col items-center justify-center gap-0.5 text-xs text-gray-400 transition-colors;
+  }
+  .bottom-nav-item.active {
+    @apply text-[#FF9933];
   }
 }
 
 @layer utilities {
   .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-  .h-dvh { height: 100dvh; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+}
+
+/* Animations */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%); }
+  50%, 100% { transform: translateX(100%); }
+}
+
+@keyframes shimmerBg {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Staggered fade-in for cards on scroll */
+@keyframes cardFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-card-in {
+  animation: cardFadeIn 0.5s ease-out both;
+}
+
+.animate-card-in-1 { animation-delay: 0ms; }
+.animate-card-in-2 { animation-delay: 80ms; }
+.animate-card-in-3 { animation-delay: 160ms; }
+.animate-card-in-4 { animation-delay: 240ms; }
+.animate-card-in-5 { animation-delay: 320ms; }
+.animate-card-in-6 { animation-delay: 400ms; }
+
+/* Cricket ball spin for decorative use */
+@keyframes ballSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-ball-spin {
+  animation: ballSpin 12s linear infinite;
+}
+
+/* Pulse glow for live elements */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Poll bar fill animation */
+@keyframes pollFill {
+  from { width: 0%; }
+  to { width: var(--poll-width); }
+}
+
+.animate-poll-fill {
+  animation: pollFill 1s ease-out 0.3s both;
 }

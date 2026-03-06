@@ -10,6 +10,13 @@ export default defineConfig({
   server: {
     host: true,  // 0.0.0.0 — обязательно для Cloudflare Tunnel
     port: 5173,
+    allowedHosts: true,  // Разрешаем все хосты (Cloudflare Tunnel, ngrok, etc.)
+    proxy: {
+      '/api/v1': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     rollupOptions: {

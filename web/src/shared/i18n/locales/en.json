@@ -1,0 +1,159 @@
+{
+  "app": {
+    "name": "CricketBaazi",
+    "tagline": "India's Smartest Cricket Predictions",
+    "disclaimer": "18+ | Play Responsibly | For Entertainment Only",
+    "responsibleGaming": "Responsible Gaming"
+  },
+
+  "home": {
+    "title": "CricketBaazi",
+    "subtitle": "AI-Powered Cricket Predictions",
+    "greeting": "Namaste, Cricket Fan!",
+    "iplCountdown": "IPL 2026 starts in {{days}} days",
+    "iplDates": "March 28 — May 31 - 84 matches",
+    "aiChat": "AI Chat",
+    "matches": "Matches",
+    "valueBets": "Value Bets",
+    "standings": "Standings",
+    "upcomingMatches": "Next Big Clashes",
+    "todaysBlockbuster": "Today's Blockbuster",
+    "hotMatch": "Hot Match",
+    "seeAll": "See all",
+    "vs": "VS",
+    "ist": "IST",
+    "liveOdds": "Live Odds"
+  },
+
+  "matches": {
+    "title": "Cricket Matches",
+    "matchCount": "{{count}} matches",
+    "filters": {
+      "all": "All",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "thisWeek": "This Week",
+      "allTeams": "All Teams"
+    },
+    "noMatches": "No matches found for the selected filters.",
+    "tryAgain": "Try Again",
+    "vs": "VS",
+    "ist": "IST"
+  },
+
+  "matchDetail": {
+    "tabs": {
+      "overview": "Overview",
+      "lineups": "Lineups",
+      "venue": "Venue",
+      "h2h": "H2H",
+      "odds": "Odds",
+      "aiPick": "AI Pick"
+    },
+    "overview": {
+      "matchInformation": "Match Information",
+      "date": "Date",
+      "time": "Time",
+      "venue": "Venue",
+      "city": "City",
+      "status": "Status",
+      "matchOdds": "Match Odds"
+    },
+    "lineups": {
+      "notAnnounced": "Lineups not yet announced"
+    },
+    "venueStats": {
+      "notAvailable": "Venue statistics not available",
+      "pitchReport": "Pitch Report",
+      "matchesPlayed": "Matches Played",
+      "avg1stInnings": "Avg 1st Innings",
+      "avg2ndInnings": "Avg 2nd Innings",
+      "tossWinBat": "Toss Win & Bat %",
+      "chaseWin": "Chase Win %"
+    },
+    "h2h": {
+      "overallRecord": "Overall Record ({{count}} matches)",
+      "wins": "wins",
+      "vs": "vs",
+      "last5Meetings": "Last 5 Meetings",
+      "mostRecentOldest": "Most recent → oldest",
+      "notAvailable": "Head-to-head data not available"
+    },
+    "odds": {
+      "oddsComparison": "Odds Comparison",
+      "bookmaker": "Bookmaker",
+      "best": "BEST",
+      "notAvailable": "Odds comparison not available"
+    },
+    "prediction": {
+      "aiMatchPrediction": "AI Match Prediction",
+      "getDescription": "Get AI-powered analysis including win probability, key factors, and value bets.",
+      "getAiPrediction": "Get AI Prediction",
+      "analyzing": "AI is analyzing the match...",
+      "predictedWinner": "Predicted Winner",
+      "aiPrediction": "AI Prediction",
+      "keyFactors": "Key Factors",
+      "valueBets": "Value Bets"
+    },
+    "loading": "Loading match details..."
+  },
+
+  "aiChat": {
+    "title": "CricketBaazi AI",
+    "online": "Online",
+    "welcomeMessage": "Namaste! I'm your CricketBaazi AI Analyst for IPL 2026. I can help you with match predictions, value bets, player analysis, and betting strategies. Aapko kya jaanna hai?",
+    "suggestions": {
+      "analyzeCSKvsMI": "Analyze CSK vs MI",
+      "bestValueBets": "Best value bets today",
+      "topBatsman": "Top batsman predictions",
+      "whichTeam": "Which team to bet on?",
+      "darkHorses": "IPL 2026 dark horses"
+    },
+    "tryAsking": "Try asking:",
+    "inputPlaceholder": "Ask about IPL matches...",
+    "fallback": {
+      "default": "Maaf kijiye, the backend service is currently unavailable. I'm unable to provide real-time analysis right now. Please try again later or check the Settings page for API status.",
+      "csk": "CSK are perennial IPL favorites with a strong track record at Chepauk. While I can't provide live analysis right now (backend unavailable), historically CSK have been excellent in the first half of the tournament. Dhoni ka legacy strong hai!",
+      "mi": "Mumbai Indians have the most IPL titles. While I can't run live analysis (backend unavailable), MI's strength typically lies in their death bowling and finishing ability. Rohit ka captaincy bahut strong hai!",
+      "value": "For value bets, I recommend looking at underdogs playing at home venues and matches where the odds market might be overreacting to recent form. Backend is currently unavailable for detailed analysis.",
+      "batsman": "Top batsman markets often provide value. Look for in-form openers at batting-friendly venues like Chinnaswamy and Wankhede. Backend is currently unavailable for specific predictions."
+    }
+  },
+
+  "settings": {
+    "title": "Settings",
+    "sections": {
+      "general": "General",
+      "system": "System",
+      "tools": "Tools",
+      "about": "About"
+    },
+    "language": "Language",
+    "darkMode": "Dark Mode",
+    "comingSoon": "Coming soon",
+    "apiStatus": "API Status",
+    "online": "Online",
+    "offline": "Offline",
+    "checking": "Checking...",
+    "tools": {
+      "kellyCalculator": "Kelly Calculator",
+      "kellyDescription": "Calculate optimal bet size using Kelly Criterion",
+      "oddsConverter": "Odds Converter",
+      "oddsDescription": "Convert between decimal, fractional, and American odds",
+      "soon": "Soon"
+    },
+    "version": "Version",
+    "build": "Build",
+    "season": "Season",
+    "iplSeason": "IPL 2026",
+    "appName": "CricketBaazi",
+    "seasonLabel": "IPL 2026 Season"
+  },
+
+  "nav": {
+    "home": "Home",
+    "matches": "Matches",
+    "aiChat": "AI Chat",
+    "settings": "Settings"
+  }
+}
