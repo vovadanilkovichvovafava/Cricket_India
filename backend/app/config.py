@@ -19,12 +19,21 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     API_V1_PREFIX: str = "/api/v1"
 
-    # CORS
+    # CORS — WEB_URL injected by Coolify, localhost for dev
+    WEB_URL: Optional[str] = None
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
     ]
+
+    def get_cors_origins(self) -> list[str]:
+        origins = list(self.CORS_ORIGINS)
+        if self.WEB_URL:
+            origins.append(self.WEB_URL.rstrip("/"))
+        # Accept all saturn.ac subdomains
+        origins.append("https://cricket-india-ddtrij.saturn.ac")
+        return origins
 
     class Config:
         env_file = ".env"
