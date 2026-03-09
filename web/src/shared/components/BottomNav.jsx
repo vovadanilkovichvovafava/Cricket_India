@@ -1,11 +1,13 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HomeIcon, CricketBatIcon, ChatBotIcon, SettingsIcon } from './Icons';
+import { useAuth } from '../../features/auth/context/AuthContext';
+import { HomeIcon, CricketBatIcon, ToolsIcon, ChatBotIcon, SettingsIcon } from './Icons';
 
 const NAV_ITEMS = [
   { Icon: HomeIcon, key: 'home', path: '/' },
   { Icon: CricketBatIcon, key: 'matches', path: '/matches' },
-  { Icon: ChatBotIcon, key: 'aiChat', path: '/ai-chat' },
+  { Icon: ToolsIcon, key: 'tools', path: '/tools' },
+  { Icon: ChatBotIcon, key: 'aiChat', path: '/ai-chat', requiresAuth: true },
   { Icon: SettingsIcon, key: 'settings', path: '/settings' },
 ];
 
@@ -13,10 +15,19 @@ export default function BottomNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
 
   function isActive(path) {
     if (path === '/') return pathname === '/';
     return pathname.startsWith(path);
+  }
+
+  function handleClick(item) {
+    if (item.requiresAuth && !isAuthenticated) {
+      navigate('/login');
+    } else {
+      navigate(item.path);
+    }
   }
 
   return (
@@ -32,7 +43,7 @@ export default function BottomNav() {
             return (
               <button
                 key={item.path}
-                onClick={() => navigate(item.path)}
+                onClick={() => handleClick(item)}
                 className={`bottom-nav-item flex-1 py-1 ${active ? 'active' : ''}`}
               >
                 <div className={active

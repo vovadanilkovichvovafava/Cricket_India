@@ -4,6 +4,7 @@ Main API router that aggregates all endpoint routers.
 
 from fastapi import APIRouter
 
+from app.api.auth import router as auth_router
 from app.api.matches import router as matches_router
 from app.api.predictions import router as predictions_router
 from app.api.standings import router as standings_router
@@ -11,6 +12,7 @@ from app.api.players import router as players_router
 
 api_router = APIRouter()
 
+api_router.include_router(auth_router)
 api_router.include_router(matches_router)
 api_router.include_router(predictions_router)
 api_router.include_router(standings_router)

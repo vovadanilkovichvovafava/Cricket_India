@@ -24,6 +24,13 @@ from app.models import (
     PlayerSearchResult,
     PlayerProfile,
     PlayerStat,
+    MatchScorecard,
+    InningsScorecard,
+    BattingEntry,
+    BowlingEntry,
+    MatchSquad,
+    TeamSquad,
+    SquadPlayer,
 )
 
 logger = logging.getLogger(__name__)
@@ -510,6 +517,126 @@ class CricketDataService:
         )
         _cache_set(cache_key, profile)
         return profile
+
+    async def get_match_scorecard(self, match_id: str) -> Optional[MatchScorecard]:
+        """Get full match scorecard — batting & bowling stats per player."""
+        cache_key = f"scorecard_{match_id}"
+        cached = _cache_get(cache_key)
+        if cached is not None:
+            return cached
+
+        data = await _cricapi_request("match_scorecard", {"id": match_id})
+        if not data or not data.get("data"):
+            return None
+
+        m = data["data"]
+        innings_list = []
+        for sc in m.get("scorecard", []):
+            batting = []
+            for b in sc.get("batting", []):
+                batting.append(BattingEntry(
+                    batsman=b.get("batsman", {}).get("name", "Unknown"),
+                    dismissal=b.get("dismissal-text", ""),
+                    runs=int(b.get("r", 0)),
+                    balls=int(b.get("b", 0)),
+                    fours=int(b.get("4s", 0)),
+                    sixes=int(b.get("6s", 0)),
+                    strike_rate=float(b.get("sr", 0)),
+                ))
+
+            bowling = []
+            for bw in sc.get("bowling", []):
+                bowling.append(BowlingEntry(
+                    bowler=bw.get("bowler", {}).get("name", "Unknown"),
+                    overs=float(bw.get("o", 0)),
+                    maidens=int(bw.get("m", 0)),
+                    runs=int(bw.get("r", 0)),
+                    wickets=int(bw.get("w", 0)),
+                    economy=float(bw.get("eco", 0)),
+                    wides=int(bw.get("wd", 0)),
+                    no_balls=int(bw.get("nb", 0)),
+                ))
+
+            # Fall of wickets
+            fow = []
+            for f in sc.get("catching", []):
+                if f.get("stumpiing"):
+                    fow.append(f"st {f.get('stumpiing', {}).get('name', '')}")
+
+            innings_list.append(InningsScorecard(
+                inning=sc.get("inning", ""),
+                runs=int(sc.get("r", 0)),
+                wickets=int(sc.get("w", 0)),
+                overs=float(sc.get("o", 0)),
+                batting=batting,
+                bowling=bowling,
+                extras=int(sc.get("extras", 0)),
+            ))
+
+        scorecard = MatchScorecard(
+            id=match_id,
+            name=m.get("name", ""),
+            status=m.get("status", ""),
+            innings=innings_list,
+        )
+        _cache_set(cache_key, scorecard)
+        return scorecard
+
+    async def get_match_squad(self, match_id: str) -> Optional[MatchSquad]:
+        """Get squad/lineup for a match."""
+        cache_key = f"squad_{match_id}"
+        cached = _cache_get(cache_key)
+        if cached is not None:
+            return cached
+
+        data = await _cricapi_request("match_squad", {"id": match_id})
+        if not data or not data.get("data"):
+            return None
+
+        m = data["data"]
+        squads_data = m if isinstance(m, list) else m.get("squad", [])
+        if len(squads_data) < 2:
+            return None
+
+        def parse_squad(team_data: dict) -> TeamSquad:
+            team_name = team_data.get("teamName", "Unknown")
+            shortname = team_data.get("shortname", team_name[:3].upper())
+            img = team_data.get("img")
+
+            ipl_code = _resolve_ipl_code(team_name) or _resolve_ipl_code(shortname)
+            if ipl_code and ipl_code in IPL_TEAM_META:
+                meta = IPL_TEAM_META[ipl_code]
+                team_info = TeamInfo(code=ipl_code, name=team_name, short_name=shortname, color=meta["color"], img=img)
+            else:
+                team_info = TeamInfo(code=shortname, name=team_name, short_name=shortname, color="#6B7280", img=img)
+
+            players = []
+            for p in team_data.get("players", []):
+                players.append(SquadPlayer(
+                    id=p.get("id", ""),
+                    name=p.get("name", "Unknown"),
+                    role=p.get("role", ""),
+                    batting_style=p.get("battingStyle", ""),
+                    bowling_style=p.get("bowlingStyle", ""),
+                    country=p.get("country", ""),
+                    player_img=p.get("playerImg"),
+                    is_captain="captain" in p.get("role", "").lower() or p.get("isCaptain", False),
+                    is_keeper="keeper" in p.get("role", "").lower() or "wk" in p.get("role", "").lower(),
+                ))
+
+            return TeamSquad(team=team_info, players=players)
+
+        home_squad = parse_squad(squads_data[0])
+        away_squad = parse_squad(squads_data[1])
+
+        squad = MatchSquad(
+            id=match_id,
+            name=m.get("name", "") if isinstance(m, dict) else "",
+            home_squad=home_squad,
+            away_squad=away_squad,
+        )
+        _cache_set(cache_key, squad)
+        return squad
 
     async def check_api_status(self) -> dict:
         """Check CricAPI connectivity and quota."""

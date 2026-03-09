@@ -1,8 +1,18 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.api.router import api_router
+from app.core.database import init_db
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup: create DB tables."""
+    init_db()
+    yield
 
 
 app = FastAPI(
@@ -11,6 +21,7 @@ app = FastAPI(
     description="AI-powered cricket betting analysis for IPL 2026",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # CORS middleware

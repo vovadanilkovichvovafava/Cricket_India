@@ -13,7 +13,7 @@ from typing import Optional
 import httpx
 
 from app.config import settings
-from app.models import MatchOdds, BookmakerOdds
+from app.models import MatchOdds, BookmakerOdds, MatchTotals, TotalsOdds
 
 logger = logging.getLogger(__name__)
 
@@ -149,6 +149,76 @@ async def get_odds_for_teams(home_name: str, away_name: str) -> Optional[MatchOd
                         bookmakers=bookmakers,
                         best_home_odds=max(b.home_odds for b in bookmakers),
                         best_away_odds=max(b.away_odds for b in bookmakers),
+                    )
+
+    return None
+
+
+async def fetch_cricket_totals(sport_key: str = "cricket_ipl") -> Optional[list[dict]]:
+    """Fetch totals (over/under) odds for a cricket sport."""
+    cached = _cache_get(f"totals_{sport_key}")
+    if cached is not None:
+        return cached
+
+    data = await _odds_api_request(
+        f"sports/{sport_key}/odds",
+        {
+            "regions": "uk,eu,au",
+            "markets": "totals",
+            "oddsFormat": "decimal",
+        },
+    )
+
+    if data and isinstance(data, list):
+        _cache_set(f"totals_{sport_key}", data)
+        return data
+
+    return None
+
+
+async def get_totals_for_teams(home_name: str, away_name: str) -> Optional[MatchTotals]:
+    """Try to find totals (over/under) odds for a specific match by team names."""
+    for sport_key in CRICKET_SPORT_KEYS:
+        events = await fetch_cricket_totals(sport_key)
+        if not events:
+            continue
+
+        home_low = home_name.lower()
+        away_low = away_name.lower()
+
+        for event in events:
+            eh = event.get("home_team", "").lower()
+            ea = event.get("away_team", "").lower()
+
+            if (home_low in eh or eh in home_low) and (away_low in ea or ea in away_low):
+                totals_list = []
+                for bm in event.get("bookmakers", []):
+                    totals_market = next(
+                        (m for m in bm.get("markets", []) if m["key"] == "totals"), None
+                    )
+                    if not totals_market:
+                        continue
+
+                    outcomes = totals_market.get("outcomes", [])
+                    over = next((o for o in outcomes if o.get("name") == "Over"), None)
+                    under = next((o for o in outcomes if o.get("name") == "Under"), None)
+
+                    if over and under:
+                        totals_list.append(TotalsOdds(
+                            bookmaker=bm.get("title", bm.get("key", "Unknown")),
+                            point=float(over.get("point", 0)),
+                            over_odds=float(over.get("price", 1.90)),
+                            under_odds=float(under.get("price", 1.90)),
+                            last_updated=datetime.fromisoformat(
+                                bm.get("last_update", datetime.utcnow().isoformat()).replace("Z", "+00:00")
+                            ),
+                        ))
+
+                if totals_list:
+                    return MatchTotals(
+                        home_team=home_name,
+                        away_team=away_name,
+                        totals=totals_list,
                     )
 
     return None

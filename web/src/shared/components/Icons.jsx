@@ -308,6 +308,18 @@ export function CricketBallDecor({ className = 'w-24 h-24' }) {
   );
 }
 
+// --- Tools grid icon for bottom nav ---
+export function ToolsIcon({ className = 'w-5 h-5' }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+  );
+}
+
 // --- Fire icon for hot matches ---
 export function FireIcon({ className = 'w-5 h-5' }) {
   return (

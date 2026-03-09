@@ -2,10 +2,33 @@ import { ENV } from '../config/env';
 
 const BASE = ENV.API_URL;
 
+// In-memory API cache (stale-while-revalidate)
+const apiCache = new Map();
+const CACHE_TTL = { list: 120000, detail: 300000 }; // 2min lists, 5min details
+
+function getCached(key) {
+  const entry = apiCache.get(key);
+  if (!entry) return null;
+  const age = Date.now() - entry.ts;
+  const ttl = key.includes('/matches/') && !key.includes('?') ? CACHE_TTL.detail : CACHE_TTL.list;
+  return { data: entry.data, fresh: age < ttl };
+}
+
+function setCache(key, data) {
+  apiCache.set(key, { data, ts: Date.now() });
+}
+
 async function request(path, options = {}) {
   const token = localStorage.getItem('token');
   const headers = { 'Content-Type': 'application/json', ...options.headers };
   if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  // Cache GET requests only
+  const isGet = !options.method || options.method === 'GET';
+  if (isGet) {
+    const cached = getCached(path);
+    if (cached?.fresh) return cached.data;
+  }
 
   const res = await fetch(`${BASE}${path}`, { ...options, headers });
   if (res.status === 401) {
@@ -14,7 +37,10 @@ async function request(path, options = {}) {
     throw new Error('Unauthorized');
   }
   if (!res.ok) throw new Error(`API Error: ${res.status}`);
-  return res.json();
+  const data = await res.json();
+
+  if (isGet) setCache(path, data);
+  return data;
 }
 
 // Normalize API match summary → frontend format
@@ -110,7 +136,8 @@ const api = {
   // Auth
   register: (data) => request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   login: (data) => request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
-  getMe: () => request('/users/me'),
+  getMe: () => request('/auth/me'),
+  getReferral: () => request('/auth/referral'),
 
   // Matches (normalized)
   getMatches: async (params) => {
@@ -154,8 +181,16 @@ const api = {
     request(`/cricket/players/search?q=${encodeURIComponent(query)}&offset=${offset}`),
   getPlayer: (playerId) => request(`/cricket/players/${playerId}`),
 
+  // Scorecard, Squad, Totals
+  getScorecard: (matchId) => request(`/cricket/matches/${matchId}/scorecard`),
+  getSquad: (matchId) => request(`/cricket/matches/${matchId}/squad`),
+  getTotals: (matchId) => request(`/cricket/matches/${matchId}/totals`),
+
   // Status
   getStatus: () => request('/status'),
+
+  // Cache management
+  clearCache: () => apiCache.clear(),
 };
 
 export default api;

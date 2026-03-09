@@ -6,6 +6,30 @@
     "responsibleGaming": "Responsible Gaming"
   },
 
+  "common": {
+    "retry": "Retry",
+    "loading": "Loading...",
+    "couldNotLoad": "Could not load matches",
+    "noMatchesNow": "No matches available right now",
+    "checkBackLater": "Check back later for live and upcoming matches",
+    "days": "Days",
+    "hours": "Hours",
+    "mins": "Mins",
+    "live": "LIVE",
+    "ft": "FT",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "startingSoon": "Starting soon",
+    "nextMatch": "Next Match",
+    "liveNow": "Live Now",
+    "matches": "matches",
+    "players": "players",
+    "showAll": "Show All",
+    "schedule": "Schedule",
+    "noLiveMatches": "No live matches right now",
+    "tryChangingFilters": "Try changing the filters"
+  },
+
   "home": {
     "title": "CricketBaazi",
     "subtitle": "AI-Powered Cricket Predictions",
@@ -13,8 +37,14 @@
     "iplCountdown": "IPL 2026 starts in {{days}} days",
     "iplDates": "March 28 — May 31 - 84 matches",
     "aiChat": "AI Chat",
+    "aiChatDesc": "AI-powered cricket predictions",
     "matches": "Matches",
     "valueBets": "Value Bets",
+    "valueBetsDesc": "Find undervalued odds with AI analysis",
+    "valueBetsAccuracy": "Accuracy",
+    "valueBetsEdge": "Avg Edge",
+    "valueBetsDaily": "Daily",
+    "findValueBets": "Find Value Bets",
     "standings": "Standings",
     "upcomingMatches": "Next Big Clashes",
     "todaysBlockbuster": "Today's Blockbuster",
@@ -22,7 +52,24 @@
     "seeAll": "See all",
     "vs": "VS",
     "ist": "IST",
-    "liveOdds": "Live Odds"
+    "liveOdds": "Live Odds",
+    "yourStats": "Your Stats",
+    "predictions": "Predictions",
+    "wins": "Wins",
+    "accuracy": "Accuracy",
+    "communityStats": "{{count}}+ predictions made",
+    "joinCommunity": "Join the community of cricket analysts",
+    "quickTools": "Quick Tools",
+    "aiAnalysis": "AI Analysis",
+    "liveWinners": "Live Winners",
+    "aiResultsTitle": "Yesterday's AI Picks",
+    "aiResultsSubtitle": "Our track record speaks",
+    "aiResultsCorrect": "correct",
+    "getAiPicks": "Get Today's AI Picks",
+    "referralTitle": "Invite Friends, Earn Bonus Picks",
+    "referralDesc": "Share your code and both get extra AI predictions!",
+    "leaderboardTitle": "Top Predictors This Week",
+    "leaderboardDesc": "See who's making the best cricket predictions"
   },
 
   "matches": {
@@ -48,7 +95,9 @@
       "venue": "Venue",
       "h2h": "H2H",
       "odds": "Odds",
-      "aiPick": "AI Pick"
+      "aiPick": "AI Pick",
+      "scorecard": "Scorecard",
+      "squad": "Squad"
     },
     "overview": {
       "matchInformation": "Match Information",
@@ -93,9 +142,82 @@
       "predictedWinner": "Predicted Winner",
       "aiPrediction": "AI Prediction",
       "keyFactors": "Key Factors",
-      "valueBets": "Value Bets"
+      "valueBets": "Value Bets",
+      "sharePrediction": "Share Prediction",
+      "generating": "Generating image..."
+    },
+    "scorecard": {
+      "loading": "Loading scorecard...",
+      "notAvailable": "Scorecard not available yet",
+      "availableAfter": "Available after match starts",
+      "batter": "Batter",
+      "bowler": "Bowler",
+      "runs": "R",
+      "balls": "B",
+      "fours": "4s",
+      "sixes": "6s",
+      "strikeRate": "SR",
+      "overs": "O",
+      "maidens": "M",
+      "wickets": "W",
+      "economy": "Eco",
+      "extras": "Extras",
+      "batting": "batting",
+      "bowling": "bowling"
+    },
+    "squad": {
+      "loading": "Loading squad...",
+      "notAvailable": "Squad not available yet"
+    },
+    "totals": {
+      "totalRuns": "Total Runs Over/Under",
+      "bookmaker": "Bookmaker",
+      "line": "Line",
+      "over": "Over",
+      "under": "Under"
     },
     "loading": "Loading match details..."
+  },
+
+  "matchCard": {
+    "communityPick": "Community Pick",
+    "predictionClosing": "Prediction closing soon!",
+    "lockIn": "Lock in your pick"
+  },
+
+  "ipl": {
+    "season": "SEASON 19",
+    "title": "IPL 2026",
+    "dates": "28 March — 31 May 2026",
+    "matchCount": "84",
+    "matchLabel": "MATCHES",
+    "teamCount": "10",
+    "teamLabel": "TEAMS",
+    "format": "T20",
+    "formatLabel": "FORMAT",
+    "seasonStartsIn": "SEASON STARTS IN",
+    "teams": "Teams",
+    "pointsTable": "Points Table",
+    "seasonStartsDate": "Season starts March 28",
+    "pointsTableAppear": "Points table will appear once matches begin",
+    "playoffsNote": "Top 4 qualify for playoffs",
+    "quickFacts": "Quick Facts",
+    "defendingChampion": "DEFENDING CHAMPION",
+    "mostTitles": "MOST TITLES",
+    "formatFact": "FORMAT",
+    "prizePool": "PRIZE POOL",
+    "defendingValue": "KKR (2024)",
+    "mostTitlesValue": "CSK & MI (5)",
+    "formatValue": "T20 · 20 overs",
+    "prizePoolValue": "₹100 Crore",
+    "teamMatches": "{{team}} Matches",
+    "noTeamMatches": "No {{team}} matches found",
+    "scheduleAppear": "Schedule will appear closer to season start",
+    "played": "P",
+    "won": "W",
+    "lost": "L",
+    "nrr": "NRR",
+    "pts": "Pts"
   },
 
   "aiChat": {
@@ -120,9 +242,175 @@
     }
   },
 
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "phone": "Phone",
+    "password": "Password",
+    "name": "Full Name",
+    "phonePlaceholder": "9876543210",
+    "passwordPlaceholder": "Min 6 characters",
+    "namePlaceholder": "Your name",
+    "loginButton": "Sign In →",
+    "registerButton": "Start Winning Now →",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "phoneRequired": "Phone number is required",
+    "passwordRequired": "Password is required",
+    "nameRequired": "Name is required",
+    "passwordMinLength": "Password must be at least 6 characters",
+    "loginError": "Invalid phone or password",
+    "registerError": "Registration failed. Number might already be taken.",
+    "welcome": "Welcome!",
+    "heroTitle": "AI Predictions",
+    "heroSubtitle": "Join thousands of winning bettors",
+    "statPicks": "3 Free picks",
+    "statAccuracy": "AI Analysis",
+    "statOnline": "Free start",
+    "freeNote": "3 free AI predictions · no card required",
+    "invitedBy": "You're invited! Code: {{code}}"
+  },
+
+  "onboarding": {
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Start Winning",
+    "welcome": "Welcome, {{name}}! 🎉",
+    "screen1Title": "AI-Powered Cricket Predictions",
+    "screen1Desc": "Get expert match analysis, win probabilities, and value bet recommendations powered by advanced AI",
+    "screen2Title": "Smart Betting Tools",
+    "screen2Desc": "Kelly Calculator, Odds Converter, and Bet Calculator to maximize your returns on every wager",
+    "screen3Title": "Track Your Success",
+    "screen3Desc": "Monitor your prediction accuracy, share wins with friends, and climb the community leaderboard",
+    "feature1": "Live Analysis",
+    "feature2": "Value Bets",
+    "feature3": "Track Record"
+  },
+
+  "referral": {
+    "title": "Invite Friends",
+    "friendsJoined": "Friends Joined",
+    "bonusPicks": "Bonus AI Picks",
+    "yourCode": "Your Referral Code",
+    "shareWith": "Share with friends",
+    "shareLink": "Share Link",
+    "copyLink": "Copy Invite Link",
+    "copied": "Copied!",
+    "milestoneTitle": "Referral Milestones",
+    "friends": "friends",
+    "milestone1": "+3 AI picks",
+    "milestone2": "+10 AI picks",
+    "milestone3": "Unlimited picks",
+    "howItWorks": "How It Works",
+    "step1": "Share your code with cricket fans",
+    "step2": "Friends register with your code",
+    "step3": "Both of you get bonus AI predictions!",
+    "whatsappMessage": "🏏 Join me on CricketBaazi — AI-powered IPL predictions! Use my code {{code}} to get bonus picks: {{link}}",
+    "telegramMessage": "🏏 Join CricketBaazi — AI-powered IPL predictions! Use code {{code}} to get bonus picks!",
+    "shareText": "Join CricketBaazi with my code {{code}} for bonus AI picks!"
+  },
+
+  "tools": {
+    "kelly": {
+      "title": "Kelly Calculator",
+      "subtitle": "Optimal bet sizing",
+      "probability": "Win Probability",
+      "odds": "Decimal Odds",
+      "optimalBet": "KELLY BET SIZE",
+      "halfKelly": "Half Kelly (safer)",
+      "expectedValue": "Expected Value",
+      "valueFound": "Value Bet Found!",
+      "noValue": "No Value",
+      "noValueDesc": "The odds don't offer value at this probability. The implied probability is higher than your estimated win chance.",
+      "howItWorks": "How Kelly Criterion Works",
+      "formula": "Kelly % = (bp - q) / b, where b = odds - 1, p = win probability, q = 1 - p. It tells you the optimal fraction of your bankroll to bet.",
+      "example": "Example",
+      "exampleText": "CSK @ 1.85 odds, you think 60% chance → Kelly says bet 8.1% of bankroll. Half-Kelly (4%) is safer for most bettors."
+    },
+    "odds": {
+      "title": "Odds Converter",
+      "subtitle": "Convert between formats",
+      "decimal": "Decimal",
+      "fractional": "Fractional",
+      "american": "American",
+      "implied": "Implied Probability",
+      "quickExamples": "Quick Examples"
+    },
+    "betCalc": {
+      "title": "Bet Calculator",
+      "subtitle": "Calculate potential returns",
+      "single": "Single",
+      "accumulator": "Accumulator",
+      "stake": "STAKE",
+      "odds": "Odds",
+      "profit": "Profit",
+      "potentialReturn": "Potential Return",
+      "combinedOdds": "Combined Odds",
+      "selectionPlaceholder": "e.g. CSK to win",
+      "addSelection": "Add Selection"
+    },
+    "glossary": {
+      "title": "Cricket Glossary",
+      "subtitle": "Cricket & betting terms",
+      "searchPlaceholder": "Search terms...",
+      "termsCount": "terms",
+      "noResults": "No terms found",
+      "categories": {
+        "all": "All",
+        "batting": "Batting",
+        "bowling": "Bowling",
+        "fielding": "Fielding",
+        "betting": "Betting"
+      },
+      "terms": {
+        "six": { "name": "Six", "desc": "Ball hit over the boundary without bouncing. Worth 6 runs." },
+        "four": { "name": "Four", "desc": "Ball reaches the boundary after bouncing. Worth 4 runs." },
+        "century": { "name": "Century", "desc": "A batter scores 100+ runs in a single innings." },
+        "halfCentury": { "name": "Half Century", "desc": "A batter scores 50+ runs in a single innings." },
+        "duck": { "name": "Duck", "desc": "A batter gets out without scoring any runs." },
+        "goldenDuck": { "name": "Golden Duck", "desc": "A batter gets out on the very first ball faced." },
+        "strikeRate": { "name": "Strike Rate", "desc": "Runs scored per 100 balls. SR = (Runs / Balls) x 100." },
+        "battingAverage": { "name": "Batting Average", "desc": "Average runs per dismissal. Total runs / times out." },
+        "powerplay": { "name": "Powerplay", "desc": "First 6 overs in T20 with only 2 fielders outside 30-yard circle." },
+        "deathOvers": { "name": "Death Overs", "desc": "Last 4 overs (17-20) of a T20 innings. Usually highest scoring." },
+        "superOver": { "name": "Super Over", "desc": "Tiebreaker: each team bats 1 over when match ends in a tie." },
+        "runRate": { "name": "Run Rate", "desc": "Average runs per over. Total runs / total overs bowled." },
+        "nrr": { "name": "NRR", "desc": "Net Run Rate. Difference between run rate scored and conceded." },
+        "wicket": { "name": "Wicket", "desc": "A batter getting out (bowled, caught, stumped, run out, LBW)." },
+        "over": { "name": "Over", "desc": "Set of 6 legal deliveries. A T20 innings has 20 overs." },
+        "maiden": { "name": "Maiden Over", "desc": "An over with no runs scored off the bat. Very rare in T20." },
+        "economyRate": { "name": "Economy Rate", "desc": "Average runs conceded per over by a bowler. Lower is better." },
+        "bowlingAverage": { "name": "Bowling Average", "desc": "Runs conceded per wicket taken. Lower is better." },
+        "wide": { "name": "Wide", "desc": "Delivery too far from batter. 1 extra run + ball rebowled." },
+        "noBall": { "name": "No Ball", "desc": "Illegal delivery. 1 extra run + free hit next ball." },
+        "yorker": { "name": "Yorker", "desc": "Ball pitched at the batter's feet. Key death overs delivery." },
+        "bouncer": { "name": "Bouncer", "desc": "Short ball rising towards batter's head/chest." },
+        "googly": { "name": "Googly", "desc": "Leg spinner's deception ball turning the opposite way." },
+        "hattrick": { "name": "Hat-trick", "desc": "Bowler takes 3 wickets on 3 consecutive deliveries." },
+        "lbw": { "name": "LBW", "desc": "Leg Before Wicket. Out if ball hits pad but would have hit stumps." },
+        "caught": { "name": "Caught", "desc": "Batter out when fielder catches the ball before it bounces." },
+        "runOut": { "name": "Run Out", "desc": "Out when stumps broken while batter is outside crease." },
+        "stumped": { "name": "Stumped", "desc": "Out when keeper breaks stumps while batter out of crease." },
+        "drs": { "name": "DRS", "desc": "Decision Review System. Teams challenge umpire decisions." },
+        "extras": { "name": "Extras", "desc": "Runs not scored by batter: wides, no-balls, byes, leg-byes." },
+        "matchWinner": { "name": "Match Winner", "desc": "Predict which team wins. Most popular betting market." },
+        "topBatsman": { "name": "Top Batsman", "desc": "Predict who scores the most runs in the match." },
+        "topBowler": { "name": "Top Bowler", "desc": "Predict who takes the most wickets in the match." },
+        "totalRuns": { "name": "Total Runs O/U", "desc": "Over/Under on total match runs, e.g. Over 320.5." },
+        "firstInningsScore": { "name": "1st Innings Score", "desc": "Predict total score of the team batting first." },
+        "tossWinner": { "name": "Toss Winner", "desc": "Predict which captain wins the coin toss. 50/50 market." },
+        "manOfMatch": { "name": "Man of the Match", "desc": "Predict who wins the MVP award." },
+        "valueBet": { "name": "Value Bet", "desc": "Odds higher than true probability. Key to long-term profit." },
+        "accumulator": { "name": "Accumulator", "desc": "Multiple bets combined. All must win. Higher odds, higher risk." },
+        "impliedProbability": { "name": "Implied Probability", "desc": "Probability from odds: 1 / decimal odds x 100." }
+      }
+    }
+  },
+
   "settings": {
     "title": "Settings",
     "sections": {
+      "account": "Account",
       "general": "General",
       "system": "System",
       "tools": "Tools",
@@ -135,12 +423,18 @@
     "online": "Online",
     "offline": "Offline",
     "checking": "Checking...",
+    "logout": "Logout",
+    "loginRegister": "Login / Register",
+    "loginDesc": "Sign in to access AI Chat and save predictions",
     "tools": {
       "kellyCalculator": "Kelly Calculator",
-      "kellyDescription": "Calculate optimal bet size using Kelly Criterion",
+      "kellyDescription": "Optimal bet size with Kelly Criterion",
       "oddsConverter": "Odds Converter",
-      "oddsDescription": "Convert between decimal, fractional, and American odds",
-      "soon": "Soon"
+      "oddsDescription": "Convert decimal, fractional, American odds",
+      "betCalculator": "Bet Calculator",
+      "betCalcDescription": "Calculate stake returns and profit",
+      "glossary": "Cricket Glossary",
+      "glossaryDescription": "Cricket and betting terms explained"
     },
     "version": "Version",
     "build": "Build",
@@ -150,10 +444,75 @@
     "seasonLabel": "IPL 2026 Season"
   },
 
+  "banner": {
+    "betWithKnowledge": "Bet with Knowledge",
+    "startBetting": "Start betting on cricket with {{name}}",
+    "placeBet": "Place Bet with {{name}}",
+    "sponsored": "Sponsored · 18+ · T&C Apply",
+    "sponsoredShort": "Sponsored",
+    "welcomeBonus": "Welcome Bonus",
+    "claimBonus": "Claim Bonus",
+    "betNow": "Bet Now →",
+    "disclaimer": "18+ | T&C Apply"
+  },
+
   "nav": {
     "home": "Home",
     "matches": "Matches",
+    "tools": "Tools",
     "aiChat": "AI Chat",
     "settings": "Settings"
+  },
+
+  "notifications": {
+    "promptTitle": "Never Miss a Match!",
+    "promptDesc": "Get notified 1 hour before matches start with your AI prediction ready",
+    "enable": "Enable Notifications",
+    "later": "Later",
+    "enabled": "Notifications enabled",
+    "matchReminder": "{{home}} vs {{away}} starts in 1 hour!",
+    "predictionReady": "Your AI prediction is ready. Don't miss this match!"
+  },
+
+  "leaderboard": {
+    "title": "Leaderboard",
+    "subtitle": "Top cricket predictors",
+    "weekly": "This Week",
+    "monthly": "This Month",
+    "picks": "picks",
+    "totalPicks": "Total Picks",
+    "avgAccuracy": "Avg Accuracy",
+    "bestStreak": "Best Streak",
+    "rankings": "Rankings",
+    "correct": "Correct",
+    "streak": "Streak",
+    "ctaTitle": "Want to be on the leaderboard?",
+    "ctaDesc": "Start making AI-powered predictions and climb the ranks!",
+    "ctaButton": "Make Your Pick"
+  },
+
+  "toolsHub": {
+    "title": "Cricket Tools",
+    "subtitle": "Smart calculators & guides for smarter bets",
+    "tipTitle": "Pro Tip",
+    "tipDesc": "Use the Kelly Calculator to find optimal bet sizes, then check odds across formats with the Converter before placing your bets.",
+    "tools": {
+      "kelly": {
+        "name": "Kelly Calculator",
+        "desc": "Find optimal bet size based on probability & odds"
+      },
+      "odds": {
+        "name": "Odds Converter",
+        "desc": "Convert between decimal, fractional & American odds"
+      },
+      "betCalc": {
+        "name": "Bet Calculator",
+        "desc": "Calculate returns for singles & accumulators"
+      },
+      "glossary": {
+        "name": "Cricket Glossary",
+        "desc": "40+ cricket & betting terms explained"
+      }
+    }
   }
 }

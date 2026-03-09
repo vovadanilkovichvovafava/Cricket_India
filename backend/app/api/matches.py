@@ -9,9 +9,9 @@ from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.models import MatchSummary, MatchDetail, Series
+from app.models import MatchSummary, MatchDetail, Series, MatchScorecard, MatchSquad, MatchTotals
 from app.services.cricket_api import cricket_service
-from app.services.odds_service import get_odds_for_teams
+from app.services.odds_service import get_odds_for_teams, get_totals_for_teams
 
 logger = logging.getLogger(__name__)
 
@@ -86,3 +86,33 @@ async def get_series_matches(series_id: str):
     if not matches:
         raise HTTPException(status_code=404, detail=f"Series '{series_id}' not found or has no matches")
     return await _enrich_with_odds(matches)
+
+
+@router.get("/matches/{match_id}/scorecard", response_model=MatchScorecard)
+async def get_match_scorecard(match_id: str):
+    """Get full scorecard — batting & bowling stats per player."""
+    scorecard = await cricket_service.get_match_scorecard(match_id)
+    if not scorecard:
+        raise HTTPException(status_code=404, detail=f"Scorecard for match '{match_id}' not found")
+    return scorecard
+
+
+@router.get("/matches/{match_id}/squad", response_model=MatchSquad)
+async def get_match_squad(match_id: str):
+    """Get squad/lineup for a match."""
+    squad = await cricket_service.get_match_squad(match_id)
+    if not squad:
+        raise HTTPException(status_code=404, detail=f"Squad for match '{match_id}' not found")
+    return squad
+
+
+@router.get("/matches/{match_id}/totals", response_model=MatchTotals)
+async def get_match_totals(match_id: str):
+    """Get totals (over/under) odds for a match."""
+    match = await cricket_service.get_match_detail(match_id)
+    if not match:
+        raise HTTPException(status_code=404, detail=f"Match '{match_id}' not found")
+    totals = await get_totals_for_teams(match.home_team.name, match.away_team.name)
+    if not totals:
+        raise HTTPException(status_code=404, detail="No totals odds available for this match")
+    return totals

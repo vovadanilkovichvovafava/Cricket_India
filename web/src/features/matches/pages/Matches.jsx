@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../../shared/api';
 import BottomNav from '../../../shared/components/BottomNav';
 import TricolorBar from '../../../shared/components/TricolorBar';
 import MatchCard from '../../../shared/components/MatchCard';
+import BookmakerBanner from '../../../shared/components/BookmakerBanner';
+import usePullToRefresh from '../../../shared/hooks/usePullToRefresh';
 import { CricketBallIcon, CricketBallDecor } from '../../../shared/components/Icons';
 
 export default function Matches() {
@@ -12,41 +14,48 @@ export default function Matches() {
   const { t } = useTranslation();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [tab, setTab] = useState('all');
 
   const tabs = [
     { key: 'all', label: t('matches.filters.all') },
-    { key: 'live', label: 'Live' },
+    { key: 'live', label: t('common.live') },
     { key: 'today', label: t('matches.filters.today') },
     { key: 'week', label: t('matches.filters.thisWeek') },
   ];
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      try {
-        const [live, all] = await Promise.all([
-          api.getLiveMatches().catch(() => []),
-          api.getMatches().catch(() => []),
-        ]);
-        // Combine: live first, then the rest, deduplicate
-        const seen = new Set();
-        const combined = [];
-        [...live, ...all].forEach(m => {
-          if (!seen.has(m.id)) {
-            seen.add(m.id);
-            combined.push(m);
-          }
-        });
-        setMatches(combined);
-      } catch {
-        setMatches([]);
-      } finally {
-        setLoading(false);
-      }
+  const loadMatches = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const [live, all] = await Promise.all([
+        api.getLiveMatches().catch(() => []),
+        api.getMatches().catch(() => []),
+      ]);
+      const seen = new Set();
+      const combined = [];
+      [...live, ...all].forEach(m => {
+        if (!seen.has(m.id)) {
+          seen.add(m.id);
+          combined.push(m);
+        }
+      });
+      setMatches(combined);
+      if (combined.length === 0) setError(true);
+    } catch {
+      setMatches([]);
+      setError(true);
+    } finally {
+      setLoading(false);
     }
-    load();
   }, []);
+
+  useEffect(() => { loadMatches(); }, [loadMatches]);
+
+  const { PullIndicator } = usePullToRefresh(useCallback(async () => {
+    api.clearCache();
+    await loadMatches();
+  }, [loadMatches]));
 
   const filteredMatches = useMemo(() => {
     let filtered = [...matches];
@@ -87,7 +96,8 @@ export default function Matches() {
   const dateKeys = Object.keys(groupedMatches);
 
   return (
-    <div className="min-h-screen bg-[#F0F2F5]">
+    <div className="min-h-screen bg-[#F0F2F5] animate-fade-in">
+      <PullIndicator />
       {/* Header — sticky white with tabs */}
       <div className="bg-white px-5 pt-6 pb-0 sticky top-0 z-10">
         <div className="flex items-center gap-3 mb-4">
@@ -140,9 +150,29 @@ export default function Matches() {
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
               <div key={i} className="bg-white rounded-xl p-4 border border-gray-100">
-                <div className="shimmer h-12 w-full rounded-lg" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="shimmer w-6 h-6 rounded-full" />
+                    <div className="shimmer h-3 w-14 rounded" />
+                  </div>
+                  <div className="shimmer h-4 w-8 rounded" />
+                  <div className="flex items-center gap-2">
+                    <div className="shimmer h-3 w-14 rounded" />
+                    <div className="shimmer w-6 h-6 rounded-full" />
+                  </div>
+                </div>
               </div>
             ))}
+          </div>
+        ) : dateKeys.length === 0 && error ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <p className="text-gray-500 text-sm mb-3">{t('common.couldNotLoad')}</p>
+            <button
+              onClick={loadMatches}
+              className="px-5 py-2 bg-[#FF9933] text-white text-sm font-semibold rounded-xl active:scale-95 transition-transform"
+            >
+              {t('common.retry')}
+            </button>
           </div>
         ) : dateKeys.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center relative">
@@ -154,23 +184,29 @@ export default function Matches() {
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-1 relative z-10">{t('matches.noMatches')}</h3>
             <p className="text-gray-500 text-sm relative z-10">
-              {tab === 'live' ? 'No live matches right now' : 'Try changing the filters'}
+              {tab === 'live' ? t('common.noLiveMatches') : t('common.tryChangingFilters')}
             </p>
           </div>
         ) : (
           <div className="pb-8">
             {dateKeys.map((dateKey, idx) => (
-              <div key={dateKey} className={`mb-5 animate-card-in animate-card-in-${Math.min(idx + 1, 6)}`}>
-                <div className="flex items-center gap-2 mb-2 mt-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#FF9933]" />
-                  <h3 className="text-sm font-semibold text-gray-700">{dateKey}</h3>
-                  <span className="text-[10px] text-gray-400 ml-auto">{groupedMatches[dateKey].length} matches</span>
+              <div key={dateKey}>
+                <div className={`mb-5 animate-card-in animate-card-in-${Math.min(idx + 1, 6)}`}>
+                  <div className="flex items-center gap-2 mb-2 mt-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#FF9933]" />
+                    <h3 className="text-sm font-semibold text-gray-700">{dateKey}</h3>
+                    <span className="text-[10px] text-gray-400 ml-auto">{groupedMatches[dateKey].length} {t('common.matches')}</span>
+                  </div>
+                  <div className="bg-white rounded-xl overflow-hidden shadow-sm">
+                    {groupedMatches[dateKey].map(m => (
+                      <MatchCard key={m.id} match={m} />
+                    ))}
+                  </div>
                 </div>
-                <div className="bg-white rounded-xl overflow-hidden shadow-sm">
-                  {groupedMatches[dateKey].map(m => (
-                    <MatchCard key={m.id} match={m} />
-                  ))}
-                </div>
+                {/* Inline banner after every 2nd date group */}
+                {(idx + 1) % 2 === 0 && idx < dateKeys.length - 1 && (
+                  <BookmakerBanner variant="inline" />
+                )}
               </div>
             ))}
           </div>

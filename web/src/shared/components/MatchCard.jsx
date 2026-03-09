@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 // Determine text color (black or white) based on background luminance
 function getTextColor(hex) {
@@ -10,7 +11,7 @@ function getTextColor(hex) {
   return (r * 299 + g * 587 + b * 114) / 1000 > 150 ? '#000' : '#fff';
 }
 
-function formatMatchTime(dateStr) {
+function formatMatchTime(dateStr, t) {
   const dt = new Date(dateStr);
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
@@ -19,8 +20,8 @@ function formatMatchTime(dateStr) {
   const tomorrowStr = tomorrow.toISOString().slice(0, 10);
   const matchDate = dt.toISOString().slice(0, 10);
   const time = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-  if (matchDate === todayStr) return `Today, ${time}`;
-  if (matchDate === tomorrowStr) return `Tomorrow, ${time}`;
+  if (matchDate === todayStr) return `${t('common.today')}, ${time}`;
+  if (matchDate === tomorrowStr) return `${t('common.tomorrow')}, ${time}`;
   return `${dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}, ${time}`;
 }
 
@@ -34,7 +35,14 @@ function getMatchCountdown(dateStr) {
   const mins = Math.floor((diff % 3600000) / 60000);
   if (days > 0) return `${days}d ${hours}h`;
   if (hours > 0) return `${hours}h ${mins}m`;
-  return 'Starting soon';
+  return null; // "Starting soon" will be handled by the component with t()
+}
+
+// Check if prediction window is closing soon (< 2 hours)
+function isUrgent(dateStr) {
+  const dt = new Date(dateStr);
+  const diff = dt - new Date();
+  return diff > 0 && diff < 7200000; // less than 2 hours
 }
 
 // Get innings score for a team by matching team name in inning string
@@ -56,14 +64,17 @@ function getOddsPoll(odds) {
   };
 }
 
-// Team badge — colored circle with code
-function TeamBadge({ code, color = '#6B7280', size = 'sm' }) {
+// Team badge — shows CricAPI logo if available, colored circle with code as fallback
+function TeamBadge({ code, color = '#6B7280', img, size = 'sm' }) {
   const textColor = getTextColor(color);
   const cls = size === 'lg'
     ? 'w-14 h-14 text-sm'
     : size === 'md'
       ? 'w-10 h-10 text-[10px]'
       : 'w-6 h-6 text-[8px]';
+  if (img) {
+    return <img src={img} alt={code} className={`${cls} rounded-full object-cover shrink-0`} />;
+  }
   return (
     <div
       className={`${cls} rounded-full flex items-center justify-center font-black shrink-0`}
@@ -98,12 +109,13 @@ function ScoreText({ innings, className = '' }) {
 // --- Featured Match Banner (diagonal split + community poll + countdown) ---
 export function FeaturedMatchCard({ match }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const homeColor = match.homeColor || '#6B7280';
   const awayColor = match.awayColor || '#6B7280';
   const homeText = getTextColor(homeColor);
   const awayText = getTextColor(awayColor);
-  const timeLabel = formatMatchTime(match.date);
-  const countdown = getMatchCountdown(match.date);
+  const timeLabel = formatMatchTime(match.date, t);
+  const countdown = getMatchCountdown(match.date) || t('common.startingSoon');
   const poll = getOddsPoll(match.odds);
   const isLive = match.status === 'live';
   const hasScores = match.score?.length > 0;
@@ -132,7 +144,7 @@ export function FeaturedMatchCard({ match }) {
         {isLive ? (
           <div className="flex items-center gap-1.5 bg-red-500/90 px-2.5 py-1 rounded-lg shadow-lg shadow-red-500/40 animate-pulse-glow">
             <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-            <span className="text-[11px] font-bold text-white tracking-wide">LIVE</span>
+            <span className="text-[11px] font-bold text-white tracking-wide">{t('common.live')}</span>
           </div>
         ) : countdown ? (
           <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-lg">
@@ -154,12 +166,16 @@ export function FeaturedMatchCard({ match }) {
         {/* Home team */}
         <div className="flex flex-col items-center gap-1.5 w-24">
           <div className="w-16 h-16 bg-white/90 rounded-xl p-1.5 flex items-center justify-center shadow-lg">
-            <div
-              className="w-full h-full rounded-full flex items-center justify-center text-xs font-black"
-              style={{ background: homeColor, color: homeText }}
-            >
-              {match.home}
-            </div>
+            {match.homeImg ? (
+              <img src={match.homeImg} alt={match.home} className="w-full h-full rounded-full object-cover" />
+            ) : (
+              <div
+                className="w-full h-full rounded-full flex items-center justify-center text-xs font-black"
+                style={{ background: homeColor, color: homeText }}
+              >
+                {match.home}
+              </div>
+            )}
           </div>
           <div className="text-center">
             <span className="text-sm font-bold text-white drop-shadow-lg block leading-tight">
@@ -200,12 +216,16 @@ export function FeaturedMatchCard({ match }) {
         {/* Away team */}
         <div className="flex flex-col items-center gap-1.5 w-24">
           <div className="w-16 h-16 bg-white/90 rounded-xl p-1.5 flex items-center justify-center shadow-lg">
-            <div
-              className="w-full h-full rounded-full flex items-center justify-center text-xs font-black"
-              style={{ background: awayColor, color: awayText }}
-            >
-              {match.away}
-            </div>
+            {match.awayImg ? (
+              <img src={match.awayImg} alt={match.away} className="w-full h-full rounded-full object-cover" />
+            ) : (
+              <div
+                className="w-full h-full rounded-full flex items-center justify-center text-xs font-black"
+                style={{ background: awayColor, color: awayText }}
+              >
+                {match.away}
+              </div>
+            )}
           </div>
           <div className="text-center">
             <span className="text-sm font-bold text-white drop-shadow-lg block leading-tight">
@@ -233,7 +253,7 @@ export function FeaturedMatchCard({ match }) {
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                 </svg>
-                Community Pick
+                {t('matchCard.communityPick')}
               </span>
               <span className="text-[10px] text-white/50">{voteCount.toLocaleString()} votes</span>
             </div>
@@ -255,6 +275,19 @@ export function FeaturedMatchCard({ match }) {
         </div>
       )}
 
+      {/* Urgency banner on featured card */}
+      {!isLive && match.status !== 'completed' && isUrgent(match.date) && (
+        <div className="relative z-10 mx-4 mb-2">
+          <div className="bg-amber-400/90 backdrop-blur-sm rounded-xl px-3 py-2 flex items-center justify-center gap-2">
+            <svg className="w-3.5 h-3.5 text-amber-900 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+              <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clipRule="evenodd" />
+            </svg>
+            <span className="text-[11px] text-amber-900 font-bold">{t('matchCard.predictionClosing')}</span>
+            <span className="text-[11px] text-amber-900 font-black">— {t('matchCard.lockIn')} →</span>
+          </div>
+        </div>
+      )}
+
       {/* Status text for completed matches */}
       {match.status === 'completed' && match.statusText && (
         <div className="relative z-10 mx-4 mb-3">
@@ -270,9 +303,10 @@ export function FeaturedMatchCard({ match }) {
 // --- Compact match card (list item with team color accent) ---
 export default function MatchCard({ match }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const homeColor = match.homeColor || '#6B7280';
   const awayColor = match.awayColor || '#6B7280';
-  const timeLabel = formatMatchTime(match.date);
+  const timeLabel = formatMatchTime(match.date, t);
   const isLive = match.status === 'live';
   const isCompleted = match.status === 'completed';
   const hasScores = match.score?.length > 0;
@@ -299,7 +333,7 @@ export default function MatchCard({ match }) {
         <div className="flex-1 min-w-0">
           {/* Home team row */}
           <div className="flex items-center gap-2 mb-1.5">
-            <TeamBadge code={match.home} color={homeColor} />
+            <TeamBadge code={match.home} color={homeColor} img={match.homeImg} />
             <span className="text-sm font-medium text-gray-900 min-w-[28px]">{match.home}</span>
             {hasScores && homeScore ? (
               <ScoreText innings={homeScore} className="text-sm font-bold text-gray-900 ml-auto tabular-nums" />
@@ -309,7 +343,7 @@ export default function MatchCard({ match }) {
           </div>
           {/* Away team row */}
           <div className="flex items-center gap-2">
-            <TeamBadge code={match.away} color={awayColor} />
+            <TeamBadge code={match.away} color={awayColor} img={match.awayImg} />
             <span className="text-sm font-medium text-gray-900 min-w-[28px]">{match.away}</span>
             {hasScores && awayScore ? (
               <ScoreText innings={awayScore} className="text-sm font-bold text-gray-900 ml-auto tabular-nums" />
@@ -342,10 +376,10 @@ export default function MatchCard({ match }) {
           {isLive ? (
             <div className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-              <span className="text-[10px] text-red-500 font-bold">LIVE</span>
+              <span className="text-[10px] text-red-500 font-bold">{t('common.live')}</span>
             </div>
           ) : isCompleted ? (
-            <span className="text-[10px] text-gray-400 font-medium">FT</span>
+            <span className="text-[10px] text-gray-400 font-medium">{t('common.ft')}</span>
           ) : (
             <div className="text-right">
               <span className="text-[11px] text-gray-400 font-medium block">{timeLabel}</span>
@@ -356,6 +390,17 @@ export default function MatchCard({ match }) {
           )}
         </div>
       </div>
+
+      {/* Urgency banner — prediction closing soon */}
+      {!isLive && !isCompleted && isUrgent(match.date) && (
+        <div className="mx-3 mb-2 -mt-0.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg px-3 py-1.5 flex items-center gap-2">
+          <svg className="w-3.5 h-3.5 text-amber-500 animate-pulse shrink-0" fill="currentColor" viewBox="0 0 24 24">
+            <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clipRule="evenodd" />
+          </svg>
+          <span className="text-[10px] text-amber-700 font-semibold">{t('matchCard.predictionClosing')}</span>
+          <span className="ml-auto text-[10px] text-[#FF9933] font-bold">{t('matchCard.lockIn')} →</span>
+        </div>
+      )}
 
       {/* Status text for completed matches */}
       {isCompleted && match.statusText && (

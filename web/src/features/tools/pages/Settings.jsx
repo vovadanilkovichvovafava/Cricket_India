@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../../features/auth/context/AuthContext';
 import { ENV } from '../../../shared/config/env';
 import BottomNav from '../../../shared/components/BottomNav';
 import TricolorBar from '../../../shared/components/TricolorBar';
@@ -10,7 +11,7 @@ import {
 } from '../../../shared/components/Icons';
 
 const APP_VERSION = '1.0.0';
-const BUILD = '2026.02.28';
+const BUILD = '2026.03.09';
 
 const LANGUAGES = [
   { code: 'en', label: 'English', native: 'English' },
@@ -19,8 +20,10 @@ const LANGUAGES = [
 ];
 
 const TOOLS = [
-  { nameKey: 'settings.tools.kellyCalculator', descKey: 'settings.tools.kellyDescription', IconComp: CalculatorIcon, path: null },
-  { nameKey: 'settings.tools.oddsConverter', descKey: 'settings.tools.oddsDescription', IconComp: RefreshIcon, path: null },
+  { nameKey: 'settings.tools.kellyCalculator', descKey: 'settings.tools.kellyDescription', IconComp: CalculatorIcon, path: '/tools/kelly' },
+  { nameKey: 'settings.tools.oddsConverter', descKey: 'settings.tools.oddsDescription', IconComp: RefreshIcon, path: '/tools/odds' },
+  { nameKey: 'settings.tools.betCalculator', descKey: 'settings.tools.betCalcDescription', IconComp: CalculatorIcon, path: '/tools/bet-calc' },
+  { nameKey: 'settings.tools.glossary', descKey: 'settings.tools.glossaryDescription', IconComp: CricketBatIcon, path: '/tools/glossary' },
 ];
 
 // Football-style settings item — icon + label + value + chevron
@@ -58,6 +61,7 @@ function SectionLabel({ text }) {
 export default function Settings() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const { user, isAuthenticated, logout } = useAuth();
   const [language, setLanguage] = useState(() => i18n.language?.split('-')[0] || 'en');
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('dark_mode') === 'true');
   const [apiStatus, setApiStatus] = useState('checking');
@@ -93,11 +97,16 @@ export default function Settings() {
     localStorage.setItem('dark_mode', String(newVal));
   }
 
+  function handleLogout() {
+    logout();
+    navigate('/');
+  }
+
   const currentLang = LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
 
   return (
     <div className="min-h-dvh bg-[#F0F2F5]">
-      {/* Header — clean white like football */}
+      {/* Header */}
       <div className="bg-white px-5 pt-6 pb-4">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)}
@@ -111,6 +120,48 @@ export default function Settings() {
       </div>
 
       <div className="px-5 pb-8">
+        {/* Account */}
+        <SectionLabel text={t('settings.sections.account')} />
+        {isAuthenticated ? (
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="px-4 py-4 flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#FF9933] to-[#FF8800] rounded-full flex items-center justify-center">
+                <span className="text-white text-lg font-bold">{user?.name?.[0]?.toUpperCase() || '?'}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
+                <p className="text-xs text-gray-400 truncate">{user?.country_code} {user?.phone?.replace(user?.country_code, '')}</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="px-3 py-1.5 bg-red-50 text-red-500 text-xs font-semibold rounded-lg active:bg-red-100 transition-colors"
+              >
+                {t('settings.logout')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <button
+              onClick={() => navigate('/login')}
+              className="w-full px-4 py-4 flex items-center gap-3 active:bg-gray-50 transition-colors"
+            >
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
+                </svg>
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-semibold text-[#FF9933]">{t('settings.loginRegister')}</p>
+                <p className="text-xs text-gray-400">{t('settings.loginDesc')}</p>
+              </div>
+              <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+          </div>
+        )}
+
         {/* General */}
         <SectionLabel text={t('settings.sections.general')} />
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
@@ -207,15 +258,8 @@ export default function Settings() {
               icon={<tool.IconComp className="w-5 h-5 text-amber-600" />}
               label={t(tool.nameKey)}
               value={t(tool.descKey)}
-              onClick={() => {/* placeholder */}}
-            >
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{t('settings.tools.soon')}</span>
-                <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                </svg>
-              </div>
-            </SettingsItem>
+              onClick={() => navigate(tool.path)}
+            />
           ))}
         </div>
 

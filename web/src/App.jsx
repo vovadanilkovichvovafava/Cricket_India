@@ -1,5 +1,7 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './features/auth/context/AuthContext';
+import NotificationPrompt from './shared/components/NotificationPrompt';
 
 // Eagerly loaded
 import Home from './features/matches/pages/Home';
@@ -9,6 +11,16 @@ const Matches = lazy(() => import('./features/matches/pages/Matches'));
 const MatchDetail = lazy(() => import('./features/matches/pages/MatchDetail'));
 const AIChat = lazy(() => import('./features/predictions/pages/AIChat'));
 const Settings = lazy(() => import('./features/tools/pages/Settings'));
+const IPLEvent = lazy(() => import('./features/events/pages/IPLEvent'));
+const LoginPage = lazy(() => import('./features/auth/pages/LoginPage'));
+const KellyCalculator = lazy(() => import('./features/tools/pages/KellyCalculator'));
+const OddsConverter = lazy(() => import('./features/tools/pages/OddsConverter'));
+const BetCalculator = lazy(() => import('./features/tools/pages/BetCalculator'));
+const CricketGlossary = lazy(() => import('./features/tools/pages/CricketGlossary'));
+const ToolsHub = lazy(() => import('./features/tools/pages/ToolsHub'));
+const ReferralPage = lazy(() => import('./features/auth/pages/ReferralPage'));
+const OnboardingPage = lazy(() => import('./features/auth/pages/OnboardingPage'));
+const Leaderboard = lazy(() => import('./features/predictions/pages/Leaderboard'));
 
 function Spinner() {
   return (
@@ -22,6 +34,14 @@ function Spinner() {
       </div>
     </div>
   );
+}
+
+// Protected route — redirects to /login if not authenticated
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <Spinner />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return children;
 }
 
 // Splash screen — cricket ball + branding
@@ -80,18 +100,33 @@ export default function App() {
   });
 
   return (
-    <>
+    <AuthProvider>
       {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+      <NotificationPrompt />
       <Suspense fallback={<Spinner />}>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route path="/referral" element={
+            <ProtectedRoute><ReferralPage /></ProtectedRoute>
+          } />
           <Route path="/matches" element={<Matches />} />
           <Route path="/match/:id" element={<MatchDetail />} />
-          <Route path="/ai-chat" element={<AIChat />} />
+          <Route path="/ai-chat" element={
+            <ProtectedRoute><AIChat /></ProtectedRoute>
+          } />
+          <Route path="/ipl" element={<IPLEvent />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/tools" element={<ToolsHub />} />
+          <Route path="/tools/kelly" element={<KellyCalculator />} />
+          <Route path="/tools/odds" element={<OddsConverter />} />
+          <Route path="/tools/bet-calc" element={<BetCalculator />} />
+          <Route path="/tools/glossary" element={<CricketGlossary />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
-    </>
+    </AuthProvider>
   );
 }

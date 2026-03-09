@@ -199,6 +199,89 @@ class PlayerSearchResult(BaseModel):
     country: str = ""
 
 
+# ──────────────────────────────────────────────
+# Scorecard Models
+# ──────────────────────────────────────────────
+
+class BattingEntry(BaseModel):
+    batsman: str
+    dismissal: str = ""  # "c Kohli b Bumrah", "not out", "b Ashwin"
+    runs: int = 0
+    balls: int = 0
+    fours: int = 0
+    sixes: int = 0
+    strike_rate: float = 0.0
+
+class BowlingEntry(BaseModel):
+    bowler: str
+    overs: float = 0.0
+    maidens: int = 0
+    runs: int = 0
+    wickets: int = 0
+    economy: float = 0.0
+    wides: int = 0
+    no_balls: int = 0
+
+class InningsScorecard(BaseModel):
+    inning: str  # "Chennai Super Kings Inning 1"
+    runs: int = 0
+    wickets: int = 0
+    overs: float = 0.0
+    batting: list[BattingEntry] = []
+    bowling: list[BowlingEntry] = []
+    extras: int = 0
+    fall_of_wickets: list[str] = []
+
+class MatchScorecard(BaseModel):
+    id: str
+    name: str = ""
+    status: str = ""
+    innings: list[InningsScorecard] = []
+
+
+# ──────────────────────────────────────────────
+# Squad Models
+# ──────────────────────────────────────────────
+
+class SquadPlayer(BaseModel):
+    id: str = ""
+    name: str
+    role: str = ""  # "Batsman", "Bowler", "All-Rounder", "WK-Batsman"
+    batting_style: str = ""
+    bowling_style: str = ""
+    country: str = ""
+    player_img: Optional[str] = None
+    is_captain: bool = False
+    is_keeper: bool = False
+
+class TeamSquad(BaseModel):
+    team: TeamInfo
+    players: list[SquadPlayer] = []
+
+class MatchSquad(BaseModel):
+    id: str
+    name: str = ""
+    home_squad: TeamSquad
+    away_squad: TeamSquad
+
+
+# ──────────────────────────────────────────────
+# Totals Odds Models
+# ──────────────────────────────────────────────
+
+class TotalsOdds(BaseModel):
+    bookmaker: str
+    point: float  # e.g. 320.5
+    over_odds: float
+    under_odds: float
+    last_updated: Optional[datetime] = None
+
+class MatchTotals(BaseModel):
+    home_team: str
+    away_team: str
+    totals: list[TotalsOdds] = []
+
+
 class PlayerStat(BaseModel):
     fn: str  # "batting" or "bowling"
     matchtype: str  # "test", "odi", "t20i", "ipl"
@@ -217,3 +300,45 @@ class PlayerProfile(BaseModel):
     place_of_birth: str = ""
     player_img: Optional[str] = None
     stats: list[PlayerStat] = []
+
+
+# ──────────────────────────────────────────────
+# Auth
+# ──────────────────────────────────────────────
+
+class RegisterRequest(BaseModel):
+    phone: str = Field(..., min_length=5, max_length=20)
+    password: str = Field(..., min_length=6, max_length=128)
+    name: str = Field(..., min_length=1, max_length=100)
+    country_code: str = Field(default="+91", max_length=5)
+    ref: Optional[str] = None  # referral code of inviter
+
+
+class LoginRequest(BaseModel):
+    phone: str
+    password: str
+    country_code: str = "+91"
+
+
+class UserResponse(BaseModel):
+    id: int
+    phone: str
+    name: str
+    country_code: str = "+91"
+    referral_code: Optional[str] = None
+    referral_count: int = 0
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class AuthResponse(BaseModel):
+    token: str
+    user: UserResponse
+
+
+class ReferralInfoResponse(BaseModel):
+    referral_code: str
+    referral_count: int
+    referral_link: str

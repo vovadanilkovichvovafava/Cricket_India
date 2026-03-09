@@ -8,5 +8,6 @@ export const ENV = {
   OFFER_URL:        rc.OFFER_URL        || import.meta.env.VITE_OFFER_URL        || '#',
   BOOKMAKER_NAME:   rc.BOOKMAKER_NAME   || import.meta.env.VITE_BOOKMAKER_NAME   || 'Partner',
   BOOKMAKER_LINK:   rc.BOOKMAKER_LINK   || import.meta.env.VITE_BOOKMAKER_LINK   || '#',
-  BOOKMAKER_BONUS:  rc.BOOKMAKER_BONUS  || import.meta.env.VITE_BOOKMAKER_BONUS  || 'Welcome Bonus',
+  BOOKMAKER_BONUS:  rc.BOOKMAKER_BONUS  || import.meta.env.VITE_BOOKMAKER_BONUS  || '',
+  BOOKMAKER_CTA:    rc.BOOKMAKER_CTA    || import.meta.env.VITE_BOOKMAKER_CTA    || '',
 };

@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     CRICKET_API_KEY: Optional[str] = None
     THE_ODDS_API_KEY: Optional[str] = None
     DATABASE_URL: str = "sqlite:///./cricket.db"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 days
 
     # App metadata
     APP_NAME: str = "Cricket Bet Analyzer API"

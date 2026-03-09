@@ -4,11 +4,26 @@ import { useTranslation } from 'react-i18next';
 import { IPL_TEAMS } from '../../../shared/utils/teamColors';
 import api from '../../../shared/api';
 import BottomNav from '../../../shared/components/BottomNav';
+import BookmakerBanner from '../../../shared/components/BookmakerBanner';
+import usePushNotifications from '../../../shared/hooks/usePushNotifications';
 import {
   CalendarIcon, ClockIcon, StadiumIcon, LocationIcon, StatusIcon,
   RobotIcon,
 } from '../../../shared/components/Icons';
 import TricolorBar from '../../../shared/components/TricolorBar';
+
+// Helper: get team display info from match data + IPL fallback
+function getTeamInfo(match, side) {
+  const code = side === 'home' ? match.home : match.away;
+  const ipl = IPL_TEAMS[code] || {};
+  return {
+    short: code,
+    name: (side === 'home' ? match.homeName : match.awayName) || ipl.name || code,
+    bg: (side === 'home' ? match.homeColor : match.awayColor) || ipl.bg || '#6B7280',
+    text: ipl.text || '#fff',
+    img: (side === 'home' ? match.homeImg : match.awayImg) || null,
+  };
+}
 
 // Мок-данные для автономной работы
 const MOCK_MATCHES = {
@@ -88,25 +103,33 @@ const MOCK_PREDICTION = {
 
 const TAB_KEYS = [
   { key: 'overview', labelKey: 'matchDetail.tabs.overview' },
-  { key: 'lineups', labelKey: 'matchDetail.tabs.lineups' },
+  { key: 'scorecard', label: 'Scorecard' },
+  { key: 'squad', label: 'Squad' },
   { key: 'venue', labelKey: 'matchDetail.tabs.venue' },
   { key: 'h2h', labelKey: 'matchDetail.tabs.h2h' },
   { key: 'odds', labelKey: 'matchDetail.tabs.odds' },
   { key: 'prediction', labelKey: 'matchDetail.tabs.aiPick' },
 ];
 
-function TeamBadgeLarge({ code }) {
-  const team = IPL_TEAMS[code] || { short: code, bg: '#6B7280', text: '#fff', name: code };
+function TeamBadgeLarge({ code, color, img, name }) {
+  const ipl = IPL_TEAMS[code];
+  const bg = color || ipl?.bg || '#6B7280';
+  const text = ipl?.text || '#fff';
+  const displayName = name || ipl?.name || code;
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <div className="rounded-full p-[3px]" style={{ background: `${team.bg}40` }}>
-        <div className="w-16 h-16 rounded-full flex items-center justify-center text-sm font-bold shadow-lg"
-          style={{ background: team.bg, color: team.text }}>
-          {team.short}
-        </div>
+      <div className="rounded-full p-[3px]" style={{ background: `${bg}40` }}>
+        {img ? (
+          <img src={img} alt={code} className="w-16 h-16 rounded-full object-cover shadow-lg" />
+        ) : (
+          <div className="w-16 h-16 rounded-full flex items-center justify-center text-sm font-bold shadow-lg"
+            style={{ background: bg, color: text }}>
+            {code}
+          </div>
+        )}
       </div>
       <span className="text-xs text-white/80 font-medium text-center leading-tight max-w-[90px]">
-        {team.name || code}
+        {displayName}
       </span>
     </div>
   );
@@ -156,8 +179,8 @@ function OverviewTab({ match }) {
       <div className="bg-white rounded-2xl p-4 shadow-sm">
         <h3 className="text-sm font-semibold text-gray-800 mb-3">{t('matchDetail.overview.matchOdds')}</h3>
         {(() => {
-          const homeTeam = IPL_TEAMS[match.home] || { short: match.home, bg: '#6B7280' };
-          const awayTeam = IPL_TEAMS[match.away] || { short: match.away, bg: '#6B7280' };
+          const homeTeam = getTeamInfo(match, 'home');
+          const awayTeam = getTeamInfo(match, 'away');
           const odds = match.odds || {};
           return (
             <div className="flex gap-3">
@@ -197,7 +220,7 @@ function LineupsTab({ match }) {
         { key: 'home', code: match.home, players: match.lineups.home },
         { key: 'away', code: match.away, players: match.lineups.away },
       ].map(side => {
-        const team = IPL_TEAMS[side.code] || { name: side.code, bg: '#6B7280', text: '#fff' };
+        const team = getTeamInfo(match, side.key);
         return (
           <div key={side.key} className="bg-white rounded-2xl shadow-sm overflow-hidden">
             <div className="px-4 py-3 flex items-center gap-2" style={{ background: team.bg }}>
@@ -287,8 +310,8 @@ function H2HTab({ match }) {
     );
   }
 
-  const homeTeam = IPL_TEAMS[match.home] || { short: match.home, bg: '#6B7280', text: '#fff' };
-  const awayTeam = IPL_TEAMS[match.away] || { short: match.away, bg: '#6B7280', text: '#fff' };
+  const homeTeam = getTeamInfo(match, 'home');
+  const awayTeam = getTeamInfo(match, 'away');
   const homePct = h2h.total > 0 ? Math.round((h2h.homeWins / h2h.total) * 100) : 50;
   const awayPct = 100 - homePct;
 
@@ -324,7 +347,7 @@ function H2HTab({ match }) {
         <h3 className="text-sm font-semibold text-gray-800 mb-3">{t('matchDetail.h2h.last5Meetings')}</h3>
         <div className="flex gap-2 justify-center">
           {h2h.lastFive.map((winner, i) => {
-            const wTeam = IPL_TEAMS[winner] || { short: winner, bg: '#6B7280', text: '#fff' };
+            const wTeam = winner === match.home ? getTeamInfo(match, 'home') : winner === match.away ? getTeamInfo(match, 'away') : { short: winner, bg: '#6B7280', text: '#fff' };
             return (
               <div key={i}
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-[10px] font-bold shadow-sm"
@@ -340,10 +363,210 @@ function H2HTab({ match }) {
   );
 }
 
-function OddsTab({ match }) {
+function ScorecardTab({ scorecard, loading }) {
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+        <p className="mt-3 text-gray-500 text-sm">Loading scorecard...</p>
+      </div>
+    );
+  }
+
+  if (!scorecard || scorecard.innings?.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl p-6 shadow-sm text-center">
+        <p className="text-gray-400 text-sm">Scorecard not available yet</p>
+        <p className="text-gray-300 text-xs mt-1">Available after match starts</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {scorecard.innings.map((inn, idx) => (
+        <div key={idx} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          {/* Innings header */}
+          <div className="px-4 py-3 bg-[#0B1E4D] flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-white truncate flex-1">{inn.inning}</h3>
+            <span className="text-sm font-bold text-white ml-2">
+              {inn.runs}/{inn.wickets} <span className="text-white/60 text-xs">({inn.overs} ov)</span>
+            </span>
+          </div>
+
+          {/* Batting table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-gray-50 text-gray-400">
+                  <th className="text-left px-3 py-2 font-medium">Batter</th>
+                  <th className="text-center px-1 py-2 font-medium w-8">R</th>
+                  <th className="text-center px-1 py-2 font-medium w-8">B</th>
+                  <th className="text-center px-1 py-2 font-medium w-8">4s</th>
+                  <th className="text-center px-1 py-2 font-medium w-8">6s</th>
+                  <th className="text-center px-1 py-2 font-medium w-10">SR</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inn.batting.map((b, i) => (
+                  <tr key={i} className={i % 2 === 0 ? '' : 'bg-gray-50/50'}>
+                    <td className="px-3 py-2">
+                      <p className="font-medium text-gray-800">{b.batsman}</p>
+                      <p className="text-[10px] text-gray-400 truncate max-w-[160px]">{b.dismissal || 'batting'}</p>
+                    </td>
+                    <td className={`text-center py-2 font-bold ${b.runs >= 50 ? 'text-[#FF9933]' : b.runs >= 30 ? 'text-[#0B1E4D]' : 'text-gray-700'}`}>
+                      {b.runs}
+                    </td>
+                    <td className="text-center py-2 text-gray-500">{b.balls}</td>
+                    <td className="text-center py-2 text-gray-500">{b.fours}</td>
+                    <td className="text-center py-2 text-gray-500">{b.sixes}</td>
+                    <td className={`text-center py-2 ${b.strike_rate >= 150 ? 'text-green-600 font-semibold' : 'text-gray-500'}`}>
+                      {b.strike_rate?.toFixed(1)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {inn.extras > 0 && (
+            <div className="px-3 py-1.5 border-t border-gray-100 text-[11px] text-gray-400">
+              Extras: {inn.extras}
+            </div>
+          )}
+
+          {/* Bowling table */}
+          {inn.bowling.length > 0 && (
+            <div className="border-t-2 border-gray-100 overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-400">
+                    <th className="text-left px-3 py-2 font-medium">Bowler</th>
+                    <th className="text-center px-1 py-2 font-medium w-8">O</th>
+                    <th className="text-center px-1 py-2 font-medium w-8">M</th>
+                    <th className="text-center px-1 py-2 font-medium w-8">R</th>
+                    <th className="text-center px-1 py-2 font-medium w-8">W</th>
+                    <th className="text-center px-1 py-2 font-medium w-10">Eco</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {inn.bowling.map((bw, i) => (
+                    <tr key={i} className={i % 2 === 0 ? '' : 'bg-gray-50/50'}>
+                      <td className="px-3 py-2 font-medium text-gray-800">{bw.bowler}</td>
+                      <td className="text-center py-2 text-gray-500">{bw.overs}</td>
+                      <td className="text-center py-2 text-gray-500">{bw.maidens}</td>
+                      <td className="text-center py-2 text-gray-500">{bw.runs}</td>
+                      <td className={`text-center py-2 font-bold ${bw.wickets >= 3 ? 'text-[#FF9933]' : bw.wickets >= 2 ? 'text-[#0B1E4D]' : 'text-gray-700'}`}>
+                        {bw.wickets}
+                      </td>
+                      <td className={`text-center py-2 ${bw.economy <= 6 ? 'text-green-600 font-semibold' : bw.economy >= 10 ? 'text-red-500' : 'text-gray-500'}`}>
+                        {bw.economy?.toFixed(1)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SquadTab({ squad, loading, match }) {
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+        <p className="mt-3 text-gray-500 text-sm">Loading squad...</p>
+      </div>
+    );
+  }
+
+  if (!squad) {
+    return (
+      <div className="bg-white rounded-2xl p-6 shadow-sm text-center">
+        <p className="text-gray-400 text-sm">Squad not available yet</p>
+      </div>
+    );
+  }
+
+  function RoleBadge({ role }) {
+    const r = (role || '').toLowerCase();
+    let label = role || '—';
+    let cls = 'bg-gray-100 text-gray-500';
+    if (r.includes('bat')) { label = 'BAT'; cls = 'bg-blue-50 text-blue-600'; }
+    else if (r.includes('bowl')) { label = 'BOWL'; cls = 'bg-green-50 text-green-600'; }
+    else if (r.includes('all')) { label = 'ALL'; cls = 'bg-purple-50 text-purple-600'; }
+    else if (r.includes('wk') || r.includes('keeper')) { label = 'WK'; cls = 'bg-amber-50 text-amber-600'; }
+    return <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${cls}`}>{label}</span>;
+  }
+
+  const teams = [
+    { data: squad.home_squad, side: 'home' },
+    { data: squad.away_squad, side: 'away' },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {teams.map(({ data, side }) => {
+        const team = getTeamInfo(match, side);
+        return (
+          <div key={side} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="px-4 py-3 flex items-center gap-2" style={{ background: team.bg }}>
+              {team.img ? (
+                <img src={team.img} alt={team.short} className="w-7 h-7 rounded-full object-cover" />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold"
+                  style={{ color: team.text }}>{team.short}</div>
+              )}
+              <h3 className="text-sm font-semibold" style={{ color: team.text }}>
+                {data.team?.name || team.name}
+              </h3>
+              <span className="ml-auto text-[10px] font-medium" style={{ color: `${team.text}99` }}>
+                {data.players?.length || 0} players
+              </span>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {(data.players || []).map((p, i) => (
+                <div key={p.id || i} className="flex items-center gap-3 px-4 py-2.5">
+                  {p.player_img ? (
+                    <img src={p.player_img} alt={p.name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400 shrink-0">
+                      {p.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">
+                      {p.name}
+                      {p.is_captain && <span className="text-[9px] text-[#FF9933] font-bold ml-1">(C)</span>}
+                      {p.is_keeper && <span className="text-[9px] text-amber-500 font-bold ml-1">(WK)</span>}
+                    </p>
+                    {p.country && <p className="text-[10px] text-gray-400">{p.country}</p>}
+                  </div>
+                  <RoleBadge role={p.role} />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function OddsTab({ match, totals }) {
   const { t } = useTranslation();
   const comparison = match.oddsComparison;
-  if (!comparison || comparison.length === 0) {
+  const homeTeam = getTeamInfo(match, 'home');
+  const awayTeam = getTeamInfo(match, 'away');
+
+  const hasH2H = comparison && comparison.length > 0;
+  const hasTotals = totals && totals.totals?.length > 0;
+
+  if (!hasH2H && !hasTotals) {
     return (
       <div className="bg-white rounded-2xl p-6 shadow-sm text-center">
         <p className="text-gray-400 text-sm">{t('matchDetail.odds.notAvailable')}</p>
@@ -351,44 +574,80 @@ function OddsTab({ match }) {
     );
   }
 
-  const homeTeam = IPL_TEAMS[match.home] || { short: match.home };
-  const awayTeam = IPL_TEAMS[match.away] || { short: match.away };
-
-  // Лучшие коэффициенты
-  const bestHome = Math.max(...comparison.map(o => o.home));
-  const bestAway = Math.max(...comparison.map(o => o.away));
+  const bestHome = hasH2H ? Math.max(...comparison.map(o => o.home)) : 0;
+  const bestAway = hasH2H ? Math.max(...comparison.map(o => o.away)) : 0;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
-        <h3 className="text-sm font-semibold text-gray-800">{t('matchDetail.odds.oddsComparison')}</h3>
-      </div>
-      {/* Table header */}
-      <div className="grid grid-cols-3 px-4 py-2 border-b border-gray-100 text-[10px] font-medium text-gray-400">
-        <span>{t('matchDetail.odds.bookmaker')}</span>
-        <span className="text-center">{homeTeam.short}</span>
-        <span className="text-center">{awayTeam.short}</span>
-      </div>
-      {/* Table rows */}
-      {comparison.map((row, i) => (
-        <div key={i} className={`grid grid-cols-3 px-4 py-3 items-center ${i > 0 ? 'border-t border-gray-50' : ''}`}>
-          <span className="text-xs font-medium text-gray-700">{row.bookmaker}</span>
-          <span className={`text-center text-sm font-bold ${row.home === bestHome ? 'text-green-600' : 'text-gray-700'}`}>
-            {row.home}
-            {row.home === bestHome && <span className="text-[8px] ml-0.5 text-[#138808]">{t('matchDetail.odds.best')}</span>}
-          </span>
-          <span className={`text-center text-sm font-bold ${row.away === bestAway ? 'text-green-600' : 'text-gray-700'}`}>
-            {row.away}
-            {row.away === bestAway && <span className="text-[8px] ml-0.5 text-[#138808]">{t('matchDetail.odds.best')}</span>}
-          </span>
+    <div className="space-y-4">
+      {/* Match Winner */}
+      {hasH2H && (
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+            <h3 className="text-sm font-semibold text-gray-800">{t('matchDetail.odds.oddsComparison')}</h3>
+          </div>
+          <div className="grid grid-cols-3 px-4 py-2 border-b border-gray-100 text-[10px] font-medium text-gray-400">
+            <span>{t('matchDetail.odds.bookmaker')}</span>
+            <span className="text-center">{homeTeam.short}</span>
+            <span className="text-center">{awayTeam.short}</span>
+          </div>
+          {comparison.map((row, i) => (
+            <div key={i} className={`grid grid-cols-3 px-4 py-3 items-center ${i > 0 ? 'border-t border-gray-50' : ''}`}>
+              <span className="text-xs font-medium text-gray-700">{row.bookmaker}</span>
+              <span className={`text-center text-sm font-bold ${row.home === bestHome ? 'text-green-600' : 'text-gray-700'}`}>
+                {row.home}
+                {row.home === bestHome && <span className="text-[8px] ml-0.5 text-[#138808]">{t('matchDetail.odds.best')}</span>}
+              </span>
+              <span className={`text-center text-sm font-bold ${row.away === bestAway ? 'text-green-600' : 'text-gray-700'}`}>
+                {row.away}
+                {row.away === bestAway && <span className="text-[8px] ml-0.5 text-[#138808]">{t('matchDetail.odds.best')}</span>}
+              </span>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
+
+      {/* Totals (Over/Under) */}
+      {hasTotals && (
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+            <h3 className="text-sm font-semibold text-gray-800">Total Runs Over/Under</h3>
+          </div>
+          <div className="grid grid-cols-4 px-4 py-2 border-b border-gray-100 text-[10px] font-medium text-gray-400">
+            <span>Bookmaker</span>
+            <span className="text-center">Line</span>
+            <span className="text-center">Over</span>
+            <span className="text-center">Under</span>
+          </div>
+          {totals.totals.map((t, i) => (
+            <div key={i} className={`grid grid-cols-4 px-4 py-3 items-center ${i > 0 ? 'border-t border-gray-50' : ''}`}>
+              <span className="text-xs font-medium text-gray-700 truncate">{t.bookmaker}</span>
+              <span className="text-center text-xs font-bold text-[#0B1E4D]">{t.point}</span>
+              <span className="text-center text-sm font-bold text-green-600">{t.over_odds}</span>
+              <span className="text-center text-sm font-bold text-red-500">{t.under_odds}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 function PredictionTab({ match, prediction, loading, onGetPrediction }) {
   const { t } = useTranslation();
+  const [sharing, setSharing] = useState(false);
+
+  async function handleShare() {
+    if (sharing || !prediction) return;
+    setSharing(true);
+    try {
+      const { sharePrediction } = await import('../../../shared/utils/sharePrediction');
+      await sharePrediction({ match, prediction });
+    } catch {
+      // ignore share errors
+    } finally {
+      setSharing(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -417,7 +676,7 @@ function PredictionTab({ match, prediction, loading, onGetPrediction }) {
     );
   }
 
-  const winnerTeam = IPL_TEAMS[prediction.winner] || { short: prediction.winner, bg: '#6B7280', text: '#fff' };
+  const winnerTeam = prediction.winner === match.home ? getTeamInfo(match, 'home') : prediction.winner === match.away ? getTeamInfo(match, 'away') : { short: prediction.winner, bg: '#6B7280', text: '#fff' };
 
   return (
     <div className="space-y-4">
@@ -492,6 +751,27 @@ function PredictionTab({ match, prediction, loading, onGetPrediction }) {
           ))}
         </div>
       </div>
+
+      {/* Share Prediction Button */}
+      <button
+        onClick={handleShare}
+        disabled={sharing}
+        className="w-full py-3.5 bg-gradient-to-r from-[#FF9933] to-[#FF8800] text-white font-semibold rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-md disabled:opacity-60"
+      >
+        {sharing ? (
+          <>
+            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span className="text-sm">{t('matchDetail.prediction.generating')}</span>
+          </>
+        ) : (
+          <>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+            </svg>
+            <span className="text-sm">{t('matchDetail.prediction.sharePrediction')}</span>
+          </>
+        )}
+      </button>
     </div>
   );
 }
@@ -505,6 +785,16 @@ export default function MatchDetail() {
   const [activeTab, setActiveTab] = useState('overview');
   const [prediction, setPrediction] = useState(null);
   const [predictionLoading, setPredictionLoading] = useState(false);
+  const [scorecard, setScorecard] = useState(null);
+  const [scorecardLoading, setScorecardLoading] = useState(false);
+  const [scorecardFetched, setScorecardFetched] = useState(false);
+  const [squad, setSquad] = useState(null);
+  const [squadLoading, setSquadLoading] = useState(false);
+  const [squadFetched, setSquadFetched] = useState(false);
+  const [totals, setTotals] = useState(null);
+  const [totalsFetched, setTotalsFetched] = useState(false);
+  const { isPushEnabled, requestPermission, scheduleMatchReminder } = usePushNotifications();
+  const [reminderSet, setReminderSet] = useState(false);
 
   useEffect(() => {
     async function fetchMatch() {
@@ -513,7 +803,6 @@ export default function MatchDetail() {
         const data = await api.getMatch(id);
         setMatch(data);
       } catch {
-        // Используем мок-данные при ошибке API
         setMatch(MOCK_MATCHES[id] || getDefaultMock(id));
       } finally {
         setLoading(false);
@@ -521,6 +810,32 @@ export default function MatchDetail() {
     }
     fetchMatch();
   }, [id]);
+
+  // Lazy load scorecard when tab is selected (fetch once)
+  useEffect(() => {
+    if (activeTab === 'scorecard' && !scorecardFetched) {
+      setScorecardFetched(true);
+      setScorecardLoading(true);
+      api.getScorecard(id).then(setScorecard).catch(() => {}).finally(() => setScorecardLoading(false));
+    }
+  }, [activeTab, id, scorecardFetched]);
+
+  // Lazy load squad when tab is selected (fetch once)
+  useEffect(() => {
+    if (activeTab === 'squad' && !squadFetched) {
+      setSquadFetched(true);
+      setSquadLoading(true);
+      api.getSquad(id).then(setSquad).catch(() => {}).finally(() => setSquadLoading(false));
+    }
+  }, [activeTab, id, squadFetched]);
+
+  // Lazy load totals when odds tab is selected (fetch once)
+  useEffect(() => {
+    if (activeTab === 'odds' && !totalsFetched) {
+      setTotalsFetched(true);
+      api.getTotals(id).then(setTotals).catch(() => {});
+    }
+  }, [activeTab, id, totalsFetched]);
 
   async function handleGetPrediction() {
     setPredictionLoading(true);
@@ -539,8 +854,8 @@ export default function MatchDetail() {
   if (loading) return <LoadingSpinner />;
   if (!match) return null;
 
-  const homeTeam = IPL_TEAMS[match.home] || { short: match.home, bg: '#6B7280', text: '#fff' };
-  const awayTeam = IPL_TEAMS[match.away] || { short: match.away, bg: '#6B7280', text: '#fff' };
+  const homeTeam = getTeamInfo(match, 'home');
+  const awayTeam = getTeamInfo(match, 'away');
   const dt = new Date(match.date);
   const dateStr = dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
   const timeStr = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -550,10 +865,11 @@ export default function MatchDetail() {
 
   const tabContent = {
     overview: <OverviewTab match={match} />,
-    lineups: <LineupsTab match={match} />,
+    scorecard: <ScorecardTab scorecard={scorecard} loading={scorecardLoading} />,
+    squad: <SquadTab squad={squad} loading={squadLoading} match={match} />,
     venue: <VenueTab match={match} />,
     h2h: <H2HTab match={match} />,
-    odds: <OddsTab match={match} />,
+    odds: <OddsTab match={match} totals={totals} />,
     prediction: <PredictionTab match={match} prediction={prediction} loading={predictionLoading} onGetPrediction={handleGetPrediction} />,
   };
 
@@ -574,20 +890,38 @@ export default function MatchDetail() {
             </button>
             <div className="text-center">
               <span className="text-[10px] font-medium text-white/70 bg-white/10 px-2.5 py-0.5 rounded-full backdrop-blur-sm">
-                IPL 2026 • {dateStr}
+                {match.matchType?.toUpperCase() || 'CRICKET'} • {dateStr}
               </span>
             </div>
-            <div className="w-10" /> {/* spacer */}
+            <button
+              onClick={async () => {
+                if (!isPushEnabled) {
+                  const result = await requestPermission();
+                  if (result !== 'granted') return;
+                }
+                if (match) {
+                  const ok = scheduleMatchReminder(match);
+                  if (ok) setReminderSet(true);
+                }
+              }}
+              className={`w-10 h-10 rounded-full flex items-center justify-center active:scale-95 transition-transform backdrop-blur-sm ${
+                reminderSet ? 'bg-[#FF9933]/30' : 'bg-white/15'
+              }`}
+            >
+              <svg className="w-5 h-5 text-white" fill={reminderSet ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+              </svg>
+            </button>
           </div>
 
           {/* Teams vs */}
           <div className="flex items-center justify-between px-2">
-            <TeamBadgeLarge code={match.home} />
+            <TeamBadgeLarge code={match.home} color={match.homeColor} img={match.homeImg} name={match.homeName} />
             <div className="flex flex-col items-center gap-1">
               <span className="text-white/60 text-[10px] font-medium">{timeStr} IST</span>
               <span className="text-white text-lg font-black">VS</span>
             </div>
-            <TeamBadgeLarge code={match.away} />
+            <TeamBadgeLarge code={match.away} color={match.awayColor} img={match.awayImg} name={match.awayName} />
           </div>
         </div>
       </div>
@@ -603,7 +937,7 @@ export default function MatchDetail() {
                 ${activeTab === tab.key
                   ? 'bg-primary-600 text-white shadow-sm'
                   : 'text-gray-500 active:bg-gray-50'}`}>
-              {t(tab.labelKey)}
+              {tab.labelKey ? t(tab.labelKey) : tab.label}
             </button>
           ))}
         </div>
@@ -617,11 +951,12 @@ export default function MatchDetail() {
       {/* Floating AI Analysis Button */}
       <button
         onClick={() => navigate(`/ai-chat?match=${match.home}-vs-${match.away}&id=${match.id}`)}
-        className="fixed bottom-24 right-4 z-40 bg-[#FF9933] text-white px-4 py-3 rounded-2xl shadow-lg shadow-orange-200 flex items-center gap-2 active:scale-95 transition-transform ring-2 ring-[#138808]/20">
+        className="fixed bottom-40 right-4 z-40 bg-[#FF9933] text-white px-4 py-3 rounded-2xl shadow-lg shadow-orange-200 flex items-center gap-2 active:scale-95 transition-transform ring-2 ring-[#138808]/20">
         <RobotIcon className="w-5 h-5" />
         <span className="text-sm font-semibold">{t('matchDetail.prediction.getAiPrediction')}</span>
       </button>
 
+      <BookmakerBanner variant="sticky" />
       <BottomNav />
     </div>
   );
