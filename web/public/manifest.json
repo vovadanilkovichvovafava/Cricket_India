@@ -1,0 +1,17 @@
+{
+  "name": "CricketBaazi",
+  "short_name": "CricketBaazi",
+  "description": "AI-powered cricket betting predictions for IPL 2026",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B1E4D",
+  "theme_color": "#0B1E4D",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
