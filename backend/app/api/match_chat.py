@@ -5,18 +5,24 @@ Uses in-memory storage with periodic JSON persistence.
 
 import logging
 import json
+import re
 import time
 import os
 from datetime import datetime, timezone
 from typing import Optional, List
 from collections import defaultdict
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
+
+from app.core.rate_limiter import limiter
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/matches", tags=["match-chat"])
+
+# Match ID format validation
+_MATCH_ID_RE = re.compile(r"^[a-zA-Z0-9_\-]{1,64}$")
 
 # ──────────────────────────────────────────────
 # Models
@@ -141,6 +147,8 @@ def _calc_vote_result(match_id: str, user_id: Optional[str] = None) -> VoteResul
 @router.get("/{match_id}/chat")
 async def get_chat_messages(match_id: str, after: Optional[str] = None):
     """Get chat messages for a match, optionally after a timestamp."""
+    if not _MATCH_ID_RE.match(match_id):
+        raise HTTPException(status_code=400, detail="Invalid match ID")
     _load_chat(match_id)
     messages = _chat_messages.get(match_id, [])
 
@@ -151,20 +159,39 @@ async def get_chat_messages(match_id: str, after: Optional[str] = None):
     return {"messages": [m.model_dump() for m in messages[-50:]]}
 
 
+def _sanitize_text(text: str) -> str:
+    """Remove HTML tags and control characters to prevent XSS."""
+    # Strip HTML tags
+    clean = re.sub(r"<[^>]*>", "", text)
+    # Remove control characters (keep newline, space)
+    clean = "".join(c for c in clean if ord(c) >= 32 or c == "\n")
+    return clean.strip()
+
+
 @router.post("/{match_id}/chat")
-async def post_chat_message(match_id: str, req: ChatMessageRequest):
+@limiter.limit("15/minute")
+async def post_chat_message(match_id: str, req: ChatMessageRequest, request: Request):
     """Post a new chat message."""
-    if not req.message.strip():
+    # Validate match_id format
+    if not _MATCH_ID_RE.match(match_id):
+        raise HTTPException(status_code=400, detail="Invalid match ID")
+
+    message = _sanitize_text(req.message)
+    user_name = _sanitize_text(req.user_name)
+
+    if not message:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
-    if len(req.message) > 500:
+    if len(message) > 500:
         raise HTTPException(status_code=400, detail="Message too long (max 500 chars)")
+    if not user_name or len(user_name) > 20:
+        raise HTTPException(status_code=400, detail="Invalid username")
 
     _load_chat(match_id)
 
     msg = ChatMessage(
         id=f"{int(time.time() * 1000)}_{len(_chat_messages[match_id])}",
-        user_name=req.user_name[:20],  # Limit username length
-        message=req.message.strip()[:500],
+        user_name=user_name[:20],
+        message=message[:500],
         timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
@@ -182,13 +209,18 @@ async def post_chat_message(match_id: str, req: ChatMessageRequest):
 @router.get("/{match_id}/vote")
 async def get_votes(match_id: str, user_id: Optional[str] = None):
     """Get current vote results for a match."""
+    if not _MATCH_ID_RE.match(match_id):
+        raise HTTPException(status_code=400, detail="Invalid match ID")
     _load_votes(match_id)
     return _calc_vote_result(match_id, user_id).model_dump()
 
 
 @router.post("/{match_id}/vote")
-async def cast_vote(match_id: str, req: VoteRequest):
+@limiter.limit("10/minute")
+async def cast_vote(match_id: str, req: VoteRequest, request: Request):
     """Cast or change a vote."""
+    if not _MATCH_ID_RE.match(match_id):
+        raise HTTPException(status_code=400, detail="Invalid match ID")
     if req.vote not in ("home", "draw", "away"):
         raise HTTPException(status_code=400, detail="Vote must be 'home', 'draw', or 'away'")
 

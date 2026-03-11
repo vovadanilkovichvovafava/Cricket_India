@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import logging
+import secrets as _secrets
+
 from pydantic_settings import BaseSettings
 from typing import List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -13,6 +18,18 @@ class Settings(BaseSettings):
     THE_ODDS_API_KEY: Optional[str] = None
     DATABASE_URL: str = "sqlite:///./cricket.db"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 days
+
+    # Security
+    ENVIRONMENT: str = "development"  # "production" or "development"
+
+    # AI limits (per user per day)
+    FREE_AI_LIMIT: int = 3
+    FREE_SUPPORT_LIMIT: int = 10
+
+    # Rate limiting
+    RATE_LIMIT_AUTH: str = "5/minute"       # login/register
+    RATE_LIMIT_AI: str = "10/minute"        # AI chat
+    RATE_LIMIT_GENERAL: str = "60/minute"   # general API
 
     # App metadata
     APP_NAME: str = "Cricket Bet Analyzer API"
@@ -40,3 +57,18 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Warn if using default secret key, auto-generate in dev
+if settings.SECRET_KEY == "change-me":
+    if settings.ENVIRONMENT == "production":
+        logger.critical(
+            "⛔ SECRET_KEY is set to default 'change-me' in PRODUCTION! "
+            "Set SECRET_KEY environment variable to a random 32+ char string."
+        )
+    else:
+        _auto_key = _secrets.token_urlsafe(32)
+        settings.SECRET_KEY = _auto_key
+        logger.warning(
+            "⚠️  SECRET_KEY was 'change-me' — auto-generated for dev. "
+            "Set SECRET_KEY env variable for production."
+        )

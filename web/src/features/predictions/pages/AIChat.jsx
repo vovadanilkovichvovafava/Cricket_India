@@ -230,7 +230,7 @@ export default function AIChat() {
   async function sendMessage(text) {
     if (!text.trim() || isTyping) return;
 
-    // Check AI request limit
+    // Check AI request limit (client-side fast check)
     if (!canUseAI()) {
       setShowUpgradeModal(true);
       return;
@@ -247,7 +247,7 @@ export default function AIChat() {
     setShowQuick(false);
     setIsTyping(true);
 
-    // Count this request
+    // Count this request (client-side, synced with backend)
     useAIRequest();
 
     try {
@@ -262,13 +262,20 @@ export default function AIChat() {
       }]);
     } catch (err) {
       console.error('AI Chat error:', err);
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1,
-        role: 'assistant',
-        content: getFallbackResponse(text),
-        suggestions: generateFollowUps(text),
-        valueBets: [],
-      }]);
+
+      // Backend rate limit / daily limit exceeded → show upgrade modal
+      if (err.status === 429) {
+        setShowUpgradeModal(true);
+        setMessages(prev => prev.filter(m => m.id !== userMessage.id)); // Remove user msg
+      } else {
+        setMessages(prev => [...prev, {
+          id: Date.now() + 1,
+          role: 'assistant',
+          content: getFallbackResponse(text),
+          suggestions: generateFollowUps(text),
+          valueBets: [],
+        }]);
+      }
     } finally {
       setIsTyping(false);
     }
@@ -285,30 +292,61 @@ export default function AIChat() {
 
   return (
     <div className="flex flex-col" style={{ height: '100dvh' }}>
-      {/* Upgrade Modal */}
+      {/* Upgrade Modal — limit reached */}
       {showUpgradeModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-6" onClick={() => setShowUpgradeModal(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full shadow-xl" onClick={e => e.stopPropagation()}>
-            <div className="text-center mb-4">
-              <LockIcon className="w-10 h-10 text-gray-400 mx-auto" />
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mt-2">{t('premium.limitReached')}</h3>
-              <p className="text-sm text-gray-500 mt-1">{t('premium.upgradeForMore')}</p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-6 animate-fade-in" onClick={() => setShowUpgradeModal(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            {/* Top gradient banner */}
+            <div className="bg-gradient-to-r from-[#0B1E4D] to-[#1a3a7a] px-6 pt-6 pb-5 text-center relative overflow-hidden">
+              <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full opacity-20 bg-[#FF9933] blur-xl" />
+              <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3 backdrop-blur-sm">
+                <LockIcon className="w-7 h-7 text-white/80" />
+              </div>
+              <h3 className="text-lg font-bold text-white">{t('premium.limitReached')}</h3>
+              <p className="text-sm text-white/60 mt-1">{t('premium.limitReachedDesc', 'Your free AI requests for today are used up')}</p>
             </div>
-            <a
-              href={affiliateLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setShowUpgradeModal(false)}
-              className="block w-full py-3 bg-gradient-to-r from-[#FF9933] to-[#FF8800] text-white font-bold rounded-xl text-sm active:scale-95 transition-transform text-center"
-            >
-              {t('premium.upgradeNow')} →
-            </a>
-            <button
-              onClick={() => setShowUpgradeModal(false)}
-              className="w-full py-2 mt-2 text-gray-400 text-sm font-medium"
-            >
-              {t('common.later') || 'Later'}
-            </button>
+
+            <div className="p-5 space-y-3">
+              {/* Option 1: Get Pro */}
+              <a
+                href={affiliateLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowUpgradeModal(false)}
+                className="flex items-center gap-3 w-full p-3.5 bg-gradient-to-r from-[#FF9933] to-[#FF8800] rounded-xl active:scale-[0.98] transition-transform"
+              >
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                  <SparkleIcon className="w-5 h-5 text-white" />
+                </div>
+                <div className="text-left flex-1">
+                  <p className="text-sm font-bold text-white">{t('premium.upgradeNow')}</p>
+                  <p className="text-[11px] text-white/70">{t('premium.unlimitedAi')}</p>
+                </div>
+                <svg className="w-5 h-5 text-white/70 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </a>
+
+              {/* Option 2: Wait for reset */}
+              <div className="flex items-center gap-3 p-3.5 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-xl flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('premium.waitForReset', 'Wait for daily reset')}</p>
+                  <p className="text-[11px] text-gray-400">{t('premium.resetsIn24h', 'Free requests refresh every 24 hours')}</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                className="w-full py-2.5 text-gray-400 text-sm font-medium"
+              >
+                {t('common.close', 'Close')}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -381,8 +419,8 @@ export default function AIChat() {
                 <ValueBetCards bets={msg.valueBets} />
               </div>
             )}
-            {/* Follow-up chips */}
-            {msg.role === 'assistant' && msg.suggestions && msg.id !== 'welcome' && !isTyping && (
+            {/* Follow-up chips — hidden when limit reached */}
+            {msg.role === 'assistant' && msg.suggestions && msg.id !== 'welcome' && !isTyping && (isPro || aiRequestsLeft > 0) && (
               <div className="flex flex-wrap gap-2 mt-2 ml-1">
                 {msg.suggestions.map(s => (
                   <button key={s} onClick={() => sendMessage(s)}
@@ -412,8 +450,8 @@ export default function AIChat() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Quick questions */}
-      {showQuick && messages.length <= 1 && (
+      {/* Quick questions — hidden when limit reached */}
+      {showQuick && messages.length <= 1 && (isPro || aiRequestsLeft > 0) && (
         <div className="px-5 pb-2 shrink-0">
           <p className="text-xs text-gray-400 mb-2">{t('aiChat.tryAsking')}</p>
           <div className="flex gap-2 mb-2">
@@ -451,32 +489,55 @@ export default function AIChat() {
         </div>
       )}
 
-      {/* Input — compact like Telegram */}
-      <div className="px-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 shrink-0 py-2.5"
-        style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}>
-        <div className="flex items-center gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !isTyping && sendMessage(input)}
-            placeholder={t('aiChat.inputPlaceholder')}
-            className="flex-1 bg-gray-50 dark:bg-gray-700 dark:text-white rounded-full px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-[#FF9933]/30"
-            disabled={isTyping}
-            autoComplete="off"
-          />
+      {/* Bottom area: input OR limit-reached banner */}
+      {!isPro && aiRequestsLeft <= 0 ? (
+        /* Limit reached — replace input with upgrade banner */
+        <div className="px-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 shrink-0 py-3"
+          style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}>
           <button
-            onClick={() => sendMessage(input)}
-            disabled={isTyping || !input.trim()}
-            className="w-10 h-10 bg-[#FF9933] text-white rounded-full flex items-center justify-center shrink-0 disabled:opacity-50 active:scale-95 transition-transform"
+            onClick={() => setShowUpgradeModal(true)}
+            className="w-full flex items-center gap-3 bg-gradient-to-r from-[#0B1E4D] to-[#1a3a7a] rounded-xl px-4 py-3 active:scale-[0.98] transition-transform"
           >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-            </svg>
+            <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center shrink-0">
+              <LockIcon className="w-4 h-4 text-white/70" />
+            </div>
+            <div className="text-left flex-1">
+              <p className="text-sm font-bold text-white">{t('premium.limitReached')}</p>
+              <p className="text-[10px] text-white/50">{t('premium.tapToUpgrade', 'Tap to get Pro or wait for daily reset')}</p>
+            </div>
+            <div className="bg-[#FF9933] px-3 py-1.5 rounded-lg shrink-0">
+              <span className="text-[11px] font-bold text-white">{t('premium.getPro')}</span>
+            </div>
           </button>
         </div>
-      </div>
+      ) : (
+        /* Normal input — compact like Telegram */
+        <div className="px-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 shrink-0 py-2.5"
+          style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}>
+          <div className="flex items-center gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !isTyping && sendMessage(input)}
+              placeholder={t('aiChat.inputPlaceholder')}
+              className="flex-1 bg-gray-50 dark:bg-gray-700 dark:text-white rounded-full px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-[#FF9933]/30"
+              disabled={isTyping}
+              autoComplete="off"
+            />
+            <button
+              onClick={() => sendMessage(input)}
+              disabled={isTyping || !input.trim()}
+              className="w-10 h-10 bg-[#FF9933] text-white rounded-full flex items-center justify-center shrink-0 disabled:opacity-50 active:scale-95 transition-transform"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

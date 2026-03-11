@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.core.database import get_db
 from app.core.security import hash_password, verify_password
+from app.core.rate_limiter import limiter
 
 router = APIRouter(tags=["admin-auth"])
 
@@ -99,8 +100,18 @@ async def get_current_admin(
 
 # ── Endpoints ───────────────────────────────────────
 
+def require_admin_role(*allowed_roles: str):
+    """Dependency: require admin to have one of the specified roles."""
+    async def _check(admin: dict = Depends(get_current_admin)):
+        if admin["role"] not in allowed_roles:
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        return admin
+    return _check
+
+
 @router.post("/bootstrap")
-async def bootstrap(db: Session = Depends(get_db)):
+@limiter.limit("2/hour")
+async def bootstrap(request: Request, db: Session = Depends(get_db)):
     """Create the first owner invite. Only works when zero admins exist."""
     from app.models.admin import AdminUser, AdminInvite
 
@@ -117,7 +128,8 @@ async def bootstrap(db: Session = Depends(get_db)):
 
 
 @router.post("/register")
-async def register(body: AdminRegisterRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/hour")
+async def register(body: AdminRegisterRequest, request: Request, db: Session = Depends(get_db)):
     """Register a new admin using an invite code."""
     from app.models.admin import AdminUser, AdminInvite
 
@@ -167,7 +179,8 @@ async def register(body: AdminRegisterRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/login")
-async def login(body: AdminLoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+async def login(body: AdminLoginRequest, request: Request, db: Session = Depends(get_db)):
     """Login with username + password."""
     from app.models.admin import AdminUser
 
@@ -225,7 +238,7 @@ async def get_me(current_admin: dict = Depends(get_current_admin)):
 
 @router.get("/team")
 async def get_team(
-    current_admin: dict = Depends(get_current_admin),
+    current_admin: dict = Depends(require_admin_role("superadmin", "owner")),
     db: Session = Depends(get_db),
 ):
     """List all admin users."""
@@ -249,7 +262,7 @@ async def get_team(
 @router.post("/invites")
 async def create_invite(
     body: AdminInviteCreateRequest,
-    current_admin: dict = Depends(get_current_admin),
+    current_admin: dict = Depends(require_admin_role("superadmin", "owner")),
     db: Session = Depends(get_db),
 ):
     """Create an invite code for a new admin."""
@@ -274,7 +287,7 @@ async def create_invite(
 
 @router.get("/invites")
 async def get_invites(
-    current_admin: dict = Depends(get_current_admin),
+    current_admin: dict = Depends(require_admin_role("superadmin", "owner")),
     db: Session = Depends(get_db),
 ):
     """List all invite codes."""

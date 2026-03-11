@@ -39,10 +39,11 @@ async function request(path, options = {}) {
   }
   if (!res.ok) {
     let detail = '';
-    try { const body = await res.json(); detail = body.detail || ''; } catch {}
+    let detailObj = null;
+    try { const body = await res.json(); detailObj = body.detail; detail = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail) || ''; } catch {}
     const err = new Error(detail || `API Error: ${res.status}`);
     err.status = res.status;
-    err.detail = detail;
+    err.detail = detailObj || detail;
     throw err;
   }
   const data = await res.json();

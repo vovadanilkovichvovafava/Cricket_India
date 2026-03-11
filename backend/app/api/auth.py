@@ -1,14 +1,21 @@
 """Auth endpoints: register, login, me, referral — phone-based."""
 
+import re
+
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import hash_password, verify_password, create_access_token, get_current_user
+from app.core.rate_limiter import limiter
 from app.models import RegisterRequest, LoginRequest, AuthResponse, UserResponse, ReferralInfoResponse
 from app.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+# Allowed origins for referral links
+_ALLOWED_ORIGINS = {"https://cricketbaazi.com", "https://www.cricketbaazi.com"}
+_ORIGIN_REGEX = re.compile(r"^https://cricket-india-[a-z0-9]+\.saturn\.ac$")
 
 
 def normalize_phone(country_code: str, phone: str) -> str:
@@ -18,9 +25,31 @@ def normalize_phone(country_code: str, phone: str) -> str:
     return f"+{cc}{digits}"
 
 
+def _validate_password(password: str):
+    """Validate password strength: min 8 chars, at least one letter + one digit."""
+    if len(password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters",
+        )
+    if not re.search(r"[a-zA-Z]", password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must contain at least one letter",
+        )
+    if not re.search(r"\d", password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must contain at least one digit",
+        )
+
+
 @router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/minute")
 async def register(body: RegisterRequest, request: Request, db: Session = Depends(get_db)):
     """Register a new user with phone + password. Optionally pass ref code."""
+    _validate_password(body.password)
+
     full_phone = normalize_phone(body.country_code, body.phone)
 
     # Check if phone already taken
@@ -31,18 +60,20 @@ async def register(body: RegisterRequest, request: Request, db: Session = Depend
             detail="Phone number already registered",
         )
 
-    # Resolve referral
+    # Resolve referral (validate format: alphanumeric only)
     referred_by_id = None
     if body.ref:
-        referrer = db.query(User).filter(User.referral_code == body.ref.strip().upper()).first()
-        if referrer:
-            referred_by_id = referrer.id
+        ref_clean = re.sub(r"[^A-Z0-9]", "", body.ref.strip().upper())
+        if ref_clean:
+            referrer = db.query(User).filter(User.referral_code == ref_clean).first()
+            if referrer:
+                referred_by_id = referrer.id
 
     user = User(
         phone=full_phone,
         country_code=body.country_code.strip(),
         hashed_password=hash_password(body.password),
-        name=body.name.strip(),
+        name=body.name.strip()[:100],  # Limit name length
         referred_by=referred_by_id,
     )
     db.add(user)
@@ -64,14 +95,22 @@ async def register(body: RegisterRequest, request: Request, db: Session = Depend
 
 
 @router.post("/login", response_model=AuthResponse)
-async def login(body: LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+async def login(body: LoginRequest, request: Request, db: Session = Depends(get_db)):
     """Login with phone + password, return JWT."""
     full_phone = normalize_phone(body.country_code, body.phone)
     user = db.query(User).filter(User.phone == full_phone).first()
-    if not user or not verify_password(body.password, user.hashed_password):
+
+    # Constant-time comparison: always verify a password even if user not found
+    # This prevents timing attacks that enumerate valid phone numbers
+    _dummy_hash = "$2b$12$LJ3m4ys3Lg7E.DUMMY.HASH.TO.PREVENT.TIMING.ATTACK"
+    stored_hash = user.hashed_password if user else _dummy_hash
+    password_ok = verify_password(body.password, stored_hash)
+
+    if not user or not password_ok:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid phone or password",
+            detail="Invalid credentials",
         )
 
     token = create_access_token({"sub": user.id})
@@ -90,7 +129,12 @@ async def get_me(current_user: User = Depends(get_current_user)):
 @router.get("/referral", response_model=ReferralInfoResponse)
 async def get_referral_info(request: Request, current_user: User = Depends(get_current_user)):
     """Get user's referral code, count, and shareable link."""
-    origin = request.headers.get("origin", "https://cricketbaazi.com")
+    origin = request.headers.get("origin", "")
+
+    # Validate origin against whitelist to prevent XSS via Origin header
+    if origin not in _ALLOWED_ORIGINS and not _ORIGIN_REGEX.match(origin):
+        origin = "https://cricketbaazi.com"
+
     referral_link = f"{origin}/login?ref={current_user.referral_code}"
 
     return ReferralInfoResponse(
