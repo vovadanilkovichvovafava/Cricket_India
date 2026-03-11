@@ -393,24 +393,104 @@ class CricketDataService:
         return matches
 
     async def get_matches(self, offset: int = 0) -> list[MatchSummary]:
-        """Get upcoming/recent cricket matches."""
-        cache_key = f"matches_{offset}"
+        """Get upcoming/recent cricket matches.
+        Fetches from multiple sources: standard matches + active series matches.
+        """
+        cache_key = f"matches_enriched_{offset}"
         cached = _cache_get(cache_key)
         if cached is not None:
             return cached
 
+        # 1. Standard matches endpoint
         data = await _cricapi_request("matches", {"offset": str(offset)})
-        if not data or not data.get("data"):
-            return []
+        seen_ids: set[str] = set()
+        matches: list[MatchSummary] = []
 
-        matches = []
-        for m in data["data"]:
-            parsed = _parse_match(m)
-            if parsed:
-                matches.append(parsed)
+        if data and data.get("data"):
+            for m in data["data"]:
+                parsed = _parse_match(m)
+                if parsed and parsed.id not in seen_ids:
+                    seen_ids.add(parsed.id)
+                    matches.append(parsed)
 
+        # 2. Fetch matches from active/upcoming series (only on first page)
+        if offset == 0:
+            try:
+                series_matches = await self._get_active_series_matches()
+                for m in series_matches:
+                    if m.id not in seen_ids:
+                        seen_ids.add(m.id)
+                        matches.append(m)
+            except Exception as e:
+                logger.warning(f"Failed to fetch active series matches: {e}")
+
+        # Sort: live first, then upcoming by date, then completed
+        def sort_key(m):
+            if m.status == MatchStatus.LIVE:
+                return (0, m.date)
+            if m.status == MatchStatus.UPCOMING:
+                return (1, m.date)
+            return (2, m.date)
+
+        matches.sort(key=sort_key)
         _cache_set(cache_key, matches)
         return matches
+
+    async def _get_active_series_matches(self) -> list[MatchSummary]:
+        """Fetch matches from currently active/upcoming series.
+        Finds series starting within ±30 days and fetches their matches.
+        """
+        cache_key = "active_series_matches"
+        cached = _cache_get(cache_key)
+        if cached is not None:
+            return cached
+
+        # Get series list
+        series_data = await _cricapi_request("series", {"offset": "0"})
+        if not series_data or not series_data.get("data"):
+            return []
+
+        now = datetime.utcnow()
+        active_series_ids = []
+
+        for s in series_data["data"]:
+            start_str = s.get("startDate", "")
+            try:
+                # Parse various date formats from CricAPI
+                start = datetime.strptime(start_str, "%Y-%m-%d") if "-" in start_str else None
+                if start and abs((start - now).days) <= 30:
+                    active_series_ids.append(s.get("id"))
+            except (ValueError, TypeError):
+                continue
+
+        if not active_series_ids:
+            return []
+
+        # Fetch matches from each active series (limit to 5 series to save API calls)
+        all_matches = []
+        import asyncio
+
+        async def fetch_series(sid):
+            data = await _cricapi_request("series_info", {"id": sid})
+            if data and data.get("data", {}).get("matchList"):
+                results = []
+                for m in data["data"]["matchList"]:
+                    parsed = _parse_match(m)
+                    if parsed:
+                        results.append(parsed)
+                return results
+            return []
+
+        tasks = [fetch_series(sid) for sid in active_series_ids[:8]]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for result in results:
+            if isinstance(result, list):
+                all_matches.extend(result)
+
+        logger.info(f"Active series: {len(active_series_ids)} series, {len(all_matches)} total matches")
+        _cache_set(cache_key, all_matches)
+        return all_matches
 
     async def get_match_detail(self, match_id: str) -> Optional[MatchDetail]:
         """Get detailed match info from CricAPI."""
