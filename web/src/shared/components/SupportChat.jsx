@@ -110,7 +110,7 @@ export default function SupportChat() {
 
           {/* Chat panel */}
           <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl shadow-2xl flex flex-col animate-slide-up"
-               style={{ maxHeight: '85dvh', height: '85dvh' }}>
+               style={{ maxHeight: '80dvh', height: '80dvh', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
 
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700 shrink-0">
@@ -219,29 +219,29 @@ export default function SupportChat() {
               <div ref={messagesEnd} />
             </div>
 
-            {/* Input */}
-            <form onSubmit={handleSubmit} className="px-4 py-3 border-t border-gray-100 dark:border-gray-700 shrink-0 safe-bottom">
-              <div className="flex items-center gap-2">
+            {/* Input — always visible at bottom */}
+            <div className="shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-600 px-4 py-3">
+              <form onSubmit={handleSubmit} className="flex items-center gap-2">
                 <input
                   ref={inputRef}
                   type="text"
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   placeholder={t('support.placeholder')}
-                  className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0B1E4D]/20"
+                  className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF9933]/30 border border-gray-200 dark:border-gray-600"
                   disabled={loading}
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || loading}
-                  className="w-10 h-10 bg-[#0B1E4D] text-white rounded-full flex items-center justify-center disabled:opacity-30 active:scale-90 transition-transform shrink-0"
+                  className="w-10 h-10 bg-[#FF9933] text-white rounded-full flex items-center justify-center disabled:opacity-30 active:scale-90 transition-transform shrink-0 shadow-md"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
                   </svg>
                 </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
         </div>
       )}

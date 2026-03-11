@@ -1,9 +1,10 @@
 #!/bin/sh
 # Inject runtime env vars into config.js before starting nginx
+# This script is placed in /docker-entrypoint.d/ and runs automatically
 
 CONFIG_FILE="/usr/share/nginx/html/config.js"
 
-# BACKEND_URL from Coolify (e.g. https://cricket-india-iwrb4s.saturn.ac)
+# BACKEND_URL from Coolify/Saturn (e.g. https://cricket-india-iwrb4s.saturn.ac)
 API_URL="${BACKEND_URL:+${BACKEND_URL}/api/v1}"
 
 cat > "$CONFIG_FILE" <<EOF
@@ -21,5 +22,3 @@ window.__APP_CONFIG__ = {
 EOF
 
 echo "Config injected: API_URL=${API_URL:-[not set]}"
-
-exec nginx -g 'daemon off;'
