@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 
-from app.models import MatchPrediction, ChatRequest, ChatResponse, PredictionStatsResponse
+from app.models import MatchPrediction, MatchStatus, ChatRequest, ChatResponse, PredictionStatsResponse
 from app.models.prediction_history import PredictionHistory
 from app.services.cricket_api import cricket_service
 from app.services.ai_analyzer import analyze_match, chat_about_cricket
@@ -55,19 +55,19 @@ async def _verify_pending(db: Session):
     for record in pending:
         try:
             match = await cricket_service.get_match_detail(record.match_id)
-            if not match or match.get("status") != "completed":
+            if not match or match.status != MatchStatus.COMPLETED:
                 continue
             # Try to extract winner from status_text (e.g., "CSK won by 5 wickets")
-            status_text = (match.get("status_text") or match.get("statusText") or "").lower()
+            status_text = (match.status_text or "").lower()
             winner = None
             for team_code in [record.home_team, record.away_team]:
                 if team_code.lower() in status_text and "won" in status_text:
                     winner = team_code
                     break
             if not winner:
-                # Try team names from match
-                home_name = match.get("home_team", {}).get("name", "") if isinstance(match.get("home_team"), dict) else ""
-                away_name = match.get("away_team", {}).get("name", "") if isinstance(match.get("away_team"), dict) else ""
+                # Try team names from match object
+                home_name = match.home_team.name if match.home_team else ""
+                away_name = match.away_team.name if match.away_team else ""
                 if home_name.lower() in status_text and "won" in status_text:
                     winner = record.home_team
                 elif away_name.lower() in status_text and "won" in status_text:

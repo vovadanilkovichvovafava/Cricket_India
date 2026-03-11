@@ -28,14 +28,7 @@ const LIVE_WINNERS = [
   { name: 'Ritu G.', pick: 'PBKS to win', result: 'correct', amount: '+₹4,500' },
 ];
 
-// Default AI results (shown while loading or if no real data)
-const DEFAULT_AI_RESULTS = [
-  { match: 'CSK vs MI', pick: 'CSK', result: true, odds: '1.85' },
-  { match: 'RCB vs KKR', pick: 'KKR', result: true, odds: '2.10' },
-  { match: 'DC vs SRH', pick: 'SRH', result: true, odds: '1.95' },
-  { match: 'RR vs PBKS', pick: 'RR', result: false, odds: '1.70' },
-  { match: 'LSG vs GT', pick: 'LSG', result: true, odds: '2.25' },
-];
+// No mock AI results — only show real prediction stats from backend
 
 export default function Home() {
   const navigate = useNavigate();
@@ -238,44 +231,33 @@ export default function Home() {
                   <p className="text-[10px] text-gray-400">{t('home.aiResultsSubtitle')}</p>
                 </div>
               </div>
-              {aiStats && aiStats.total_predictions > 0 ? (
+              {aiStats && aiStats.total_predictions > 0 && (
                 <div className="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-lg">
                   <span className="text-sm font-black">{aiStats.accuracy_pct}%</span>
-                  <span className="text-[10px] ml-0.5">{t('home.aiResultsCorrect')}</span>
-                </div>
-              ) : (
-                <div className="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg">
-                  <span className="text-sm font-black">{DEFAULT_AI_RESULTS.filter(r => r.result).length}/{DEFAULT_AI_RESULTS.length}</span>
                   <span className="text-[10px] ml-0.5">{t('home.aiResultsCorrect')}</span>
                 </div>
               )}
             </div>
             <div className="space-y-1.5">
-              {(aiStats?.recent?.length > 0 ? aiStats.recent.slice(0, 5) : DEFAULT_AI_RESULTS).map((r, i) => {
-                const isReal = aiStats?.recent?.length > 0;
-                return (
+              {aiStats?.recent?.length > 0 ? aiStats.recent.slice(0, 5).map((r, i) => (
                   <div key={i} className="flex items-center gap-2 bg-white/60 dark:bg-white/5 rounded-lg px-3 py-1.5">
-                    {isReal
-                      ? (r.result === 'correct'
-                          ? <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                          : r.result === 'incorrect'
-                            ? <XCircleIcon className="w-4 h-4 text-red-500" />
-                            : <HourglassIcon className="w-4 h-4 text-amber-500" />)
-                      : (r.result
-                          ? <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                          : <XCircleIcon className="w-4 h-4 text-red-500" />)
+                    {r.result === 'correct'
+                      ? <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                      : r.result === 'incorrect'
+                        ? <XCircleIcon className="w-4 h-4 text-red-500" />
+                        : <HourglassIcon className="w-4 h-4 text-amber-500" />
                     }
                     <span className="text-[11px] text-gray-700 dark:text-gray-300 font-medium flex-1">
-                      {isReal ? `${r.home} vs ${r.away}` : r.match}
+                      {r.home} vs {r.away}
                     </span>
-                    <span className="text-[11px] text-gray-500 dark:text-gray-400">{isReal ? r.pick : r.pick}</span>
-                    {isReal
-                      ? <span className="text-[10px] text-gray-400 font-mono">{r.confidence}%</span>
-                      : <span className="text-[10px] text-gray-400 font-mono">@{r.odds}</span>
-                    }
+                    <span className="text-[11px] text-gray-500 dark:text-gray-400">{r.pick}</span>
+                    <span className="text-[10px] text-gray-400 font-mono">{r.confidence}%</span>
                   </div>
-                );
-              })}
+                )) : (
+                  <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-2">
+                    {t('home.noAiResults', 'No predictions yet — try AI Chat!')}
+                  </p>
+                )}
             </div>
             <button
               onClick={() => navigate('/ai-chat')}

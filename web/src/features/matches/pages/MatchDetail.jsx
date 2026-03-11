@@ -37,82 +37,7 @@ function getTeamInfo(match, side) {
   };
 }
 
-// Мок-данные для автономной работы
-const MOCK_MATCHES = {
-  1: {
-    id: 1, home: 'CSK', away: 'MI', date: '2026-03-28T19:30:00+05:30',
-    venue: 'MA Chidambaram Stadium', city: 'Chennai', status: 'upcoming',
-    odds: { home: 1.85, away: 2.05, draw: null },
-    venueStats: { matches: 98, avgFirst: 172, avgSecond: 158, tossWinBat: 55, chaseWin: 42 },
-    h2h: { total: 36, homeWins: 20, awayWins: 16, lastFive: ['CSK', 'MI', 'CSK', 'CSK', 'MI'] },
-    lineups: {
-      home: ['MS Dhoni (wk)', 'Ruturaj Gaikwad (c)', 'Devon Conway', 'Moeen Ali', 'Shivam Dube', 'Ravindra Jadeja', 'Dwaine Pretorius', 'Deepak Chahar', 'Tushar Deshpande', 'Maheesh Theekshana', 'Matheesha Pathirana'],
-      away: ['Rohit Sharma (c)', 'Ishan Kishan (wk)', 'Suryakumar Yadav', 'Tilak Varma', 'Hardik Pandya', 'Tim David', 'Romario Shepherd', 'Piyush Chawla', 'Jasprit Bumrah', 'Jofra Archer', 'Akash Madhwal'],
-    },
-    oddsComparison: [
-      { bookmaker: 'Bet365', home: 1.85, away: 2.05 },
-      { bookmaker: '1xBet', home: 1.83, away: 2.08 },
-      { bookmaker: 'Betway', home: 1.87, away: 2.02 },
-      { bookmaker: 'Parimatch', home: 1.82, away: 2.10 },
-      { bookmaker: '10CRIC', home: 1.84, away: 2.06 },
-    ],
-  },
-  2: {
-    id: 2, home: 'RCB', away: 'KKR', date: '2026-03-29T15:30:00+05:30',
-    venue: 'M Chinnaswamy Stadium', city: 'Bengaluru', status: 'upcoming',
-    odds: { home: 2.10, away: 1.80 },
-    venueStats: { matches: 92, avgFirst: 183, avgSecond: 168, tossWinBat: 48, chaseWin: 50 },
-    h2h: { total: 32, homeWins: 12, awayWins: 20, lastFive: ['KKR', 'KKR', 'RCB', 'KKR', 'RCB'] },
-    lineups: {
-      home: ['Virat Kohli', 'Faf du Plessis (c)', 'Rajat Patidar', 'Glenn Maxwell', 'Dinesh Karthik (wk)', 'Shahbaz Ahmed', 'Wanindu Hasaranga', 'Harshal Patel', 'Mohammed Siraj', 'Josh Hazlewood', 'Yash Dayal'],
-      away: ['Venkatesh Iyer', 'Phil Salt (wk)', 'Shreyas Iyer (c)', 'Nitish Rana', 'Andre Russell', 'Rinku Singh', 'Sunil Narine', 'Varun Chakravarthy', 'Mitchell Starc', 'Harshit Rana', 'Vaibhav Arora'],
-    },
-    oddsComparison: [
-      { bookmaker: 'Bet365', home: 2.10, away: 1.80 },
-      { bookmaker: '1xBet', home: 2.12, away: 1.78 },
-      { bookmaker: 'Betway', home: 2.08, away: 1.82 },
-      { bookmaker: 'Parimatch', home: 2.15, away: 1.76 },
-      { bookmaker: '10CRIC', home: 2.10, away: 1.80 },
-    ],
-  },
-};
-
-// Генерация мока для неизвестного id
-function getDefaultMock(id) {
-  return {
-    id: Number(id), home: 'CSK', away: 'MI', date: '2026-03-28T19:30:00+05:30',
-    venue: 'MA Chidambaram Stadium', city: 'Chennai', status: 'upcoming',
-    odds: { home: 1.85, away: 2.05 },
-    venueStats: { matches: 98, avgFirst: 172, avgSecond: 158, tossWinBat: 55, chaseWin: 42 },
-    h2h: { total: 36, homeWins: 20, awayWins: 16, lastFive: ['CSK', 'MI', 'CSK', 'CSK', 'MI'] },
-    lineups: {
-      home: ['Ruturaj Gaikwad (c)', 'Devon Conway', 'Moeen Ali', 'Shivam Dube', 'Ravindra Jadeja', 'MS Dhoni (wk)', 'Dwaine Pretorius', 'Deepak Chahar', 'Tushar Deshpande', 'Maheesh Theekshana', 'Matheesha Pathirana'],
-      away: ['Rohit Sharma (c)', 'Ishan Kishan (wk)', 'Suryakumar Yadav', 'Tilak Varma', 'Hardik Pandya', 'Tim David', 'Romario Shepherd', 'Piyush Chawla', 'Jasprit Bumrah', 'Jofra Archer', 'Akash Madhwal'],
-    },
-    oddsComparison: [
-      { bookmaker: 'Bet365', home: 1.85, away: 2.05 },
-      { bookmaker: '1xBet', home: 1.83, away: 2.08 },
-      { bookmaker: 'Betway', home: 1.87, away: 2.02 },
-    ],
-  };
-}
-
-const MOCK_PREDICTION = {
-  winner: 'CSK',
-  confidence: 62,
-  analysis: 'CSK have a strong home record at Chepauk with a 68% win rate. The pitch is expected to assist spinners in the middle overs, which suits CSK\'s bowling attack. MI\'s batting lineup is strong but they historically struggle in Chennai. The toss could be crucial — batting first under lights may be the way to go.',
-  factors: [
-    { label: 'Home advantage', impact: 'positive', detail: 'CSK have won 68% of matches at MA Chidambaram Stadium' },
-    { label: 'Head-to-head record', impact: 'positive', detail: 'CSK lead the overall H2H 20-16 against MI' },
-    { label: 'Spin conditions', impact: 'positive', detail: 'Chepauk pitch assists spinners — suits CSK bowling attack' },
-    { label: 'MI away form', impact: 'negative', detail: 'MI have struggled away from Wankhede this season' },
-  ],
-  valueBets: [
-    { market: 'Match Winner', pick: 'CSK to Win', odds: 1.85, risk: 'Low', value: 'CSK at 1.85 offers good value — our model gives them 62% (implied odds: 54%). 8% edge makes this a solid low-risk bet.', confidence: 'High' },
-    { market: 'Top Batsman', pick: 'Ruturaj Gaikwad', odds: 4.50, risk: 'High', value: 'Gaikwad averages 52 at home this season with a strike rate of 142. At 4.50, this offers massive value for the in-form opener.', confidence: 'Medium' },
-    { market: 'Total Runs Over/Under', pick: 'Over 340.5', odds: 1.90, risk: 'Medium', value: 'Chepauk has averaged 356 runs in T20 matches this year. Over 340.5 at 1.90 is well-priced for this high-scoring venue.', confidence: 'Medium' },
-  ],
-};
+// No mock data — all match data comes from CricAPI
 
 const TAB_KEYS = [
   { key: 'overview', labelKey: 'matchDetail.tabs.overview' },
@@ -1557,8 +1482,9 @@ export default function MatchDetail() {
       try {
         const data = await api.getMatch(id);
         setMatch(data);
-      } catch {
-        setMatch(MOCK_MATCHES[id] || getDefaultMock(id));
+      } catch (err) {
+        console.error('Failed to fetch match:', err);
+        setMatch(null);
       } finally {
         setLoading(false);
       }
@@ -1624,10 +1550,9 @@ export default function MatchDetail() {
     try {
       const data = await api.getPrediction(id);
       setPrediction(data);
-    } catch {
-      // Используем мок для демонстрации
-      await new Promise(r => setTimeout(r, 1500));
-      setPrediction(MOCK_PREDICTION);
+    } catch (err) {
+      console.error('Failed to fetch prediction:', err);
+      setPrediction(null);
     } finally {
       setPredictionLoading(false);
     }

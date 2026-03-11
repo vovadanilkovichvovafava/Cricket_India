@@ -180,27 +180,7 @@ function ValueBetCards({ bets }) {
   );
 }
 
-// --- Fallback bets for non-API responses ---
-function generateFallbackBets(userMessage) {
-  const lower = userMessage.toLowerCase();
-  if (lower.includes('csk') || lower.includes('chennai'))
-    return [
-      { market: 'Match Winner', selection: 'CSK to Win', odds: 1.85, confidence: 0.65, risk: 'Low', reasoning: 'Strong home record at Chepauk' },
-      { market: 'Top Batsman', selection: 'Ruturaj Gaikwad', odds: 5.00, confidence: 0.50, risk: 'Medium', reasoning: 'CSK captain in excellent form' },
-      { market: 'Total Sixes', selection: 'Over 12.5', odds: 1.80, confidence: 0.55, risk: 'Medium', reasoning: 'CSK middle order hits big at home' },
-    ];
-  if (lower.includes('mi') || lower.includes('mumbai'))
-    return [
-      { market: 'Match Winner', selection: 'MI to Win', odds: 1.90, confidence: 0.60, risk: 'Low', reasoning: 'Mumbai Indians strong squad depth' },
-      { market: 'Top Bowler', selection: 'Jasprit Bumrah', odds: 3.50, confidence: 0.55, risk: 'Medium', reasoning: 'Best death bowler in IPL history' },
-      { market: 'First Innings Score', selection: 'Over 170.5', odds: 1.85, confidence: 0.52, risk: 'Medium', reasoning: 'Wankhede favors high-scoring games' },
-    ];
-  return [
-    { market: 'Match Winner', selection: 'CSK to Win', odds: 1.85, confidence: 0.62, risk: 'Low', reasoning: 'Strong home advantage and consistent form' },
-    { market: 'Top Batsman', selection: 'Virat Kohli', odds: 4.50, confidence: 0.45, risk: 'Medium', reasoning: 'In excellent batting form this season' },
-    { market: 'Total Runs O/U', selection: 'Over 340.5', odds: 1.90, confidence: 0.55, risk: 'Medium', reasoning: 'High-scoring venue with flat pitch' },
-  ];
-}
+// No fallback bets — only real AI-generated bets from Claude API
 
 // --- Main AIChat ---
 export default function AIChat() {
@@ -280,14 +260,14 @@ export default function AIChat() {
         suggestions: response.follow_ups || generateFollowUps(text),
         valueBets: response.value_bets || [],
       }]);
-    } catch {
-      await new Promise(r => setTimeout(r, 1000 + Math.random() * 1000));
+    } catch (err) {
+      console.error('AI Chat error:', err);
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
         role: 'assistant',
         content: getFallbackResponse(text),
         suggestions: generateFollowUps(text),
-        valueBets: generateFallbackBets(text),
+        valueBets: [],
       }]);
     } finally {
       setIsTyping(false);
