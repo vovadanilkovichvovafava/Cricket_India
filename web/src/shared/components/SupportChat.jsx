@@ -23,10 +23,6 @@ export default function SupportChat() {
   const messagesEnd = useRef(null);
   const inputRef = useRef(null);
 
-  // Hide on login/onboarding pages
-  const hiddenPaths = ['/login', '/onboarding'];
-  if (hiddenPaths.includes(location.pathname)) return null;
-
   const scrollToBottom = () => {
     messagesEnd.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -46,6 +42,10 @@ export default function SupportChat() {
       setTimeout(() => inputRef.current?.focus(), 300);
     }
   }, [open]);
+
+  // Hide on login/onboarding pages (AFTER all hooks to respect Rules of Hooks)
+  const hiddenPaths = ['/login', '/onboarding'];
+  if (hiddenPaths.includes(location.pathname)) return null;
 
   const quickQuestions = [
     { key: 'howApp', label: t('support.quick.howApp') },
