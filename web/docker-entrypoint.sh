@@ -4,8 +4,10 @@
 
 CONFIG_FILE="/usr/share/nginx/html/config.js"
 
-# BACKEND_URL from Coolify/Saturn (e.g. https://cricket-india-iwrb4s.saturn.ac)
-API_URL="${BACKEND_URL:+${BACKEND_URL}/api/v1}"
+# PUBLIC_API_URL — public backend URL (use this to avoid Coolify overriding BACKEND_URL)
+# Fallback chain: PUBLIC_API_URL → BACKEND_URL → empty
+BACKEND="${PUBLIC_API_URL:-${BACKEND_URL:-}}"
+API_URL="${BACKEND:+${BACKEND}/api/v1}"
 
 cat > "$CONFIG_FILE" <<EOF
 window.__APP_CONFIG__ = {
