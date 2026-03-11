@@ -117,7 +117,16 @@ export default function LoginPage() {
         navigate('/', { replace: true });
       }
     } catch (err) {
-      setError(isRegister ? t('auth.registerError') : t('auth.loginError'));
+      // Show actual backend error if available, fallback to generic message
+      const msg = err?.detail || err?.message || '';
+      if (msg.includes('409') || msg.includes('already')) {
+        setError(t('auth.phoneAlreadyTaken'));
+      } else if (msg.includes('401') || msg.includes('Invalid')) {
+        setError(t('auth.loginError'));
+      } else {
+        setError(isRegister ? t('auth.registerError') : t('auth.loginError'));
+      }
+      console.error('Auth error:', msg);
     } finally {
       setLoading(false);
     }

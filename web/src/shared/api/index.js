@@ -37,7 +37,14 @@ async function request(path, options = {}) {
     window.location.href = '/login';
     throw new Error('Unauthorized');
   }
-  if (!res.ok) throw new Error(`API Error: ${res.status}`);
+  if (!res.ok) {
+    let detail = '';
+    try { const body = await res.json(); detail = body.detail || ''; } catch {}
+    const err = new Error(detail || `API Error: ${res.status}`);
+    err.status = res.status;
+    err.detail = detail;
+    throw err;
+  }
   const data = await res.json();
 
   if (isGet) setCache(path, data);
