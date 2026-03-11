@@ -1,0 +1,335 @@
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { useAdminAuth } from '../context/AdminAuthContext'
+import { adminApi } from '../api'
+
+function StatCard({ label, value, sub, subColor, color = 'blue', icon }) {
+  const colors = {
+    blue: 'from-blue-600/20 to-blue-600/5 border-blue-500/20',
+    green: 'from-green-600/20 to-green-600/5 border-green-500/20',
+    purple: 'from-purple-600/20 to-purple-600/5 border-purple-500/20',
+    amber: 'from-amber-600/20 to-amber-600/5 border-amber-500/20',
+    cyan: 'from-cyan-600/20 to-cyan-600/5 border-cyan-500/20',
+    rose: 'from-rose-600/20 to-rose-600/5 border-rose-500/20',
+  }
+  const textColors = {
+    blue: 'text-blue-400', green: 'text-green-400', purple: 'text-purple-400',
+    amber: 'text-amber-400', cyan: 'text-cyan-400', rose: 'text-rose-400',
+  }
+  const subClr = subColor === 'green' ? 'text-emerald-400' : subColor === 'amber' ? 'text-amber-400' : 'text-slate-500'
+
+  return (
+    <div className={`bg-gradient-to-br ${colors[color]} border rounded-xl p-4`}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs text-slate-400 font-medium">{label}</p>
+        <span className={textColors[color]}>{icon}</span>
+      </div>
+      <p className="text-2xl font-bold text-slate-100">{value}</p>
+      {sub && <p className={`text-[11px] mt-1 ${subClr}`}>{sub}</p>}
+    </div>
+  )
+}
+
+function BarChart({ data, color = 'blue' }) {
+  if (!data.length) return <p className="text-xs text-slate-600 text-center py-6">No data</p>
+  const items = data.slice(-14)
+  const max = Math.max(...items.map(d => d.count), 1)
+  const yTicks = [max, Math.round(max * 0.66), Math.round(max * 0.33), 0]
+  const barColor = color === 'green' ? 'bg-emerald-500/50 hover:bg-emerald-400/70' : 'bg-blue-500/50 hover:bg-blue-400/70'
+
+  return (
+    <div className="flex gap-0">
+      <div className="flex flex-col justify-between h-32 pr-2 shrink-0">
+        {yTicks.map((v, i) => (
+          <span key={i} className="text-[9px] text-slate-500 font-mono leading-none text-right min-w-[24px]">{v}</span>
+        ))}
+      </div>
+      <div className="flex-1 flex flex-col">
+        <div className="flex items-end gap-[3px] h-32 border-l border-b border-slate-700/50 pl-1 pb-1">
+          {items.map((d, i) => (
+            <div
+              key={i}
+              className={`flex-1 ${barColor} rounded-t min-w-[6px] transition-all relative group`}
+              style={{ height: `${Math.max((d.count / max) * 100, 3)}%` }}
+            >
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-800 text-[9px] text-slate-200 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 font-mono">
+                {d.count}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-between mt-1.5 pl-1">
+          {items.map((d, i) => {
+            const show = i === 0 || i === items.length - 1 || i % 3 === 0
+            const label = d.date ? d.date.slice(5) : ''
+            return (
+              <span key={i} className="flex-1 text-center text-[8px] text-slate-500 font-mono">
+                {show ? label : ''}
+              </span>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function AdminDashboard() {
+  const { admin } = useAdminAuth()
+  const [overview, setOverview] = useState(null)
+  const [usersStats, setUsersStats] = useState(null)
+  const [predStats, setPredStats] = useState(null)
+  const [onlineHistory, setOnlineHistory] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      adminApi.getOverview().catch(() => null),
+      adminApi.getUsersStats().catch(() => null),
+      adminApi.getPredictionsStats().catch(() => null),
+      adminApi.getOnlineHistory().catch(() => null),
+    ]).then(([ov, us, ps, oh]) => {
+      setOverview(ov)
+      setUsersStats(us)
+      setPredStats(ps)
+      setOnlineHistory(oh)
+      setLoading(false)
+    })
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  const o = overview || { users: {}, predictions: {}, support_sessions: 0, cricket_api: {} }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-xl font-semibold">Dashboard</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Welcome back, <span className="text-slate-300">{admin?.name}</span>
+        </p>
+      </div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+        <StatCard
+          label="Total Users"
+          value={(o.users.total || 0).toLocaleString()}
+          sub={`+${o.users.new_today || 0} today`}
+          subColor={o.users.new_today > 0 ? 'green' : undefined}
+          color="blue"
+          icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>}
+        />
+        <StatCard
+          label="PRO Users"
+          value={(o.users.pro || 0).toLocaleString()}
+          sub={o.users.pro_new_today > 0 ? `+${o.users.pro_new_today} today` : 'No new today'}
+          subColor={o.users.pro_new_today > 0 ? 'green' : undefined}
+          color="purple"
+          icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>}
+        />
+        <StatCard
+          label="Online Users"
+          value={(o.users.online || 0).toLocaleString()}
+          sub="Active last 15 min"
+          color="cyan"
+          icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/></svg>}
+        />
+        <StatCard
+          label="Predictions"
+          value={(o.predictions.total || 0).toLocaleString()}
+          sub={`+${o.predictions.today || 0} today · ${o.predictions.accuracy || 0}% acc`}
+          subColor={o.predictions.today > 0 ? 'green' : undefined}
+          color="green"
+          icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75z"/></svg>}
+        />
+        <StatCard
+          label="Support Sessions"
+          value={(o.support_sessions || 0).toLocaleString()}
+          sub={o.support_sessions_today > 0 ? `+${o.support_sessions_today} today` : 'None today'}
+          subColor={o.support_sessions_today > 0 ? 'amber' : undefined}
+          color="rose"
+          icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.712 4.33a9.027 9.027 0 011.652 1.306c.51.51.944 1.064 1.306 1.652M16.712 4.33l-3.448 4.138m3.448-4.138a9.014 9.014 0 00-9.424 0M19.67 7.288l-4.138 3.448m4.138-3.448a9.014 9.014 0 010 9.424m-4.138-5.976a3.736 3.736 0 00-.88-1.388 3.737 3.737 0 00-1.388-.88m2.268 2.268a3.765 3.765 0 010 2.528m-2.268-4.796l-3.448 4.138m3.448-4.138a3.736 3.736 0 00-5.528 0m2.28 4.138L7.288 19.67m0 0a9.024 9.024 0 01-1.652-1.306 9.027 9.027 0 01-1.306-1.652m4.138-3.448a3.765 3.765 0 010 2.528M4.33 16.712a9.014 9.014 0 010-9.424m4.138 5.976a3.765 3.765 0 01-2.528 0"/></svg>}
+        />
+        <StatCard
+          label="Cricket API"
+          value={(o.cricket_api?.used || 0).toLocaleString()}
+          sub={o.cricket_api?.limit ? `Limit: ${o.cricket_api.limit.toLocaleString()}/day` : 'No key set'}
+          subColor="green"
+          color="amber"
+          icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>}
+        />
+      </div>
+
+      {/* Charts row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-sm font-semibold">User Registrations</h3>
+              <p className="text-[11px] text-slate-500">Last 14 days</p>
+            </div>
+            <Link to="/admin/users" className="text-[11px] text-blue-400 hover:text-blue-300">View all</Link>
+          </div>
+          <BarChart data={usersStats?.daily_registrations || []} color="blue" />
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-sm font-semibold">Daily Predictions</h3>
+              <p className="text-[11px] text-slate-500">Last 14 days</p>
+            </div>
+            <Link to="/admin/predictions" className="text-[11px] text-blue-400 hover:text-blue-300">View all</Link>
+          </div>
+          <BarChart data={predStats?.daily_predictions || []} color="green" />
+        </div>
+      </div>
+
+      {/* Online 24h */}
+      {onlineHistory?.hours?.length > 0 && (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-sm font-semibold">Online Users — Last 24h</h3>
+              <p className="text-[11px] text-slate-500">
+                Peak: <span className="text-cyan-400 font-mono font-semibold">{onlineHistory.peak_users}</span> at <span className="text-slate-300 font-mono">{onlineHistory.peak_hour || '—'}</span>
+                {' · '}Now: <span className="text-green-400 font-mono font-semibold">{onlineHistory.current_online}</span>
+              </p>
+            </div>
+          </div>
+          <div className="flex items-end gap-[2px] h-24 mb-2">
+            {onlineHistory.hours.map((h, i) => {
+              const max = onlineHistory.peak_users || 1
+              const pct = Math.max((h.unique_users / max) * 100, 3)
+              const isPeak = h.unique_users === onlineHistory.peak_users
+              return (
+                <div
+                  key={i}
+                  className={`flex-1 rounded-t min-w-[4px] transition-all relative group ${isPeak ? 'bg-cyan-400' : 'bg-cyan-500/40 hover:bg-cyan-400/60'}`}
+                  style={{ height: `${pct}%` }}
+                >
+                  <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-800 text-[9px] text-slate-200 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 font-mono">
+                    {h.hour}: {h.unique_users} users
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex gap-[2px]">
+            {onlineHistory.hours.map((h, i) => (
+              <div key={i} className="flex-1 text-center">
+                {i % 3 === 0 && <span className="text-[8px] text-slate-500 font-mono">{h.hour}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Bottom: Countries */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <h3 className="text-sm font-semibold mb-3">Top Countries</h3>
+          <div className="space-y-2.5">
+            {(() => {
+              const countries = (usersStats?.by_country || []).slice(0, 6)
+              const maxCount = countries[0]?.count || 1
+              return countries.map((c, i) => (
+                <div key={c.country}>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-500 w-4">{i + 1}</span>
+                      <span className="text-sm">{c.country || 'Unknown'}</span>
+                    </div>
+                    <span className="text-xs text-slate-400 font-mono">{c.count}</span>
+                  </div>
+                  <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden ml-6">
+                    <div className="h-full bg-blue-500/50 rounded-full transition-all" style={{ width: `${Math.round((c.count / maxCount) * 100)}%` }} />
+                  </div>
+                </div>
+              ))
+            })()}
+            {!usersStats?.by_country?.length && <p className="text-xs text-slate-600 text-center py-4">No data</p>}
+          </div>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <h3 className="text-sm font-semibold mb-3">Prediction Accuracy</h3>
+          <div className="space-y-3">
+            {predStats?.confidence_distribution && (
+              <>
+                {[
+                  { label: 'High Confidence (70%+)', value: predStats.confidence_distribution.high, color: 'bg-green-500' },
+                  { label: 'Medium (50-70%)', value: predStats.confidence_distribution.medium, color: 'bg-amber-500' },
+                  { label: 'Low (<50%)', value: predStats.confidence_distribution.low, color: 'bg-red-500' },
+                ].map(item => {
+                  const total = (predStats.confidence_distribution.high + predStats.confidence_distribution.medium + predStats.confidence_distribution.low) || 1
+                  const pct = Math.round((item.value / total) * 100)
+                  return (
+                    <div key={item.label}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-slate-300">{item.label}</span>
+                        <span className="text-xs text-slate-400 font-mono">{item.value} ({pct}%)</span>
+                      </div>
+                      <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div className={`h-full ${item.color}/50 rounded-full`} style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </>
+            )}
+            <div className="pt-2 border-t border-slate-800">
+              <p className="text-xs text-slate-500">
+                Overall: <span className="text-green-400 font-semibold">{predStats?.accuracy || 0}%</span> ({predStats?.correct || 0}/{predStats?.verified || 0})
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <h3 className="text-sm font-semibold mb-3">Quick Stats</h3>
+          <div className="space-y-3">
+            {[
+              { label: 'AI Chats Today', value: o.ai_chats_today || 0, color: 'text-blue-400' },
+              { label: 'Total Predictions', value: o.predictions.total || 0, color: 'text-green-400' },
+              { label: 'Verified', value: o.predictions.verified || 0, color: 'text-amber-400' },
+              { label: 'Pending', value: (o.predictions.total || 0) - (o.predictions.verified || 0), color: 'text-slate-400' },
+            ].map(item => (
+              <div key={item.label} className="flex items-center justify-between py-1.5 border-b border-slate-800/50">
+                <span className="text-xs text-slate-400">{item.label}</span>
+                <span className={`text-sm font-bold font-mono ${item.color}`}>{item.value.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Quick links */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { to: '/admin/users', label: 'Manage Users', desc: 'View & search users' },
+          { to: '/admin/predictions', label: 'Analytics', desc: 'Prediction accuracy' },
+          { to: '/admin/chats', label: 'Chats', desc: 'Support & AI conversations' },
+          { to: '/admin/team', label: 'Team', desc: 'Manage admin access' },
+        ].map(item => (
+          <Link
+            key={item.to}
+            to={item.to}
+            className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors group"
+          >
+            <p className="text-sm font-medium group-hover:text-blue-400 transition-colors">{item.label}</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">{item.desc}</p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}

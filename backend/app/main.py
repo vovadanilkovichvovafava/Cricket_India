@@ -5,6 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.api.router import api_router
+from app.api.admin_auth import router as admin_auth_router
+from app.api.admin_stats import router as admin_stats_router
 from app.core.database import init_db
 
 
@@ -35,6 +37,10 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+
+# Admin panel routes (separate auth)
+app.include_router(admin_auth_router, prefix=settings.API_V1_PREFIX + "/admin/auth", tags=["admin"])
+app.include_router(admin_stats_router, prefix=settings.API_V1_PREFIX + "/admin/stats", tags=["admin-stats"])
 
 
 @app.get("/", tags=["root"])

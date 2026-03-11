@@ -1,0 +1,82 @@
+import { ENV } from '../../shared/config/env'
+
+const API_BASE = ENV.API_URL + '/admin'
+
+function getToken() {
+  try { return localStorage.getItem('admin_token') } catch { return null }
+}
+
+function getRefreshToken() {
+  try { return localStorage.getItem('admin_refresh_token') } catch { return null }
+}
+
+export function setTokens(access, refresh) {
+  localStorage.setItem('admin_token', access)
+  localStorage.setItem('admin_refresh_token', refresh)
+}
+
+export function clearTokens() {
+  localStorage.removeItem('admin_token')
+  localStorage.removeItem('admin_refresh_token')
+}
+
+async function request(path, options = {}) {
+  const token = getToken()
+  const headers = { 'Content-Type': 'application/json', ...options.headers }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  let res = await fetch(`${API_BASE}${path}`, { ...options, headers })
+
+  // Auto-refresh on 401
+  if (res.status === 401 && getRefreshToken()) {
+    const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: getRefreshToken() }),
+    })
+    if (refreshRes.ok) {
+      const data = await refreshRes.json()
+      setTokens(data.access_token, data.refresh_token)
+      headers['Authorization'] = `Bearer ${data.access_token}`
+      res = await fetch(`${API_BASE}${path}`, { ...options, headers })
+    } else {
+      clearTokens()
+      throw new Error('Session expired')
+    }
+  }
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }))
+    throw new Error(err.detail || 'Request failed')
+  }
+  return res.json()
+}
+
+export const adminApi = {
+  // Auth
+  login: (username, password) =>
+    request('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
+  register: (invite_code, username, password, name) =>
+    request('/auth/register', { method: 'POST', body: JSON.stringify({ invite_code, username, password, name }) }),
+  me: () => request('/auth/me'),
+  getTeam: () => request('/auth/team'),
+  createInvite: (role = 'admin', expires_hours = 72) =>
+    request('/auth/invites', { method: 'POST', body: JSON.stringify({ role, expires_hours }) }),
+  getInvites: () => request('/auth/invites'),
+
+  // Stats
+  getOverview: () => request('/stats/overview'),
+  getOnlineHistory: () => request('/stats/online-history'),
+  getUsersStats: () => request('/stats/users'),
+  searchUsers: (q = '', status = '', sort = 'created_at', page = 1) =>
+    request(`/stats/users/search?q=${encodeURIComponent(q)}&status=${status}&sort=${sort}&page=${page}`),
+  getUserProfile: (userId) => request(`/stats/users/${userId}/profile`),
+  getPredictionsStats: () => request('/stats/predictions'),
+  getSupportStats: () => request('/stats/support'),
+  getSupportSessions: (limit = 30, offset = 0) =>
+    request(`/stats/chats/support-sessions?limit=${limit}&offset=${offset}`),
+  getSupportSessionMessages: (sessionId) =>
+    request(`/stats/chats/support-sessions/${sessionId}`),
+  getMLStats: () => request('/stats/ml'),
+  getTrafficStats: () => request('/stats/traffic'),
+}

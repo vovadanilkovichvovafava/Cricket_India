@@ -26,6 +26,7 @@ const PlayerStats = lazy(() => import('./features/tools/pages/PlayerStats'));
 const ReferralPage = lazy(() => import('./features/auth/pages/ReferralPage'));
 const OnboardingPage = lazy(() => import('./features/auth/pages/OnboardingPage'));
 const Leaderboard = lazy(() => import('./features/predictions/pages/Leaderboard'));
+const AdminRoutes = lazy(() => import('./features/admin/AdminRoutes'));
 
 function Spinner() {
   return (
@@ -133,6 +134,10 @@ export default function App() {
             <Route path="/tools/tracker" element={<ProtectedRoute><BetTracker /></ProtectedRoute>} />
             <Route path="/tools/players" element={<ProtectedRoute><PlayerStats /></ProtectedRoute>} />
             <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+
+            {/* Admin panel — separate auth, no ProtectedRoute */}
+            <Route path="/admin/*" element={<AdminRoutes />} />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
