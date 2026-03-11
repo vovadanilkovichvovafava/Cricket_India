@@ -96,31 +96,31 @@ export default function Matches() {
   const dateKeys = Object.keys(groupedMatches);
 
   return (
-    <div className="min-h-screen bg-[#F0F2F5] animate-fade-in">
+    <div className="min-h-screen bg-[#F0F2F5] dark:bg-gray-900 animate-fade-in">
       <PullIndicator />
       {/* Header — sticky white with tabs */}
-      <div className="bg-white px-5 pt-6 pb-0 sticky top-0 z-10">
+      <div className="bg-white dark:bg-gray-800 px-5 pt-6 pb-0 sticky top-0 z-10">
         <div className="flex items-center gap-3 mb-4">
           <button onClick={() => navigate(-1)}
-            className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center active:scale-95 transition-transform">
-            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center active:scale-95 transition-transform">
+            <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
           </button>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">{t('matches.title')}</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t('matches.title')}</h1>
             <p className="text-gray-500 text-sm">{t('matches.matchCount', { count: matches.length })}</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-100">
+        <div className="flex border-b border-gray-100 dark:border-gray-700">
           {tabs.map(tabItem => (
             <button
               key={tabItem.key}
               onClick={() => setTab(tabItem.key)}
               className={`flex-1 py-3 text-sm font-medium relative flex items-center justify-center gap-1.5 ${
-                tab === tabItem.key ? 'text-[#0B1E4D]' : 'text-gray-400'
+                tab === tabItem.key ? 'text-[#0B1E4D] dark:text-[#FF9933]' : 'text-gray-400 dark:text-gray-500'
               }`}
             >
               {tabItem.label}
@@ -130,7 +130,7 @@ export default function Matches() {
                 </span>
               )}
               {tabItem.key === 'all' && matches.length > 0 && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center bg-gray-200 text-gray-600">
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200">
                   {matches.length}
                 </span>
               )}
@@ -149,7 +149,7 @@ export default function Matches() {
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-xl p-4 border border-gray-100">
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="shimmer w-6 h-6 rounded-full" />
@@ -179,10 +179,10 @@ export default function Matches() {
             <div className="absolute inset-0 flex items-center justify-center opacity-10">
               <CricketBallDecor className="w-40 h-40 text-gray-400 animate-ball-spin" />
             </div>
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 relative z-10">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4 relative z-10">
               <CricketBallIcon className="w-8 h-8 text-gray-300" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-1 relative z-10">{t('matches.noMatches')}</h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 relative z-10">{t('matches.noMatches')}</h3>
             <p className="text-gray-500 text-sm relative z-10">
               {tab === 'live' ? t('common.noLiveMatches') : t('common.tryChangingFilters')}
             </p>
@@ -194,10 +194,10 @@ export default function Matches() {
                 <div className={`mb-5 animate-card-in animate-card-in-${Math.min(idx + 1, 6)}`}>
                   <div className="flex items-center gap-2 mb-2 mt-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#FF9933]" />
-                    <h3 className="text-sm font-semibold text-gray-700">{dateKey}</h3>
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{dateKey}</h3>
                     <span className="text-[10px] text-gray-400 ml-auto">{groupedMatches[dateKey].length} {t('common.matches')}</span>
                   </div>
-                  <div className="bg-white rounded-xl overflow-hidden shadow-sm">
+                  <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm">
                     {groupedMatches[dateKey].map(m => (
                       <MatchCard key={m.id} match={m} />
                     ))}

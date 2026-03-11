@@ -1,4 +1,5 @@
 import { ENV } from '../config/env';
+import { getTeamColor } from '../utils/teamColors';
 
 const BASE = ENV.API_URL;
 
@@ -52,8 +53,8 @@ function normalizeMatch(m) {
     away: m.away_team.code,
     homeName: m.home_team.name,
     awayName: m.away_team.name,
-    homeColor: m.home_team.color || '#6B7280',
-    awayColor: m.away_team.color || '#6B7280',
+    homeColor: (m.home_team.color && m.home_team.color !== '#6B7280') ? m.home_team.color : getTeamColor(m.home_team.code),
+    awayColor: (m.away_team.color && m.away_team.color !== '#6B7280') ? m.away_team.color : getTeamColor(m.away_team.code),
     homeImg: m.home_team.img,
     awayImg: m.away_team.img,
     name: m.name || '',
@@ -116,18 +117,22 @@ function normalizePrediction(p) {
   return {
     winner: p.predicted_winner,
     confidence: Math.round((p.confidence || 0) * 100),
+    analysis: p.analysis_text || '',
     factors: (p.key_factors || []).map((f, i) => {
       if (typeof f === 'string') {
         return { label: f.split(' - ')[0] || f, impact: i < 2 ? 'positive' : 'neutral', detail: f };
       }
-      return { label: f.factor || f, impact: f.impact || 'neutral', detail: f.detail || '' };
+      return { label: f.factor || f.label || f, impact: f.impact || 'neutral', detail: f.detail || '' };
     }),
     valueBets: (p.value_bets || []).map(b => ({
       market: b.market,
       pick: b.pick || b.selection,
       odds: b.odds,
+      risk: b.risk || 'Medium',
       value: b.reasoning || '',
-      confidence: typeof b.confidence === 'number' ? (b.confidence >= 0.7 ? 'High' : b.confidence >= 0.5 ? 'Medium' : 'Low') : (b.confidence || 'Medium'),
+      confidence: typeof b.confidence === 'number'
+        ? (b.confidence >= 0.7 ? 'High' : b.confidence >= 0.5 ? 'Medium' : 'Low')
+        : (b.confidence || 'Medium'),
     })),
   };
 }
@@ -169,6 +174,7 @@ const api = {
     return normalizePrediction(data);
   },
   getChatLimit: () => request('/predictions/chat-limit'),
+  getPredictionStats: () => request('/predictions/stats/accuracy'),
   chat: (data) => request('/predictions/chat', { method: 'POST', body: JSON.stringify(data) }),
 
   // Standings
@@ -181,10 +187,21 @@ const api = {
     request(`/cricket/players/search?q=${encodeURIComponent(query)}&offset=${offset}`),
   getPlayer: (playerId) => request(`/cricket/players/${playerId}`),
 
-  // Scorecard, Squad, Totals
+  // Scorecard, Squad, Totals, Fantasy Points, Ball-by-Ball
   getScorecard: (matchId) => request(`/cricket/matches/${matchId}/scorecard`),
   getSquad: (matchId) => request(`/cricket/matches/${matchId}/squad`),
   getTotals: (matchId) => request(`/cricket/matches/${matchId}/totals`),
+  getFantasyPoints: (matchId) => request(`/cricket/matches/${matchId}/fantasy-points`),
+  getBallByBall: (matchId) => request(`/cricket/matches/${matchId}/ball-by-ball`),
+
+  // Match Chat & Voting
+  getChatMessages: (matchId, after) => request(`/matches/${matchId}/chat${after ? `?after=${after}` : ''}`),
+  postChatMessage: (matchId, data) => request(`/matches/${matchId}/chat`, { method: 'POST', body: JSON.stringify(data) }),
+  getVotes: (matchId, userId) => request(`/matches/${matchId}/vote${userId ? `?user_id=${userId}` : ''}`),
+  castVote: (matchId, data) => request(`/matches/${matchId}/vote`, { method: 'POST', body: JSON.stringify(data) }),
+
+  // Support Chat (free for all users)
+  supportChat: (data) => request('/support/chat', { method: 'POST', body: JSON.stringify(data) }),
 
   // Status
   getStatus: () => request('/status'),

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import { SparkleIcon, GiftIcon } from '../../../shared/components/Icons';
 
 // Country codes with phone format info
 // digits = expected digit count (local number), placeholder = formatted example
@@ -153,7 +154,7 @@ export default function LoginPage() {
             <span className="text-[10px] text-white/80 font-medium">{t('auth.statPicks')}</span>
           </div>
           <div className="flex items-center gap-1 bg-white/10 rounded-full px-2.5 py-1">
-            <span className="text-[10px] text-[#FF9933]">✦</span>
+            <SparkleIcon className="w-2.5 h-2.5 text-[#FF9933]" />
             <span className="text-[10px] text-white/80 font-medium">{t('auth.statAccuracy')}</span>
           </div>
           <div className="flex items-center gap-1 bg-white/10 rounded-full px-2.5 py-1">
@@ -179,20 +180,20 @@ export default function LoginPage() {
       </div>
 
       {/* Form card */}
-      <div className="flex-1 bg-white rounded-t-3xl px-6 pt-6 pb-6">
+      <div className="flex-1 bg-white dark:bg-gray-800 rounded-t-3xl px-6 pt-6 pb-6">
         {/* Referral invite badge */}
         {refCode && isRegister && (
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2.5 mb-4 flex items-center gap-2">
-            <span className="text-lg">🎁</span>
+            <GiftIcon className="w-5 h-5 text-[#FF9933]" />
             <p className="text-sm text-emerald-700 font-medium">{t('auth.invitedBy', { code: refCode })}</p>
           </div>
         )}
         {/* Tabs */}
-        <div className="flex bg-gray-100 rounded-xl p-1 mb-5">
+        <div className="flex bg-gray-100 dark:bg-gray-700 rounded-xl p-1 mb-5">
           <button
             onClick={() => { setIsRegister(false); setError(''); }}
             className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-              !isRegister ? 'bg-white text-[#0B1E4D] shadow-sm' : 'text-gray-400'
+              !isRegister ? 'bg-white dark:bg-gray-600 text-[#0B1E4D] dark:text-white shadow-sm' : 'text-gray-400'
             }`}
           >
             {t('auth.login')}
@@ -200,7 +201,7 @@ export default function LoginPage() {
           <button
             onClick={() => { setIsRegister(true); setError(''); }}
             className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-              isRegister ? 'bg-white text-[#0B1E4D] shadow-sm' : 'text-gray-400'
+              isRegister ? 'bg-white dark:bg-gray-600 text-[#0B1E4D] dark:text-white shadow-sm' : 'text-gray-400'
             }`}
           >
             {t('auth.register')}
@@ -259,7 +260,7 @@ export default function LoginPage() {
 
                 {/* Dropdown */}
                 {showCountryPicker && (
-                  <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
+                  <div className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
                     {COUNTRIES.map(c => (
                       <button
                         key={c.code}

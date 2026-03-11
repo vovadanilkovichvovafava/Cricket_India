@@ -102,7 +102,7 @@ export default function OddsConverter() {
   ];
 
   return (
-    <div className="min-h-dvh bg-[#F0F2F5]">
+    <div className="min-h-dvh bg-[#F0F2F5] dark:bg-gray-900">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#0B1E4D] to-[#162D6B] px-5 pt-6 pb-5">
         <div className="flex items-center gap-3 mb-4">
@@ -122,7 +122,7 @@ export default function OddsConverter() {
       <div className="px-5 -mt-3 pb-6 space-y-3">
         {fields.map(field => (
           <div key={field.key}
-            className={`bg-white rounded-2xl shadow-sm p-4 transition-all ${
+            className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 transition-all ${
               activeField === field.key ? 'ring-2 ring-[#FF9933]/30' : ''
             }`}>
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{field.label}</label>
@@ -133,7 +133,7 @@ export default function OddsConverter() {
                 value={field.value}
                 onFocus={() => setActiveField(field.key)}
                 onChange={e => field.onChange(e.target.value)}
-                className="w-full text-2xl font-bold text-[#0B1E4D] bg-transparent border-none outline-none p-0"
+                className="w-full text-2xl font-bold text-[#0B1E4D] dark:text-white bg-transparent border-none outline-none p-0"
                 placeholder={field.placeholder}
               />
               {field.suffix && (
@@ -144,8 +144,8 @@ export default function OddsConverter() {
         ))}
 
         {/* Quick examples */}
-        <div className="bg-white rounded-2xl shadow-sm p-5">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('tools.odds.quickExamples')}</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{t('tools.odds.quickExamples')}</h3>
           <div className="space-y-2">
             {[
               { label: 'CSK to win', odds: '1.85' },
@@ -155,9 +155,9 @@ export default function OddsConverter() {
               <button
                 key={ex.odds}
                 onClick={() => updateFromDecimal(ex.odds)}
-                className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 rounded-xl active:bg-gray-100 transition-colors"
+                className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-xl active:bg-gray-100 dark:active:bg-gray-600 transition-colors"
               >
-                <span className="text-sm text-gray-600">{ex.label}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">{ex.label}</span>
                 <span className="text-sm font-bold text-[#FF9933]">{ex.odds}</span>
               </button>
             ))}

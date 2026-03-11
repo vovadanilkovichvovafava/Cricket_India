@@ -105,7 +105,7 @@ function StickyBanner() {
   }
 
   return (
-    <div className="fixed bottom-16 left-0 right-0 z-20 px-4 pb-2 safe-bottom">
+    <div className="fixed bottom-20 left-0 right-0 z-20 px-4 pb-2 safe-bottom">
       <a
         href={link}
         target="_blank"

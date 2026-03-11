@@ -319,7 +319,7 @@ export default function MatchCard({ match }) {
   return (
     <div
       onClick={() => navigate(`/match/${match.id}`)}
-      className="bg-white cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 relative overflow-hidden"
+      className="bg-white dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0 relative overflow-hidden"
     >
       {/* Team color accent stripe — left edge */}
       <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{
@@ -334,21 +334,21 @@ export default function MatchCard({ match }) {
           {/* Home team row */}
           <div className="flex items-center gap-2 mb-1.5">
             <TeamBadge code={match.home} color={homeColor} img={match.homeImg} />
-            <span className="text-sm font-medium text-gray-900 min-w-[28px]">{match.home}</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100 min-w-[28px]">{match.home}</span>
             {hasScores && homeScore ? (
-              <ScoreText innings={homeScore} className="text-sm font-bold text-gray-900 ml-auto tabular-nums" />
+              <ScoreText innings={homeScore} className="text-sm font-bold text-gray-900 dark:text-gray-100 ml-auto tabular-nums" />
             ) : (
-              <span className="text-[11px] text-gray-400 truncate">{match.homeName}</span>
+              <span className="text-[11px] text-gray-400 dark:text-gray-500 truncate">{match.homeName}</span>
             )}
           </div>
           {/* Away team row */}
           <div className="flex items-center gap-2">
             <TeamBadge code={match.away} color={awayColor} img={match.awayImg} />
-            <span className="text-sm font-medium text-gray-900 min-w-[28px]">{match.away}</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100 min-w-[28px]">{match.away}</span>
             {hasScores && awayScore ? (
-              <ScoreText innings={awayScore} className="text-sm font-bold text-gray-900 ml-auto tabular-nums" />
+              <ScoreText innings={awayScore} className="text-sm font-bold text-gray-900 dark:text-gray-100 ml-auto tabular-nums" />
             ) : (
-              <span className="text-[11px] text-gray-400 truncate">{match.awayName}</span>
+              <span className="text-[11px] text-gray-400 dark:text-gray-500 truncate">{match.awayName}</span>
             )}
           </div>
         </div>
@@ -362,10 +362,10 @@ export default function MatchCard({ match }) {
             ].map(o => (
               <div
                 key={o.label}
-                className="bg-[#0B1E4D]/5 border border-[#0B1E4D]/10 rounded px-2 py-1 text-center min-w-[38px]"
+                className="bg-[#0B1E4D]/5 dark:bg-white/10 border border-[#0B1E4D]/10 dark:border-white/10 rounded px-2 py-1 text-center min-w-[38px]"
               >
-                <span className="text-[9px] text-[#0B1E4D]/40 font-medium block leading-tight">{o.label}</span>
-                <span className="text-[11px] text-[#0B1E4D] font-bold block leading-tight">{o.val}</span>
+                <span className="text-[9px] text-[#0B1E4D]/40 dark:text-gray-400 font-medium block leading-tight">{o.label}</span>
+                <span className="text-[11px] text-[#0B1E4D] dark:text-gray-100 font-bold block leading-tight">{o.val}</span>
               </div>
             ))}
           </div>
@@ -379,12 +379,12 @@ export default function MatchCard({ match }) {
               <span className="text-[10px] text-red-500 font-bold">{t('common.live')}</span>
             </div>
           ) : isCompleted ? (
-            <span className="text-[10px] text-gray-400 font-medium">{t('common.ft')}</span>
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">{t('common.ft')}</span>
           ) : (
             <div className="text-right">
-              <span className="text-[11px] text-gray-400 font-medium block">{timeLabel}</span>
+              <span className="text-[11px] text-gray-400 dark:text-gray-400 font-medium block">{timeLabel}</span>
               {match.matchType && (
-                <span className="text-[9px] text-gray-300 font-medium">{matchTypeLabel(match.matchType)}</span>
+                <span className="text-[9px] text-gray-300 dark:text-gray-500 font-medium">{matchTypeLabel(match.matchType)}</span>
               )}
             </div>
           )}
@@ -393,7 +393,7 @@ export default function MatchCard({ match }) {
 
       {/* Urgency banner — prediction closing soon */}
       {!isLive && !isCompleted && isUrgent(match.date) && (
-        <div className="mx-3 mb-2 -mt-0.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg px-3 py-1.5 flex items-center gap-2">
+        <div className="mx-3 mb-2 -mt-0.5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-200 dark:border-amber-700/50 rounded-lg px-3 py-1.5 flex items-center gap-2">
           <svg className="w-3.5 h-3.5 text-amber-500 animate-pulse shrink-0" fill="currentColor" viewBox="0 0 24 24">
             <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clipRule="evenodd" />
           </svg>
@@ -405,7 +405,7 @@ export default function MatchCard({ match }) {
       {/* Status text for completed matches */}
       {isCompleted && match.statusText && (
         <div className="px-4 pb-2 -mt-1">
-          <span className="text-[10px] text-gray-400">{match.statusText}</span>
+          <span className="text-[10px] text-gray-400 dark:text-gray-500">{match.statusText}</span>
         </div>
       )}
     </div>

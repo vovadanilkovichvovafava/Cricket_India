@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/context/AuthContext';
+import { usePremium } from '../../../shared/context/PremiumContext';
 import api from '../../../shared/api';
 import BottomNav from '../../../shared/components/BottomNav';
 import MatchCard, { FeaturedMatchCard } from '../../../shared/components/MatchCard';
@@ -11,22 +12,24 @@ import usePullToRefresh from '../../../shared/hooks/usePullToRefresh';
 import {
   CricketBatIcon, ChatBotIcon, CricketBallDecor,
   ChartIcon, MoneyIcon, TrophyIcon, FireIcon, UsersIcon,
+  CheckCircleIcon, XCircleIcon, HourglassIcon,
+  RocketIcon, RobotIcon, GoldMedalIcon, GiftIcon,
 } from '../../../shared/components/Icons';
 
 // Fake live winners for ticker
 const LIVE_WINNERS = [
-  { name: 'Rahul M.', pick: 'CSK to win', result: '✅', amount: '+₹2,400' },
-  { name: 'Priya S.', pick: 'Kohli top bat', result: '✅', amount: '+₹890' },
-  { name: 'Amit K.', pick: 'MI total O/U', result: '✅', amount: '+₹5,100' },
-  { name: 'Sneha R.', pick: 'RCB to win', result: '❌', amount: '' },
-  { name: 'Vikram P.', pick: 'KKR match winner', result: '✅', amount: '+₹3,200' },
-  { name: 'Ananya D.', pick: 'SRH 1st innings', result: '✅', amount: '+₹760' },
-  { name: 'Deepak T.', pick: 'DC top bowler', result: '✅', amount: '+₹1,800' },
-  { name: 'Ritu G.', pick: 'PBKS to win', result: '✅', amount: '+₹4,500' },
+  { name: 'Rahul M.', pick: 'CSK to win', result: 'correct', amount: '+₹2,400' },
+  { name: 'Priya S.', pick: 'Kohli top bat', result: 'correct', amount: '+₹890' },
+  { name: 'Amit K.', pick: 'MI total O/U', result: 'correct', amount: '+₹5,100' },
+  { name: 'Sneha R.', pick: 'RCB to win', result: 'incorrect', amount: '' },
+  { name: 'Vikram P.', pick: 'KKR match winner', result: 'correct', amount: '+₹3,200' },
+  { name: 'Ananya D.', pick: 'SRH 1st innings', result: 'correct', amount: '+₹760' },
+  { name: 'Deepak T.', pick: 'DC top bowler', result: 'correct', amount: '+₹1,800' },
+  { name: 'Ritu G.', pick: 'PBKS to win', result: 'correct', amount: '+₹4,500' },
 ];
 
-// Yesterday's AI picks (mock)
-const AI_RESULTS = [
+// Default AI results (shown while loading or if no real data)
+const DEFAULT_AI_RESULTS = [
   { match: 'CSK vs MI', pick: 'CSK', result: true, odds: '1.85' },
   { match: 'RCB vs KKR', pick: 'KKR', result: true, odds: '2.10' },
   { match: 'DC vs SRH', pick: 'SRH', result: true, odds: '1.95' },
@@ -38,9 +41,11 @@ export default function Home() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
+  const { isPro } = usePremium();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [aiStats, setAiStats] = useState(null);
 
   const daysUntilIPL = Math.max(0, Math.ceil((new Date('2026-03-28') - new Date()) / 86400000));
 
@@ -72,18 +77,41 @@ export default function Home() {
 
   useEffect(() => { loadMatches(); }, [loadMatches]);
 
+  // Fetch real AI accuracy stats
+  useEffect(() => {
+    api.getPredictionStats().then(setAiStats).catch(() => {});
+  }, []);
+
   const { PullIndicator } = usePullToRefresh(useCallback(async () => {
     api.clearCache();
     await loadMatches();
   }, [loadMatches]));
 
-  const liveMatches = matches.filter(m => m.status === 'live');
-  const featuredMatch = liveMatches[0] || matches[0];
-  const otherMatches = matches.filter(m => m !== featuredMatch).slice(0, 4);
+  // Prioritize major cricket: IPL, international, big leagues — filter out minor matches
+  const MAJOR_TEAMS = new Set([
+    'CSK','MI','RCB','KKR','DC','SRH','RR','PBKS','LSG','GT',
+    'IND','AUS','ENG','NZ','SA','PAK','SL','WI','BAN','AFG',
+    'ZIM','IRE','NED','SCO','NEP','USA','NAM',
+  ]);
+  const MAJOR_KW = ['ipl','world cup','champions','ashes','bbl','psl','cpl','sa20','hundred','wpl','asia cup'];
+  const isMajor = (m) => {
+    if (MAJOR_TEAMS.has(m.home) || MAJOR_TEAMS.has(m.away)) return true;
+    const n = (m.name || '').toLowerCase();
+    return MAJOR_KW.some(kw => n.includes(kw));
+  };
+  const sorted = [...matches].sort((a, b) => {
+    const scoreLive = (b.status === 'live') - (a.status === 'live');
+    if (scoreLive) return scoreLive;
+    return isMajor(b) - isMajor(a);
+  });
+
+  const liveMatches = sorted.filter(m => m.status === 'live');
+  const featuredMatch = liveMatches[0] || sorted[0];
+  const otherMatches = sorted.filter(m => m !== featuredMatch).slice(0, 4);
   const hasLive = liveMatches.length > 0;
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in bg-[#F0F2F5] dark:bg-gray-900 min-h-dvh">
       <PullIndicator />
       {/* Header with cricket ball decoration */}
       <div className="bg-gradient-to-br from-[#0B1E4D] via-[#122556] to-[#162D6B] text-white px-5 pt-6 pb-10 rounded-b-3xl relative overflow-hidden">
@@ -148,20 +176,44 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Go Pro Card (Free users only) */}
+        {!isPro && (
+          <div
+            onClick={() => navigate('/tools')}
+            className="animate-card-in animate-card-in-2 bg-gradient-to-r from-[#FF9933] to-[#FF8800] rounded-2xl p-4 cursor-pointer active:scale-[0.98] transition-transform shadow-md"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <RocketIcon className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-sm">{t('premium.goProTitle')}</h3>
+                <p className="text-white/80 text-[11px]">{t('premium.goProDesc')}</p>
+              </div>
+              <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </div>
+          </div>
+        )}
+
         {/* Live Winners Ticker */}
-        <div className="animate-card-in animate-card-in-2 overflow-hidden rounded-xl bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-100">
-          <div className="flex items-center gap-2 px-3 py-1.5 border-b border-emerald-100 bg-emerald-50/50">
+        <div className="animate-card-in animate-card-in-2 overflow-hidden rounded-xl bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/40 dark:to-green-950/40 border border-emerald-100 dark:border-emerald-800/30">
+          <div className="flex items-center gap-2 px-3 py-1.5 border-b border-emerald-100 dark:border-emerald-800/30 bg-emerald-50/50 dark:bg-emerald-950/30">
             <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">{t('home.liveWinners')}</span>
+            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">{t('home.liveWinners')}</span>
           </div>
           <div className="overflow-hidden py-2 px-3">
             <div className="flex gap-5 animate-winners-ticker">
               {[...LIVE_WINNERS, ...LIVE_WINNERS].map((w, i) => (
                 <div key={i} className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs">{w.result}</span>
-                  <span className="text-[11px] text-gray-600 whitespace-nowrap font-medium">{w.name}</span>
-                  <span className="text-[10px] text-gray-400 whitespace-nowrap">{w.pick}</span>
-                  {w.amount && <span className="text-[11px] text-emerald-600 font-bold whitespace-nowrap">{w.amount}</span>}
+                  {w.result === 'correct'
+                    ? <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                    : <XCircleIcon className="w-4 h-4 text-red-500" />
+                  }
+                  <span className="text-[11px] text-gray-600 dark:text-gray-300 whitespace-nowrap font-medium">{w.name}</span>
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap">{w.pick}</span>
+                  {w.amount && <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold whitespace-nowrap">{w.amount}</span>}
                 </div>
               ))}
             </div>
@@ -173,33 +225,57 @@ export default function Home() {
           <BookmakerBanner variant="hero" />
         </div>
 
-        {/* AI Results — Yesterday's Picks */}
+        {/* AI Results — Real Accuracy Stats */}
         <div className="animate-card-in animate-card-in-2">
-          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-4 border border-purple-100">
+          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950/40 dark:to-indigo-950/40 rounded-2xl p-4 border border-purple-100 dark:border-purple-800/30">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <span className="text-sm">🤖</span>
+                <div className="w-7 h-7 bg-purple-100 dark:bg-purple-900/50 rounded-lg flex items-center justify-center">
+                  <RobotIcon className="w-4 h-4 text-purple-600 dark:text-purple-300" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-gray-900">{t('home.aiResultsTitle')}</h3>
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white">{t('home.aiResultsTitle')}</h3>
                   <p className="text-[10px] text-gray-400">{t('home.aiResultsSubtitle')}</p>
                 </div>
               </div>
-              <div className="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg">
-                <span className="text-sm font-black">{AI_RESULTS.filter(r => r.result).length}/{AI_RESULTS.length}</span>
-                <span className="text-[10px] ml-0.5">{t('home.aiResultsCorrect')}</span>
-              </div>
+              {aiStats && aiStats.total_predictions > 0 ? (
+                <div className="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-lg">
+                  <span className="text-sm font-black">{aiStats.accuracy_pct}%</span>
+                  <span className="text-[10px] ml-0.5">{t('home.aiResultsCorrect')}</span>
+                </div>
+              ) : (
+                <div className="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg">
+                  <span className="text-sm font-black">{DEFAULT_AI_RESULTS.filter(r => r.result).length}/{DEFAULT_AI_RESULTS.length}</span>
+                  <span className="text-[10px] ml-0.5">{t('home.aiResultsCorrect')}</span>
+                </div>
+              )}
             </div>
             <div className="space-y-1.5">
-              {AI_RESULTS.map((r, i) => (
-                <div key={i} className="flex items-center gap-2 bg-white/60 rounded-lg px-3 py-1.5">
-                  <span className="text-xs">{r.result ? '✅' : '❌'}</span>
-                  <span className="text-[11px] text-gray-700 font-medium flex-1">{r.match}</span>
-                  <span className="text-[11px] text-gray-500">{r.pick}</span>
-                  <span className="text-[10px] text-gray-400 font-mono">@{r.odds}</span>
-                </div>
-              ))}
+              {(aiStats?.recent?.length > 0 ? aiStats.recent.slice(0, 5) : DEFAULT_AI_RESULTS).map((r, i) => {
+                const isReal = aiStats?.recent?.length > 0;
+                return (
+                  <div key={i} className="flex items-center gap-2 bg-white/60 dark:bg-white/5 rounded-lg px-3 py-1.5">
+                    {isReal
+                      ? (r.result === 'correct'
+                          ? <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                          : r.result === 'incorrect'
+                            ? <XCircleIcon className="w-4 h-4 text-red-500" />
+                            : <HourglassIcon className="w-4 h-4 text-amber-500" />)
+                      : (r.result
+                          ? <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                          : <XCircleIcon className="w-4 h-4 text-red-500" />)
+                    }
+                    <span className="text-[11px] text-gray-700 dark:text-gray-300 font-medium flex-1">
+                      {isReal ? `${r.home} vs ${r.away}` : r.match}
+                    </span>
+                    <span className="text-[11px] text-gray-500 dark:text-gray-400">{isReal ? r.pick : r.pick}</span>
+                    {isReal
+                      ? <span className="text-[10px] text-gray-400 font-mono">{r.confidence}%</span>
+                      : <span className="text-[10px] text-gray-400 font-mono">@{r.odds}</span>
+                    }
+                  </div>
+                );
+              })}
             </div>
             <button
               onClick={() => navigate('/ai-chat')}
@@ -213,7 +289,7 @@ export default function Home() {
         {/* Featured Match */}
         {loading ? (
           <div className="animate-card-in animate-card-in-3">
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm">
               <div className="shimmer h-4 w-24 rounded mb-4" />
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -284,13 +360,15 @@ export default function Home() {
           className="animate-card-in animate-card-in-3 bg-gradient-to-r from-[#0B1E4D] to-indigo-800 rounded-2xl p-4 cursor-pointer active:scale-[0.98] transition-transform shadow-md"
         >
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-[#FF9933]/20 rounded-xl flex items-center justify-center text-2xl">🏆</div>
+            <div className="w-12 h-12 bg-[#FF9933]/20 rounded-xl flex items-center justify-center">
+              <TrophyIcon className="w-5 h-5 text-[#FF9933]" />
+            </div>
             <div className="flex-1">
               <h3 className="text-white font-bold text-sm">{t('home.leaderboardTitle')}</h3>
               <p className="text-blue-200/70 text-[11px]">{t('home.leaderboardDesc')}</p>
             </div>
             <div className="flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-lg">
-              <span className="text-xs text-emerald-300 font-bold">🥇 83%</span>
+              <span className="text-xs text-emerald-300 font-bold flex items-center gap-1"><GoldMedalIcon className="w-4 h-4" /> 83%</span>
             </div>
             <svg className="w-5 h-5 text-white/60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -299,16 +377,16 @@ export default function Home() {
         </div>
 
         {/* Stats */}
-        <div className="card animate-card-in animate-card-in-4">
+        <div className="card dark:bg-gray-800 animate-card-in animate-card-in-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-gray-900">{t('home.yourStats')}</h3>
+            <h3 className="font-bold text-gray-900 dark:text-white">{t('home.yourStats')}</h3>
           </div>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <div className="w-8 h-8 mx-auto mb-1 text-[#0B1E4D] flex items-center justify-center">
+              <div className="w-8 h-8 mx-auto mb-1 text-[#0B1E4D] dark:text-blue-300 flex items-center justify-center">
                 <ChartIcon className="w-6 h-6" />
               </div>
-              <p className="text-2xl font-bold text-gray-900">0</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{aiStats?.total_predictions || 0}</p>
               <p className="text-xs text-gray-500">{t('home.predictions')}</p>
             </div>
             <div>
@@ -317,7 +395,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p className="text-2xl font-bold text-[#138808]">0</p>
+              <p className="text-2xl font-bold text-[#138808]">{aiStats?.correct || 0}</p>
               <p className="text-xs text-gray-500">{t('home.wins')}</p>
             </div>
             <div>
@@ -326,7 +404,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
                 </svg>
               </div>
-              <p className="text-2xl font-bold text-[#138808]">0%</p>
+              <p className="text-2xl font-bold text-[#138808]">{aiStats?.accuracy_pct || 0}%</p>
               <p className="text-xs text-gray-500">{t('home.accuracy')}</p>
             </div>
           </div>
@@ -353,22 +431,22 @@ export default function Home() {
           <h3 className="section-title mb-3">{t('home.quickTools')}</h3>
           <div className="grid grid-cols-3 gap-3">
             <div onClick={() => navigate('/matches')} className="card text-center cursor-pointer hover:shadow-md transition-shadow py-5">
-              <div className="w-10 h-10 mx-auto mb-2 bg-[#138808]/10 rounded-xl flex items-center justify-center">
-                <CricketBatIcon className="w-5 h-5 text-[#138808]" />
+              <div className="w-10 h-10 mx-auto mb-2 bg-[#138808]/10 dark:bg-[#138808]/20 rounded-xl flex items-center justify-center">
+                <CricketBatIcon className="w-5 h-5 text-[#138808] dark:text-emerald-400" />
               </div>
-              <p className="text-xs font-medium text-gray-700">{t('home.matches')}</p>
+              <p className="text-xs font-medium text-gray-700 dark:text-gray-300">{t('home.matches')}</p>
             </div>
             <div onClick={() => navigate('/ai-chat')} className="card text-center cursor-pointer hover:shadow-md transition-shadow py-5">
-              <div className="w-10 h-10 mx-auto mb-2 bg-purple-50 rounded-xl flex items-center justify-center">
-                <ChatBotIcon className="w-5 h-5 text-purple-600" />
+              <div className="w-10 h-10 mx-auto mb-2 bg-purple-50 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+                <ChatBotIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               </div>
-              <p className="text-xs font-medium text-gray-700">{t('home.aiAnalysis')}</p>
+              <p className="text-xs font-medium text-gray-700 dark:text-gray-300">{t('home.aiAnalysis')}</p>
             </div>
             <div onClick={() => navigate('/settings')} className="card text-center cursor-pointer hover:shadow-md transition-shadow py-5">
-              <div className="w-10 h-10 mx-auto mb-2 bg-[#0B1E4D]/10 rounded-xl flex items-center justify-center">
-                <TrophyIcon className="w-5 h-5 text-[#0B1E4D]" />
+              <div className="w-10 h-10 mx-auto mb-2 bg-[#0B1E4D]/10 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                <TrophyIcon className="w-5 h-5 text-[#0B1E4D] dark:text-blue-400" />
               </div>
-              <p className="text-xs font-medium text-gray-700">{t('home.standings')}</p>
+              <p className="text-xs font-medium text-gray-700 dark:text-gray-300">{t('home.standings')}</p>
             </div>
           </div>
         </div>
@@ -380,7 +458,9 @@ export default function Home() {
             className="animate-card-in bg-gradient-to-r from-[#FF9933] to-[#FF8800] rounded-2xl p-4 cursor-pointer active:scale-[0.98] transition-transform shadow-md"
           >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl">🎁</div>
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <GiftIcon className="w-5 h-5 text-white" />
+              </div>
               <div className="flex-1">
                 <h3 className="text-white font-bold text-sm">{t('home.referralTitle')}</h3>
                 <p className="text-white/80 text-[11px]">{t('home.referralDesc')}</p>
@@ -397,7 +477,7 @@ export default function Home() {
         {/* Upcoming Matches */}
         {loading ? (
           <div className="animate-card-in animate-card-in-6">
-            <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm space-y-3">
               {[1, 2, 3].map(i => (
                 <div key={i} className="shimmer h-14 w-full rounded-lg" />
               ))}
@@ -417,7 +497,7 @@ export default function Home() {
                 </svg>
               </button>
             </div>
-            <div className="bg-white rounded-xl overflow-hidden shadow-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm">
               {otherMatches.map(m => <MatchCard key={m.id} match={m} />)}
             </div>
           </div>

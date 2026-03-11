@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../features/auth/context/AuthContext';
+import { usePremium } from '../../../shared/context/PremiumContext';
+import { useTheme } from '../../../shared/context/ThemeContext';
 import { ENV } from '../../../shared/config/env';
 import BottomNav from '../../../shared/components/BottomNav';
 import TricolorBar from '../../../shared/components/TricolorBar';
 import {
   LanguageIcon, MoonIcon, ServerIcon, CalculatorIcon, RefreshIcon,
-  SmartphoneIcon, WrenchIcon, CricketBatIcon, ShieldCheckIcon,
+  SmartphoneIcon, WrenchIcon, CricketBatIcon, ShieldCheckIcon, FreeBadgeIcon, SparkleIcon,
 } from '../../../shared/components/Icons';
 
 const APP_VERSION = '1.0.0';
@@ -33,13 +35,13 @@ function SettingsItem({ icon, label, value, onClick, children }) {
     <Wrapper
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-4 py-3.5 text-left ${
-        onClick ? 'active:bg-gray-50 transition-colors' : ''
+        onClick ? 'active:bg-gray-50 dark:active:bg-gray-700 transition-colors' : ''
       }`}
     >
-      <span className="text-gray-500">{icon}</span>
+      <span className="text-gray-500 dark:text-gray-400">{icon}</span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900">{label}</p>
-        {value && <p className="text-[11px] text-gray-400 truncate">{value}</p>}
+        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</p>
+        {value && <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">{value}</p>}
       </div>
       {children || (
         onClick && (
@@ -54,7 +56,7 @@ function SettingsItem({ icon, label, value, onClick, children }) {
 
 function SectionLabel({ text }) {
   return (
-    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-1 pt-5 pb-2">{text}</p>
+    <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider px-1 pt-5 pb-2">{text}</p>
   );
 }
 
@@ -62,8 +64,9 @@ export default function Settings() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { user, isAuthenticated, logout } = useAuth();
+  const { isPro, aiRequestsLeft, FREE_AI_LIMIT, downgradeToFree } = usePremium();
+  const { isDark, toggleDarkMode } = useTheme();
   const [language, setLanguage] = useState(() => i18n.language?.split('-')[0] || 'en');
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('dark_mode') === 'true');
   const [apiStatus, setApiStatus] = useState('checking');
   const [showLangPicker, setShowLangPicker] = useState(false);
 
@@ -91,12 +94,6 @@ export default function Settings() {
     setShowLangPicker(false);
   }
 
-  function handleDarkModeToggle() {
-    const newVal = !darkMode;
-    setDarkMode(newVal);
-    localStorage.setItem('dark_mode', String(newVal));
-  }
-
   function handleLogout() {
     logout();
     navigate('/');
@@ -105,9 +102,9 @@ export default function Settings() {
   const currentLang = LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
 
   return (
-    <div className="min-h-dvh bg-[#F0F2F5]">
+    <div className="min-h-dvh bg-[#F0F2F5] dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white px-5 pt-6 pb-4">
+      <div className="bg-white dark:bg-gray-800 px-5 pt-6 pb-4">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)}
             className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center active:scale-95 transition-transform">
@@ -115,7 +112,7 @@ export default function Settings() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
           </button>
-          <h1 className="text-xl font-bold text-gray-900">{t('settings.title')}</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t('settings.title')}</h1>
         </div>
       </div>
 
@@ -123,13 +120,13 @@ export default function Settings() {
         {/* Account */}
         <SectionLabel text={t('settings.sections.account')} />
         {isAuthenticated ? (
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
             <div className="px-4 py-4 flex items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-[#FF9933] to-[#FF8800] rounded-full flex items-center justify-center">
                 <span className="text-white text-lg font-bold">{user?.name?.[0]?.toUpperCase() || '?'}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user?.name}</p>
                 <p className="text-xs text-gray-400 truncate">{user?.country_code} {user?.phone?.replace(user?.country_code, '')}</p>
               </div>
               <button
@@ -141,7 +138,7 @@ export default function Settings() {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
             <button
               onClick={() => navigate('/login')}
               className="w-full px-4 py-4 flex items-center gap-3 active:bg-gray-50 transition-colors"
@@ -162,9 +159,53 @@ export default function Settings() {
           </div>
         )}
 
+        {/* Premium */}
+        <SectionLabel text={t('premium.planSection') || 'Plan'} />
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+          {isPro ? (
+            <div className="px-4 py-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center">
+                  <SparkleIcon className="w-5 h-5 text-yellow-300" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{t('premium.proPlan')}</p>
+                  <p className="text-[11px] text-emerald-600 font-medium">{t('premium.unlimited')}</p>
+                </div>
+                <button
+                  onClick={downgradeToFree}
+                  className="text-[11px] text-gray-400 px-2 py-1"
+                >
+                  {t('premium.downgrade') || 'Downgrade'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="px-4 py-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 bg-gray-100 rounded-xl flex items-center justify-center">
+                  <FreeBadgeIcon className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{t('premium.freePlan')}</p>
+                  <p className="text-[11px] text-gray-400">{t('premium.requestsLeft', { count: aiRequestsLeft })} ({FREE_AI_LIMIT}/day)</p>
+                </div>
+                <a
+                  href={ENV.BOOKMAKER_LINK !== '#' ? ENV.BOOKMAKER_LINK : 'https://siteofficialred.com/Qhs6z2nP'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-gradient-to-r from-[#FF9933] to-[#FF8800] text-white text-xs font-bold px-3 py-1.5 rounded-lg active:scale-95 transition-transform"
+                >
+                  {t('premium.upgradeNow')}
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* General */}
         <SectionLabel text={t('settings.sections.general')} />
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
           {/* Language */}
           <SettingsItem
             icon={<LanguageIcon className="w-5 h-5 text-amber-600" />}
@@ -202,21 +243,20 @@ export default function Settings() {
 
           {/* Dark Mode */}
           <SettingsItem
-            icon={<MoonIcon className="w-5 h-5 text-[#0B1E4D]" />}
+            icon={<MoonIcon className="w-5 h-5 text-[#0B1E4D] dark:text-blue-300" />}
             label={t('settings.darkMode')}
-            value={t('settings.comingSoon')}
           >
-            <button onClick={handleDarkModeToggle}
-              className={`w-12 h-7 rounded-full transition-colors relative ${darkMode ? 'bg-[#FF9933]' : 'bg-gray-300'}`}>
+            <button onClick={toggleDarkMode}
+              className={`w-12 h-7 rounded-full transition-colors relative ${isDark ? 'bg-[#FF9933]' : 'bg-gray-300'}`}>
               <div className={`w-5 h-5 bg-white rounded-full shadow-md absolute top-1 transition-transform
-                ${darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                ${isDark ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
           </SettingsItem>
         </div>
 
         {/* System */}
         <SectionLabel text={t('settings.sections.system')} />
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
           <SettingsItem
             icon={<ServerIcon className="w-5 h-5 text-emerald-600" />}
             label={t('settings.apiStatus')}
@@ -251,7 +291,7 @@ export default function Settings() {
 
         {/* Tools */}
         <SectionLabel text={t('settings.sections.tools')} />
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
           {TOOLS.map(tool => (
             <SettingsItem
               key={tool.nameKey}
@@ -265,7 +305,7 @@ export default function Settings() {
 
         {/* About */}
         <SectionLabel text={t('settings.sections.about')} />
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
           <SettingsItem icon={<SmartphoneIcon className="w-5 h-5 text-gray-500" />} label={t('settings.version')}>
             <span className="text-xs text-gray-400 font-mono">v{APP_VERSION}</span>
           </SettingsItem>
@@ -280,8 +320,8 @@ export default function Settings() {
         {/* Footer */}
         <div className="mt-6">
           <TricolorBar className="mb-3" />
-          <div className="bg-white rounded-2xl shadow-sm p-4 text-center">
-            <span className="text-sm font-bold text-gray-700">{t('app.name')}</span>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 text-center">
+            <span className="text-sm font-bold text-gray-700 dark:text-gray-200">{t('app.name')}</span>
             <p className="text-[11px] text-gray-400 mb-2 mt-1">{t('app.tagline')}</p>
             <div className="flex items-center justify-center gap-1.5 mb-1">
               <ShieldCheckIcon className="w-3.5 h-3.5 text-[#138808]" />

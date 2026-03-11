@@ -9,7 +9,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.models import MatchSummary, MatchDetail, Series, MatchScorecard, MatchSquad, MatchTotals
+from app.models import MatchSummary, MatchDetail, Series, MatchScorecard, MatchSquad, MatchTotals, MatchFantasyPoints, MatchBallByBall
 from app.services.cricket_api import cricket_service
 from app.services.odds_service import get_odds_for_teams, get_totals_for_teams
 
@@ -116,3 +116,22 @@ async def get_match_totals(match_id: str):
     if not totals:
         raise HTTPException(status_code=404, detail="No totals odds available for this match")
     return totals
+
+
+@router.get("/matches/{match_id}/fantasy-points", response_model=MatchFantasyPoints)
+async def get_match_fantasy_points(match_id: str):
+    """Get fantasy points / top performers for a match."""
+    result = await cricket_service.get_match_fantasy_points(match_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Fantasy points not available for this match")
+    return result
+
+
+@router.get("/matches/{match_id}/ball-by-ball", response_model=MatchBallByBall)
+async def get_match_ball_by_ball(match_id: str):
+    """Get ball-by-ball live commentary for a match.
+    Only available for major tournaments with fantasyEnabled=true."""
+    result = await cricket_service.get_match_ball_by_ball(match_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Ball-by-ball data not available")
+    return result

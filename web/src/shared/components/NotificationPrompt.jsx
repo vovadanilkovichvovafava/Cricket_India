@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import usePushNotifications from '../hooks/usePushNotifications';
+import { BellIcon } from './Icons';
 
 export default function NotificationPrompt() {
   const { t } = useTranslation();
@@ -35,7 +36,7 @@ export default function NotificationPrompt() {
       <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 mx-auto max-w-md">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 bg-[#FF9933]/10 rounded-xl flex items-center justify-center shrink-0">
-            <span className="text-lg">🔔</span>
+            <BellIcon className="w-5 h-5 text-amber-500" />
           </div>
           <div className="flex-1">
             <h3 className="text-sm font-bold text-gray-900">{t('notifications.promptTitle')}</h3>

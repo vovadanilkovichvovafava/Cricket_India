@@ -25,7 +25,7 @@ export default function KellyCalculator() {
   const ev = b > 0 ? (p * b - q) * 100 : 0;
 
   return (
-    <div className="min-h-dvh bg-[#F0F2F5]">
+    <div className="min-h-dvh bg-[#F0F2F5] dark:bg-gray-900">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#0B1E4D] to-[#162D6B] px-5 pt-6 pb-5">
         <div className="flex items-center gap-3 mb-4">
@@ -44,11 +44,11 @@ export default function KellyCalculator() {
 
       <div className="px-5 -mt-3 pb-6">
         {/* Input card */}
-        <div className="bg-white rounded-2xl shadow-sm p-5 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 mb-4">
           {/* Probability slider */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700">{t('tools.kelly.probability')}</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('tools.kelly.probability')}</label>
               <span className="text-lg font-bold text-[#0B1E4D]">{probability}%</span>
             </div>
             <input
@@ -56,7 +56,7 @@ export default function KellyCalculator() {
               min="1" max="99"
               value={probability}
               onChange={e => setProbability(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#FF9933]"
+              className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-[#FF9933]"
             />
             <div className="flex justify-between text-[10px] text-gray-400 mt-1">
               <span>1%</span>
@@ -67,7 +67,7 @@ export default function KellyCalculator() {
 
           {/* Decimal odds */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('tools.kelly.odds')}</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('tools.kelly.odds')}</label>
             <div className="relative">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">×</span>
               <input
@@ -76,7 +76,7 @@ export default function KellyCalculator() {
                 min="1.01"
                 value={odds}
                 onChange={e => setOdds(e.target.value)}
-                className="w-full pl-9 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FF9933]/30 focus:border-[#FF9933] transition-all"
+                className="w-full pl-9 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-white focus:outline-none focus:ring-2 focus:ring-[#FF9933]/30 focus:border-[#FF9933] transition-all"
                 placeholder="1.85"
               />
             </div>
@@ -108,7 +108,7 @@ export default function KellyCalculator() {
               <div>
                 <p className="text-xs text-gray-500 mb-1">{t('tools.kelly.optimalBet')}</p>
                 <p className="text-3xl font-black text-[#0B1E4D]">{kellyPct.toFixed(1)}%</p>
-                <div className="w-full h-3 bg-gray-200 rounded-full mt-2 overflow-hidden">
+                <div className="w-full h-3 bg-gray-200 dark:bg-gray-600 rounded-full mt-2 overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-[#FF9933] to-[#FF8800] rounded-full transition-all duration-500"
                     style={{ width: `${Math.min(kellyPct, 100)}%` }}
@@ -136,12 +136,12 @@ export default function KellyCalculator() {
         </div>
 
         {/* Info card */}
-        <div className="bg-white rounded-2xl shadow-sm p-5">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('tools.kelly.howItWorks')}</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('tools.kelly.howItWorks')}</h3>
           <p className="text-xs text-gray-500 leading-relaxed mb-3">{t('tools.kelly.formula')}</p>
-          <div className="bg-gray-50 rounded-xl p-3">
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3">
             <p className="text-xs text-gray-400 mb-1">{t('tools.kelly.example')}</p>
-            <p className="text-xs text-gray-600">{t('tools.kelly.exampleText')}</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">{t('tools.kelly.exampleText')}</p>
           </div>
         </div>
       </div>

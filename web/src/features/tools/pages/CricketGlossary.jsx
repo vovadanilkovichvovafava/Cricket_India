@@ -142,11 +142,11 @@ export default function CricketGlossary() {
               <button
                 key={term.key}
                 onClick={() => setExpanded(isExpanded ? null : term.key)}
-                className="w-full text-left bg-white rounded-2xl shadow-sm overflow-hidden transition-all"
+                className="w-full text-left bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden transition-all"
               >
                 <div className="flex items-center gap-3 p-4">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                       {t(`tools.glossary.terms.${term.key}.name`)}
                     </p>
                   </div>

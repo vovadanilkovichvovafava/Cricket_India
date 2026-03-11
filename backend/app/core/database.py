@@ -29,4 +29,5 @@ def get_db():
 def init_db():
     """Create all tables."""
     from app.models.user import User  # noqa: F401 — register model
+    from app.models.prediction_history import PredictionHistory  # noqa: F401
     Base.metadata.create_all(bind=engine)

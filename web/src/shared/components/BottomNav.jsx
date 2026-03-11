@@ -6,8 +6,8 @@ import { HomeIcon, CricketBatIcon, ToolsIcon, ChatBotIcon, SettingsIcon } from '
 const NAV_ITEMS = [
   { Icon: HomeIcon, key: 'home', path: '/' },
   { Icon: CricketBatIcon, key: 'matches', path: '/matches' },
+  { Icon: ChatBotIcon, key: 'aiChat', path: '/ai-chat' },
   { Icon: ToolsIcon, key: 'tools', path: '/tools' },
-  { Icon: ChatBotIcon, key: 'aiChat', path: '/ai-chat', requiresAuth: true },
   { Icon: SettingsIcon, key: 'settings', path: '/settings' },
 ];
 
@@ -36,7 +36,7 @@ export default function BottomNav() {
       <div className="h-20" />
 
       {/* Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 safe-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 safe-bottom">
         <div className="flex items-center justify-around py-2 px-1">
           {NAV_ITEMS.map(item => {
             const active = isActive(item.path);

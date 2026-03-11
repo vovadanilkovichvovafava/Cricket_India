@@ -31,6 +31,11 @@ from app.models import (
     MatchSquad,
     TeamSquad,
     SquadPlayer,
+    MatchFantasyPoints,
+    FantasyPlayerPoints,
+    InningsPoints,
+    MatchBallByBall,
+    BallEvent,
 )
 
 logger = logging.getLogger(__name__)
@@ -59,8 +64,11 @@ def _cache_set(key: str, data):
 
 
 # ──────────────────────────────────────────────
-# Known IPL team metadata (for color enrichment)
+# Known team metadata (for color enrichment)
 # ──────────────────────────────────────────────
+
+# Default fallback color for unknown teams (yellow-green)
+DEFAULT_TEAM_COLOR = "#8DB600"
 
 IPL_TEAM_META = {
     "CSK": {"name": "Chennai Super Kings", "color": "#FCCA06"},
@@ -75,21 +83,115 @@ IPL_TEAM_META = {
     "GT": {"name": "Gujarat Titans", "color": "#1C1C1C"},
 }
 
-# Map full team names → IPL codes (for enrichment)
-_NAME_TO_IPL_CODE = {
-    "chennai super kings": "CSK",
-    "mumbai indians": "MI",
-    "royal challengers bengaluru": "RCB",
-    "royal challengers bangalore": "RCB",
-    "kolkata knight riders": "KKR",
-    "delhi capitals": "DC",
-    "sunrisers hyderabad": "SRH",
-    "rajasthan royals": "RR",
-    "punjab kings": "PBKS",
-    "kings xi punjab": "PBKS",
-    "lucknow super giants": "LSG",
-    "gujarat titans": "GT",
+# All known cricket team colors worldwide (code → color)
+# IPL, International, BBL, PSL, CPL, SA20, The Hundred, SA domestic, ILT20
+GLOBAL_TEAM_COLORS = {
+    # ── IPL ──
+    "CSK": "#FCCA06", "MI": "#004BA0", "RCB": "#EC1C24", "KKR": "#3A225D",
+    "DC": "#004C93", "SRH": "#F7A721", "RR": "#EA1A85", "PBKS": "#ED1B24",
+    "LSG": "#A72056", "GT": "#1C1C1C",
+    # ── International ──
+    "IND": "#0078D7", "AUS": "#FFCD00", "ENG": "#002147", "PAK": "#006629",
+    "SA": "#006A4D", "RSA": "#006A4D", "NZ": "#000000", "NZL": "#000000",
+    "WI": "#7B0041", "SL": "#003478", "SRI": "#003478",
+    "BAN": "#006A4D", "AFG": "#0066B3", "ZIM": "#D40000",
+    "IRE": "#169B62", "NED": "#FF6600", "SCO": "#003078",
+    "NEP": "#003893", "UAE": "#003B70", "OMN": "#C8102E",
+    "NAM": "#002D6E", "USA": "#002868", "CAN": "#FF0000",
+    "PNG": "#CE1126", "HK": "#DE2910", "KEN": "#006600",
+    # ── Big Bash League (BBL) ──
+    "SIX": "#EC2A90", "THU": "#97D700", "STA": "#287246", "REN": "#EE343F",
+    "SCO": "#FF6600", "HEA": "#27A6B0", "HUR": "#674398", "STR": "#0084D6",
+    # ── Pakistan Super League (PSL) ──
+    "KAR": "#0752C2", "LAH": "#78FF06", "ISL": "#FF0000", "PES": "#FFFF00",
+    "QUE": "#5F0182", "MUL": "#589F28",
+    # ── Caribbean Premier League (CPL) ──
+    "TKR": "#D50032", "JAM": "#009B3A", "BR": "#E74093", "SNP": "#CF142B",
+    "GAW": "#009E49", "SLK": "#0057B7", "ABF": "#000080",
+    # ── SA20 (South Africa franchise) ──
+    "MICT": "#004B8D", "DSG": "#A72056", "JSK": "#F9CD05",
+    "PR": "#EA1A85", "PC": "#004C93", "SEC": "#F26522",
+    # ── South African domestic (CSA T20) ──
+    "WAR": "#556B2F", "TIT": "#00BFFF", "LIONS": "#CC0000", "LIO": "#CC0000",
+    "DOL": "#1C1C6B", "KNG": "#FF6600", "KNI": "#FF6600",
+    "COB": "#006400", "NWD": "#8B0000", "ERD": "#8B0000",
+    # ── The Hundred (UK) ──
+    "OI": "#00A651", "TR": "#00584C", "SB": "#002B5C", "BP": "#D4213D",
+    "MO": "#4A4A4A", "LS": "#00A3E0", "WF": "#E4003B", "NS": "#FFD700",
+    # ── ILT20 (UAE) ──
+    "GG": "#E87722", "DUB": "#CC0033", "MIE": "#004B8D",
+    "ADKR": "#3A225D", "DV": "#CC0000", "SW": "#5F0182",
 }
+
+# Map full team names → code (for enrichment)
+_NAME_TO_CODE = {
+    # IPL
+    "chennai super kings": "CSK", "mumbai indians": "MI",
+    "royal challengers bengaluru": "RCB", "royal challengers bangalore": "RCB",
+    "kolkata knight riders": "KKR", "delhi capitals": "DC",
+    "sunrisers hyderabad": "SRH", "rajasthan royals": "RR",
+    "punjab kings": "PBKS", "kings xi punjab": "PBKS",
+    "lucknow super giants": "LSG", "gujarat titans": "GT",
+    # International
+    "india": "IND", "australia": "AUS", "england": "ENG",
+    "pakistan": "PAK", "south africa": "SA", "new zealand": "NZ",
+    "west indies": "WI", "sri lanka": "SL", "bangladesh": "BAN",
+    "afghanistan": "AFG", "zimbabwe": "ZIM", "ireland": "IRE",
+    "netherlands": "NED", "scotland": "SCO", "nepal": "NEP",
+    "oman": "OMN", "namibia": "NAM", "usa": "USA", "canada": "CAN",
+    "united states": "USA", "united arab emirates": "UAE",
+    "papua new guinea": "PNG", "hong kong": "HK", "kenya": "KEN",
+    # BBL
+    "sydney sixers": "SIX", "sydney thunder": "THU",
+    "melbourne stars": "STA", "melbourne renegades": "REN",
+    "perth scorchers": "SCO", "brisbane heat": "HEA",
+    "hobart hurricanes": "HUR", "adelaide strikers": "STR",
+    # PSL
+    "karachi kings": "KAR", "lahore qalandars": "LAH",
+    "islamabad united": "ISL", "peshawar zalmi": "PES",
+    "quetta gladiators": "QUE", "multan sultans": "MUL",
+    # CPL
+    "trinbago knight riders": "TKR", "jamaica tallawahs": "JAM",
+    "barbados royals": "BR", "st kitts and nevis patriots": "SNP",
+    "guyana amazon warriors": "GAW", "st lucia kings": "SLK",
+    # SA20
+    "mi cape town": "MICT", "durban super giants": "DSG",
+    "joburg super kings": "JSK", "paarl royals": "PR",
+    "pretoria capitals": "PC", "sunrisers eastern cape": "SEC",
+    # SA domestic
+    "warriors": "WAR", "titans": "TIT", "lions": "LIO",
+    "dolphins": "DOL", "knights": "KNI", "cape cobras": "COB",
+    "north west dragons": "NWD", "north west": "NWD",
+    # The Hundred
+    "oval invincibles": "OI", "trent rockets": "TR",
+    "southern brave": "SB", "birmingham phoenix": "BP",
+    "manchester originals": "MO", "london spirit": "LS",
+    "welsh fire": "WF", "northern superchargers": "NS",
+    # ILT20
+    "gulf giants": "GG", "dubai capitals": "DUB",
+    "mi emirates": "MIE", "abu dhabi knight riders": "ADKR",
+    "desert vipers": "DV", "sharjah warriorz": "SW",
+}
+
+
+def _resolve_team_color(name: str, code: str = "") -> Optional[str]:
+    """Resolve a team name or code to a color hex. Returns None if unknown."""
+    # Try code first (fast path)
+    upper = code.strip().upper() if code else ""
+    if upper and upper in GLOBAL_TEAM_COLORS:
+        return GLOBAL_TEAM_COLORS[upper]
+    # Try full name
+    low = name.strip().lower()
+    if low in _NAME_TO_CODE:
+        resolved = _NAME_TO_CODE[low]
+        if resolved in GLOBAL_TEAM_COLORS:
+            return GLOBAL_TEAM_COLORS[resolved]
+    # Try partial/substring match as last resort
+    for key, team_code in _NAME_TO_CODE.items():
+        if key in low or low in key:
+            if team_code in GLOBAL_TEAM_COLORS:
+                return GLOBAL_TEAM_COLORS[team_code]
+    return None
 
 
 def _resolve_ipl_code(name: str) -> Optional[str]:
@@ -98,8 +200,10 @@ def _resolve_ipl_code(name: str) -> Optional[str]:
     (e.g. South African 'Titans' should NOT match 'Gujarat Titans').
     """
     low = name.strip().lower()
-    if low in _NAME_TO_IPL_CODE:
-        return _NAME_TO_IPL_CODE[low]
+    if low in _NAME_TO_CODE:
+        code = _NAME_TO_CODE[low]
+        if code in IPL_TEAM_META:
+            return code
     upper = name.strip().upper()
     if upper in IPL_TEAM_META:
         return upper
@@ -157,11 +261,13 @@ def _parse_team_info(team_data: dict) -> TeamInfo:
             img=img,
         )
 
+    # Try global team color database
+    color = _resolve_team_color(name, shortname) or DEFAULT_TEAM_COLOR
     return TeamInfo(
         code=shortname,
         name=name,
         short_name=shortname,
-        color="#6B7280",
+        color=color,
         img=img,
     )
 
@@ -427,7 +533,8 @@ class CricketDataService:
                 meta = IPL_TEAM_META[ipl_code]
                 team = TeamInfo(code=ipl_code, name=name, short_name=shortname, color=meta["color"], img=img)
             else:
-                team = TeamInfo(code=shortname, name=name, short_name=shortname, color="#6B7280", img=img)
+                color = _resolve_team_color(name, shortname) or DEFAULT_TEAM_COLOR
+                team = TeamInfo(code=shortname, name=name, short_name=shortname, color=color, img=img)
 
             wins = int(entry.get("wins", 0))
             loss = int(entry.get("loss", 0))
@@ -608,7 +715,8 @@ class CricketDataService:
                 meta = IPL_TEAM_META[ipl_code]
                 team_info = TeamInfo(code=ipl_code, name=team_name, short_name=shortname, color=meta["color"], img=img)
             else:
-                team_info = TeamInfo(code=shortname, name=team_name, short_name=shortname, color="#6B7280", img=img)
+                color = _resolve_team_color(team_name, shortname) or DEFAULT_TEAM_COLOR
+                team_info = TeamInfo(code=shortname, name=team_name, short_name=shortname, color=color, img=img)
 
             players = []
             for p in team_data.get("players", []):
@@ -637,6 +745,106 @@ class CricketDataService:
         )
         _cache_set(cache_key, squad)
         return squad
+
+    async def get_match_fantasy_points(self, match_id: str) -> Optional[MatchFantasyPoints]:
+        """Get fantasy points for each player in a match (Top Performers)."""
+        cache_key = f"fantasy_{match_id}"
+        cached = _cache_get(cache_key)
+        if cached is not None:
+            return cached
+
+        data = await _cricapi_request("match_points", {"id": match_id})
+        if not data or not data.get("data"):
+            return None
+
+        d = data["data"]
+
+        # Parse totals (top performers across the match)
+        totals = []
+        for p in (d.get("totals") or []):
+            totals.append(FantasyPlayerPoints(
+                name=p.get("name", "Unknown"),
+                team=p.get("team", ""),
+                points=float(p.get("points", 0)),
+                player_id=p.get("id"),
+                player_img=p.get("playerImg"),
+            ))
+        # Sort by points descending
+        totals.sort(key=lambda x: -x.points)
+
+        # Parse per-innings breakdown
+        innings = []
+        for inn in (d.get("innings") or []):
+            players = []
+            for p in (inn.get("points") or []):
+                players.append(FantasyPlayerPoints(
+                    name=p.get("name", "Unknown"),
+                    team=p.get("team", ""),
+                    points=float(p.get("points", 0)),
+                    player_id=p.get("id"),
+                    player_img=p.get("playerImg"),
+                ))
+            players.sort(key=lambda x: -x.points)
+            innings.append(InningsPoints(
+                inning=inn.get("inning", ""),
+                players=players,
+            ))
+
+        result = MatchFantasyPoints(
+            id=match_id,
+            name=data.get("name", ""),
+            status=data.get("status", ""),
+            totals=totals,
+            innings=innings,
+        )
+        _cache_set(cache_key, result)
+        return result
+
+    async def get_match_ball_by_ball(self, match_id: str) -> Optional[MatchBallByBall]:
+        """Get ball-by-ball data for a match (live commentary feed).
+        Only available for major tournaments (IPL, World Cup, etc.) with fantasyEnabled=true.
+        """
+        cache_key = f"bbb_{match_id}"
+        cached = _cache_get(cache_key)
+        if cached is not None:
+            return cached
+
+        data = await _cricapi_request("match_bbb", {"id": match_id})
+        if not data:
+            return MatchBallByBall(id=match_id, available=False)
+
+        if data.get("status") == "failure":
+            result = MatchBallByBall(id=match_id, available=False)
+            _cache_set(cache_key, result)
+            return result
+
+        d = data.get("data", {})
+        balls = []
+        bbb_data = d.get("bpiData") or d.get("bbb") or d.get("data") or []
+        if isinstance(bbb_data, list):
+            for b in bbb_data:
+                balls.append(BallEvent(
+                    ball=float(b.get("ball", 0)),
+                    over=int(b.get("over", 0)),
+                    batsman=b.get("batsman", {}).get("name", "") if isinstance(b.get("batsman"), dict) else str(b.get("batsman", "")),
+                    bowler=b.get("bowler", {}).get("name", "") if isinstance(b.get("bowler"), dict) else str(b.get("bowler", "")),
+                    runs=int(b.get("runs", 0)),
+                    extras=int(b.get("extras", 0)),
+                    wicket=b.get("wicket", False),
+                    wicket_type=b.get("wicketType", ""),
+                    commentary=b.get("commentary", ""),
+                    score=b.get("score", ""),
+                ))
+
+        result = MatchBallByBall(
+            id=match_id,
+            name=d.get("name", "") if isinstance(d, dict) else "",
+            status=d.get("status", "") if isinstance(d, dict) else "",
+            available=len(balls) > 0,
+            balls=balls,
+        )
+        _cache_set(cache_key, result)
+        return result
 
     async def check_api_status(self) -> dict:
         """Check CricAPI connectivity and quota."""

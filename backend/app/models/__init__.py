@@ -286,6 +286,56 @@ class MatchSquad(BaseModel):
 
 
 # ──────────────────────────────────────────────
+# Fantasy Points (Top Performers)
+# ──────────────────────────────────────────────
+
+class FantasyPlayerPoints(BaseModel):
+    name: str
+    team: str = ""
+    points: float = 0.0
+    player_id: Optional[str] = None
+    player_img: Optional[str] = None
+
+
+class InningsPoints(BaseModel):
+    inning: str = ""
+    players: List[FantasyPlayerPoints] = []
+
+
+class MatchFantasyPoints(BaseModel):
+    id: str
+    name: str = ""
+    status: str = ""
+    totals: List[FantasyPlayerPoints] = []
+    innings: List[InningsPoints] = []
+
+
+# ──────────────────────────────────────────────
+# Ball-by-Ball (Live Commentary)
+# ──────────────────────────────────────────────
+
+class BallEvent(BaseModel):
+    ball: float = 0.0
+    over: int = 0
+    batsman: str = ""
+    bowler: str = ""
+    runs: int = 0
+    extras: int = 0
+    wicket: bool = False
+    wicket_type: str = ""
+    commentary: str = ""
+    score: str = ""  # e.g. "142/3"
+
+
+class MatchBallByBall(BaseModel):
+    id: str
+    name: str = ""
+    status: str = ""
+    available: bool = False
+    balls: List[BallEvent] = []
+
+
+# ──────────────────────────────────────────────
 # Predictions / AI
 # ──────────────────────────────────────────────
 
@@ -294,6 +344,7 @@ class ValueBet(BaseModel):
     selection: str = ""
     odds: Optional[float] = None
     confidence: Optional[float] = None
+    risk: str = "Medium"  # Low, Medium, High
     reasoning: str = ""
 
 
@@ -306,7 +357,7 @@ class MatchPrediction(BaseModel):
     predicted_winner: str
     win_probability: float = 0.5
     confidence: float = 0.5
-    key_factors: List[str] = []
+    key_factors: list = []  # Can be strings or dicts with factor/detail/impact
     value_bets: List[ValueBet] = []
     analysis_text: str = ""
     model_used: str = "generic"
@@ -324,3 +375,29 @@ class ChatResponse(BaseModel):
     response: str
     match_context: Optional[str] = None
     model_used: str = "generic"
+    value_bets: List[ValueBet] = []
+
+
+# ──────────────────────────────────────────────
+# Support Chat
+# ──────────────────────────────────────────────
+
+class SupportChatRequest(BaseModel):
+    message: str
+
+
+class SupportChatResponse(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
+    response: str
+    model_used: str = "generic"
+
+
+# ─── Prediction Stats ────────────────────────────
+class PredictionStatsResponse(BaseModel):
+    total_predictions: int = 0
+    correct: int = 0
+    incorrect: int = 0
+    pending: int = 0
+    accuracy_pct: float = 0.0
+    recent: list = []  # last 10 predictions with results

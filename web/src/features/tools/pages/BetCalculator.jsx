@@ -44,7 +44,7 @@ export default function BetCalculator() {
   const totalProfit = betType === 'single' ? singleProfit : accumProfit;
 
   return (
-    <div className="min-h-dvh bg-[#F0F2F5]">
+    <div className="min-h-dvh bg-[#F0F2F5] dark:bg-gray-900">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#0B1E4D] to-[#162D6B] px-5 pt-6 pb-5">
         <div className="flex items-center gap-3 mb-4">
@@ -63,7 +63,7 @@ export default function BetCalculator() {
 
       <div className="px-5 -mt-3 pb-6">
         {/* Bet type toggle */}
-        <div className="bg-white rounded-2xl shadow-sm p-1.5 mb-4 flex">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-1.5 mb-4 flex">
           <button
             onClick={() => setBetType('single')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
@@ -83,7 +83,7 @@ export default function BetCalculator() {
         </div>
 
         {/* Stake input */}
-        <div className="bg-white rounded-2xl shadow-sm p-4 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 mb-4">
           <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('tools.betCalc.stake')}</label>
           <div className="relative">
             <span className="absolute left-0 top-1/2 -translate-y-1/2 text-xl text-gray-400">₹</span>
@@ -91,7 +91,7 @@ export default function BetCalculator() {
               type="number"
               value={stake}
               onChange={e => setStake(e.target.value)}
-              className="w-full pl-7 text-2xl font-bold text-[#0B1E4D] bg-transparent border-none outline-none"
+              className="w-full pl-7 text-2xl font-bold text-[#0B1E4D] dark:text-white bg-transparent border-none outline-none"
               placeholder="100"
             />
           </div>
@@ -100,7 +100,7 @@ export default function BetCalculator() {
             {[100, 500, 1000, 5000].map(v => (
               <button key={v} onClick={() => setStake(String(v))}
                 className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                  stake === String(v) ? 'bg-[#FF9933] text-white' : 'bg-gray-100 text-gray-500'
+                  stake === String(v) ? 'bg-[#FF9933] text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
                 }`}
               >
                 ₹{v}
@@ -111,7 +111,7 @@ export default function BetCalculator() {
 
         {/* Single odds or Accumulator selections */}
         {betType === 'single' ? (
-          <div className="bg-white rounded-2xl shadow-sm p-4 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 mb-4">
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('tools.betCalc.odds')}</label>
             <input
               type="number"
@@ -119,21 +119,21 @@ export default function BetCalculator() {
               min="1.01"
               value={singleOdds}
               onChange={e => setSingleOdds(e.target.value)}
-              className="w-full text-2xl font-bold text-[#0B1E4D] bg-transparent border-none outline-none"
+              className="w-full text-2xl font-bold text-[#0B1E4D] dark:text-white bg-transparent border-none outline-none"
               placeholder="1.85"
             />
           </div>
         ) : (
           <div className="space-y-2 mb-4">
             {selections.map((sel, idx) => (
-              <div key={idx} className="bg-white rounded-2xl shadow-sm p-4 flex items-center gap-3">
+              <div key={idx} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 flex items-center gap-3">
                 <span className="w-6 h-6 bg-[#0B1E4D] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">{idx + 1}</span>
                 <div className="flex-1">
                   <input
                     type="text"
                     value={sel.label}
                     onChange={e => updateSelection(idx, 'label', e.target.value)}
-                    className="w-full text-sm text-gray-700 bg-transparent outline-none mb-1"
+                    className="w-full text-sm text-gray-700 dark:text-gray-300 bg-transparent outline-none mb-1"
                     placeholder={t('tools.betCalc.selectionPlaceholder')}
                   />
                   <div className="flex items-center gap-1">
@@ -159,7 +159,7 @@ export default function BetCalculator() {
             ))}
             {selections.length < 10 && (
               <button onClick={addSelection}
-                className="w-full py-3 border-2 border-dashed border-gray-200 rounded-2xl text-sm text-gray-400 font-medium active:bg-gray-50 transition-colors">
+                className="w-full py-3 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl text-sm text-gray-400 font-medium active:bg-gray-50 dark:active:bg-gray-700 transition-colors">
                 + {t('tools.betCalc.addSelection')}
               </button>
             )}

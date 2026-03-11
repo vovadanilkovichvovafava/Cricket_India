@@ -2,22 +2,23 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import { CricketBatIcon, RobotIcon, TargetIcon, BarChartIcon, LightBulbIcon, TrendingUpIcon } from '../../../shared/components/Icons';
 
 const SCREENS = [
   {
-    icon: '🏏',
+    icon: <CricketBatIcon className="w-12 h-12 text-white" />,
     bg: 'from-[#FF9933] to-[#FF8800]',
     titleKey: 'onboarding.screen1Title',
     descKey: 'onboarding.screen1Desc',
   },
   {
-    icon: '🤖',
+    icon: <RobotIcon className="w-12 h-12 text-white" />,
     bg: 'from-purple-500 to-indigo-600',
     titleKey: 'onboarding.screen2Title',
     descKey: 'onboarding.screen2Desc',
   },
   {
-    icon: '🎯',
+    icon: <TargetIcon className="w-12 h-12 text-white" />,
     bg: 'from-[#138808] to-emerald-600',
     titleKey: 'onboarding.screen3Title',
     descKey: 'onboarding.screen3Desc',
@@ -70,7 +71,7 @@ export default function OnboardingPage() {
 
         {/* Icon */}
         <div className={`w-24 h-24 bg-gradient-to-br ${screen.bg} rounded-3xl flex items-center justify-center mb-8 shadow-lg`}>
-          <span className="text-5xl">{screen.icon}</span>
+          {screen.icon}
         </div>
 
         {/* Title */}
@@ -87,12 +88,12 @@ export default function OnboardingPage() {
         {step === 0 && (
           <div className="flex gap-3 mt-8">
             {[
-              { emoji: '📊', label: t('onboarding.feature1') },
-              { emoji: '💡', label: t('onboarding.feature2') },
-              { emoji: '📈', label: t('onboarding.feature3') },
+              { icon: <BarChartIcon className="w-5 h-5 text-white mx-auto" />, label: t('onboarding.feature1') },
+              { icon: <LightBulbIcon className="w-5 h-5 text-white mx-auto" />, label: t('onboarding.feature2') },
+              { icon: <TrendingUpIcon className="w-5 h-5 text-white mx-auto" />, label: t('onboarding.feature3') },
             ].map((f, i) => (
               <div key={i} className="bg-white/10 rounded-xl px-3 py-2 text-center">
-                <span className="text-lg block mb-0.5">{f.emoji}</span>
+                <span className="block mb-0.5">{f.icon}</span>
                 <span className="text-[10px] text-white/70 font-medium">{f.label}</span>
               </div>
             ))}

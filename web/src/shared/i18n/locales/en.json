@@ -120,6 +120,23 @@
       "tossWinBat": "Toss Win & Bat %",
       "chaseWin": "Chase Win %"
     },
+    "weather": {
+      "title": "Weather Forecast",
+      "temp": "Temperature",
+      "humidity": "Humidity",
+      "wind": "Wind",
+      "dewFactor": "Dew Factor",
+      "dewHeavy": "Heavy dew expected — bowling second will be harder",
+      "dewModerate": "Moderate dew — may affect spinners in 2nd innings",
+      "dewLight": "Minimal dew — conditions even for both innings"
+    },
+    "pitch": {
+      "type": "Pitch Type",
+      "surface": "Surface",
+      "highScoring": "High-scoring venue. Batting-friendly conditions with good carry and true bounce. Pacers may find some assistance early. Team batting first has historically posted 175+ here.",
+      "balanced": "Balanced pitch offering something for both batsmen and bowlers. Spinners tend to play a key role in middle overs. Chasing teams have a slight edge.",
+      "lowScoring": "Low-scoring venue that assists spin heavily. Slower surface makes stroke-play difficult. Bowling first and defending is the preferred strategy."
+    },
     "h2h": {
       "overallRecord": "Overall Record ({{count}} matches)",
       "wins": "wins",
@@ -132,7 +149,8 @@
       "oddsComparison": "Odds Comparison",
       "bookmaker": "Bookmaker",
       "best": "BEST",
-      "notAvailable": "Odds comparison not available"
+      "notAvailable": "Odds comparison not available",
+      "notAvailableHint": "Odds are usually available 1-2 days before major matches (IPL, internationals). Check back closer to match time!"
     },
     "prediction": {
       "aiMatchPrediction": "AI Match Prediction",
@@ -223,7 +241,7 @@
   "aiChat": {
     "title": "CricketBaazi AI",
     "online": "Online",
-    "welcomeMessage": "Namaste! I'm your CricketBaazi AI Analyst for IPL 2026. I can help you with match predictions, value bets, player analysis, and betting strategies. Aapko kya jaanna hai?",
+    "welcomeMessage": "Hey! I'm your CricketBaazi AI Analyst for IPL 2026. I can help you with match predictions, value bets, player analysis, and betting strategies. What would you like to know?",
     "suggestions": {
       "analyzeCSKvsMI": "Analyze CSK vs MI",
       "bestValueBets": "Best value bets today",
@@ -491,6 +509,44 @@
     "ctaButton": "Make Your Pick"
   },
 
+  "premium": {
+    "getPro": "Get Pro",
+    "unlockAll": "Unlock All Features",
+    "unlimitedAi": "Unlimited AI predictions",
+    "allTools": "All tools & calculators",
+    "prioritySupport": "Priority support",
+    "upgradeNow": "Deposit & Get Pro",
+    "upgradeDesc": "Deposit at our partner bookmaker & get Pro instantly",
+    "proActive": "Pro Active",
+    "freePlan": "Free Plan",
+    "proPlan": "Pro Plan",
+    "planSection": "Plan",
+    "requestsLeft": "{{count}} requests left today",
+    "unlimited": "Unlimited",
+    "trialAvailable": "1 Free Trial",
+    "trialUsed": "Pro Only",
+    "limitReached": "Daily limit reached",
+    "upgradeForMore": "Deposit at our partner bookmaker to unlock unlimited AI predictions and all tools",
+    "downgrade": "Downgrade",
+    "goProTitle": "Go Pro — Unlimited AI",
+    "goProDesc": "Deposit at partner & unlock everything free"
+  },
+
+  "support": {
+    "title": "CricketBaazi Support",
+    "online": "Online",
+    "welcome": "Hi! I'm CricketBaazi Support. I can help you understand the app, cricket terms, betting concepts, and our tools. Ask me anything!",
+    "quickQuestionsLabel": "Common questions:",
+    "placeholder": "Ask me anything...",
+    "fallback": "Sorry, I'm having trouble connecting. Please try again in a moment!",
+    "quick": {
+      "howApp": "How does the app work?",
+      "whatOdds": "What are betting odds?",
+      "howKelly": "How to use Kelly Calculator?",
+      "whatValueBet": "What is a value bet?"
+    }
+  },
+
   "toolsHub": {
     "title": "Cricket Tools",
     "subtitle": "Smart calculators & guides for smarter bets",
@@ -512,7 +568,71 @@
       "glossary": {
         "name": "Cricket Glossary",
         "desc": "40+ cricket & betting terms explained"
+      },
+      "tracker": {
+        "name": "Bet Tracker",
+        "desc": "Track your bets, P&L and win rate"
+      },
+      "players": {
+        "name": "Player Stats",
+        "desc": "Search players & view career statistics"
       }
+    }
+  },
+
+  "players": {
+    "title": "Player Stats",
+    "subtitle": "Search & explore cricket player statistics",
+    "searchPlaceholder": "Search player name...",
+    "profile": "Player Profile",
+    "resultsFound": "players found",
+    "noResults": "No players found",
+    "tryDifferent": "Try a different search term",
+    "loadingProfile": "Loading player profile...",
+    "iplStars": "IPL 2026 Stars",
+    "statsAvailable": "Stats Available",
+    "batting": "Batting",
+    "battingDesc": "Runs, avg, SR, 50s, 100s",
+    "bowling": "Bowling",
+    "bowlingDesc": "Wickets, economy, avg",
+    "battingStats": "Batting Statistics",
+    "bowlingStats": "Bowling Statistics",
+    "born": "Born",
+    "birthPlace": "Birth Place",
+    "battingStyle": "Batting Style",
+    "bowlingStyle": "Bowling Style",
+    "noStats": "No statistics available for this player",
+    "tipTitle": "Pro Tip",
+    "tipDesc": "Check player stats before betting on Top Batsman or Top Bowler markets. Form and venue history matter!"
+  },
+
+  "betTracker": {
+    "title": "Bet Tracker",
+    "subtitle": "Track your bets & performance",
+    "addBet": "Add Bet",
+    "matchPlaceholder": "Match (e.g. CSK vs MI)",
+    "marketPlaceholder": "Market",
+    "pickPlaceholder": "Your Pick",
+    "oddsPlaceholder": "Odds",
+    "stakePlaceholder": "Stake (₹)",
+    "pick": "Pick",
+    "oddsLabel": "Odds",
+    "stakeLabel": "Stake",
+    "potentialWin": "To Win",
+    "markWon": "Won ✅",
+    "markLost": "Lost ❌",
+    "empty": "No bets tracked yet",
+    "emptyHint": "Tap + to log your first bet",
+    "filter": {
+      "all": "All",
+      "pending": "Pending",
+      "won": "Won",
+      "lost": "Lost"
+    },
+    "stats": {
+      "profit": "Profit",
+      "winRate": "Win Rate",
+      "bets": "Total"
     }
   }
 }

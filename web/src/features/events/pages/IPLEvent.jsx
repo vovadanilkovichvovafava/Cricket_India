@@ -108,7 +108,7 @@ function TeamsGrid({ selectedTeam, onSelectTeam }) {
     <div className="px-5 py-4">
       <div className="flex items-center gap-2 mb-3">
         <TrophyIcon className="w-5 h-5 text-[#FCCA06]" />
-        <h2 className="font-bold text-gray-900">{t('ipl.teams')}</h2>
+        <h2 className="font-bold text-gray-900 dark:text-gray-100">{t('ipl.teams')}</h2>
         {selectedTeam && (
           <button onClick={() => onSelectTeam(null)}
             className="ml-auto text-xs text-[#FF9933] font-medium">
@@ -127,7 +127,7 @@ function TeamsGrid({ selectedTeam, onSelectTeam }) {
               className={`flex items-center gap-2.5 p-3 rounded-xl transition-all active:scale-[0.97] ${
                 isSelected
                   ? 'ring-2 ring-offset-1 shadow-md'
-                  : 'bg-white shadow-sm'
+                  : 'bg-white dark:bg-gray-800 shadow-sm'
               }`}
               style={isSelected ? { background: team.bg + '15', ringColor: team.bg } : undefined}
             >
@@ -138,7 +138,7 @@ function TeamsGrid({ selectedTeam, onSelectTeam }) {
                 {code}
               </div>
               <div className="text-left min-w-0">
-                <p className="text-xs font-bold text-gray-900 truncate">{team.name}</p>
+                <p className="text-xs font-bold text-gray-900 dark:text-gray-100 truncate">{team.name}</p>
                 <p className="text-[10px] text-gray-400">{team.city}</p>
               </div>
             </button>
@@ -157,8 +157,8 @@ function PointsTable({ standings, loading }) {
   if (loading) {
     return (
       <div className="px-5 py-4">
-        <h2 className="font-bold text-gray-900 mb-3">{t('ipl.pointsTable')}</h2>
-        <div className="bg-white rounded-xl p-4 shadow-sm space-y-2">
+        <h2 className="font-bold text-gray-900 dark:text-gray-100 mb-3">{t('ipl.pointsTable')}</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm space-y-2">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="shimmer h-8 w-full rounded" />
           ))}
@@ -170,8 +170,8 @@ function PointsTable({ standings, loading }) {
   if (!standings || standings.length === 0) {
     return (
       <div className="px-5 py-4">
-        <h2 className="font-bold text-gray-900 mb-3">{t('ipl.pointsTable')}</h2>
-        <div className="bg-white rounded-xl p-6 shadow-sm text-center">
+        <h2 className="font-bold text-gray-900 dark:text-gray-100 mb-3">{t('ipl.pointsTable')}</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm text-center">
           <CricketBatIcon className="w-10 h-10 text-gray-200 mx-auto mb-2" />
           <p className="text-gray-400 text-sm">{t('ipl.seasonStartsDate')}</p>
           <p className="text-gray-300 text-xs">{t('ipl.pointsTableAppear')}</p>
@@ -182,10 +182,10 @@ function PointsTable({ standings, loading }) {
 
   return (
     <div className="px-5 py-4">
-      <h2 className="font-bold text-gray-900 mb-3">{t('ipl.pointsTable')}</h2>
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <h2 className="font-bold text-gray-900 dark:text-gray-100 mb-3">{t('ipl.pointsTable')}</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
         {/* Header */}
-        <div className="grid grid-cols-[auto_1fr_repeat(5,_32px)] gap-1 px-3 py-2 bg-gray-50 text-[10px] text-gray-400 font-semibold uppercase">
+        <div className="grid grid-cols-[auto_1fr_repeat(5,_32px)] gap-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 text-[10px] text-gray-400 font-semibold uppercase">
           <span className="w-5">#</span>
           <span>Team</span>
           <span className="text-center">{t('ipl.played')}</span>
@@ -200,25 +200,25 @@ function PointsTable({ standings, loading }) {
           const isPlayoff = idx < 4;
           return (
             <div key={idx}
-              className={`grid grid-cols-[auto_1fr_repeat(5,_32px)] gap-1 px-3 py-2.5 items-center border-t border-gray-50 ${isPlayoff ? 'bg-green-50/30' : ''}`}>
+              className={`grid grid-cols-[auto_1fr_repeat(5,_32px)] gap-1 px-3 py-2.5 items-center border-t border-gray-50 dark:border-gray-700 ${isPlayoff ? 'bg-green-50/30 dark:bg-green-900/20' : ''}`}>
               <span className="w-5 text-xs text-gray-400 font-medium">{idx + 1}</span>
               <div className="flex items-center gap-2 min-w-0">
                 <div className="w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-black shrink-0"
                   style={{ background: teamData.bg || '#6B7280', color: teamData.text || '#fff' }}>
                   {row.team?.code || '?'}
                 </div>
-                <span className="text-xs font-semibold text-gray-900 truncate">{row.team?.short_name || row.team?.code}</span>
+                <span className="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate">{row.team?.short_name || row.team?.code}</span>
               </div>
-              <span className="text-xs text-gray-600 text-center">{row.played}</span>
+              <span className="text-xs text-gray-600 dark:text-gray-300 text-center">{row.played}</span>
               <span className="text-xs text-green-600 text-center font-medium">{row.won}</span>
               <span className="text-xs text-red-400 text-center">{row.lost}</span>
               <span className="text-[10px] text-gray-500 text-center">{row.net_run_rate > 0 ? '+' : ''}{row.net_run_rate?.toFixed(2)}</span>
-              <span className="text-xs font-bold text-gray-900 text-center">{row.points}</span>
+              <span className="text-xs font-bold text-gray-900 dark:text-gray-100 text-center">{row.points}</span>
             </div>
           );
         })}
         {/* Legend */}
-        <div className="px-3 py-2 bg-gray-50 flex items-center gap-1">
+        <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700 flex items-center gap-1">
           <div className="w-2 h-2 bg-green-200 rounded-full" />
           <span className="text-[10px] text-gray-400">{t('ipl.playoffsNote')}</span>
         </div>
@@ -242,13 +242,13 @@ function QuickFacts() {
     <div className="px-5 py-4">
       <div className="flex items-center gap-2 mb-3">
         <FireIcon className="w-5 h-5 text-[#FF9933]" />
-        <h2 className="font-bold text-gray-900">{t('ipl.quickFacts')}</h2>
+        <h2 className="font-bold text-gray-900 dark:text-gray-100">{t('ipl.quickFacts')}</h2>
       </div>
       <div className="grid grid-cols-2 gap-2.5">
         {facts.map(fact => (
-          <div key={fact.label} className="bg-white rounded-xl p-3.5 shadow-sm">
+          <div key={fact.label} className="bg-white dark:bg-gray-800 rounded-xl p-3.5 shadow-sm">
             <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">{fact.label}</p>
-            <p className="text-sm font-bold text-gray-900">{fact.value}</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{fact.value}</p>
             <div className="w-8 h-1 rounded-full mt-2" style={{ background: fact.color }} />
           </div>
         ))}
@@ -322,7 +322,7 @@ export default function IPLEvent() {
   const dateKeys = Object.keys(groupedMatches);
 
   return (
-    <div className="min-h-screen bg-[#F0F2F5] animate-fade-in">
+    <div className="min-h-screen bg-[#F0F2F5] dark:bg-gray-900 animate-fade-in">
       <IPLHeader />
 
       <div className="-mt-3">
@@ -341,7 +341,7 @@ export default function IPLEvent() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <CricketBatIcon className="w-5 h-5 text-[#0B1E4D]" />
-              <h2 className="font-bold text-gray-900">
+              <h2 className="font-bold text-gray-900 dark:text-gray-100">
                 {selectedTeam ? t('ipl.teamMatches', { team: selectedTeam }) : t('common.schedule')}
               </h2>
             </div>
@@ -353,7 +353,7 @@ export default function IPLEvent() {
           {loading ? (
             <div className="space-y-2">
               {[1, 2, 3].map(i => (
-                <div key={i} className="bg-white rounded-xl p-4">
+                <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="shimmer w-6 h-6 rounded-full" />
@@ -369,7 +369,7 @@ export default function IPLEvent() {
               ))}
             </div>
           ) : dateKeys.length === 0 ? (
-            <div className="bg-white rounded-xl p-6 shadow-sm text-center">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm text-center">
               <p className="text-gray-400 text-sm">
                 {selectedTeam ? t('ipl.noTeamMatches', { team: selectedTeam }) : t('ipl.scheduleAppear')}
               </p>
@@ -383,7 +383,7 @@ export default function IPLEvent() {
                     <h3 className="text-xs font-semibold text-gray-500">{dateKey}</h3>
                     <span className="text-[10px] text-gray-300 ml-auto">{groupedMatches[dateKey].length}</span>
                   </div>
-                  <div className="bg-white rounded-xl overflow-hidden shadow-sm">
+                  <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm">
                     {groupedMatches[dateKey].map(m => (
                       <MatchCard key={m.id} match={m} />
                     ))}

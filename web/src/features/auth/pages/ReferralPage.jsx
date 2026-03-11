@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import api from '../../../shared/api';
+import { ShareIcon, UsersIcon, GiftIcon } from '../../../shared/components/Icons';
 import BottomNav from '../../../shared/components/BottomNav';
 import TricolorBar from '../../../shared/components/TricolorBar';
 
@@ -113,7 +114,7 @@ export default function ReferralPage() {
 
       <div className="px-5 -mt-4 space-y-4 pb-6">
         {/* Referral Code Card */}
-        <div className="bg-white rounded-2xl shadow-sm p-5">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('referral.yourCode')}</p>
           <div className="flex items-center gap-3">
             <div className="flex-1 bg-gray-50 border-2 border-dashed border-[#FF9933]/30 rounded-xl px-4 py-3 text-center">
@@ -139,8 +140,8 @@ export default function ReferralPage() {
         </div>
 
         {/* Share buttons */}
-        <div className="bg-white rounded-2xl shadow-sm p-5">
-          <p className="text-sm font-bold text-gray-900 mb-3">{t('referral.shareWith')}</p>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
+          <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3">{t('referral.shareWith')}</p>
           <div className="grid grid-cols-3 gap-3">
             {/* WhatsApp */}
             <button
@@ -206,9 +207,9 @@ export default function ReferralPage() {
         </div>
 
         {/* Progress to milestone */}
-        <div className="bg-white rounded-2xl shadow-sm p-5">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-bold text-gray-900">{t('referral.milestoneTitle')}</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{t('referral.milestoneTitle')}</p>
             <span className="text-xs text-[#FF9933] font-semibold">{referralCount}/{nextMilestone.count}</span>
           </div>
           <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden mb-3">
@@ -243,16 +244,16 @@ export default function ReferralPage() {
         </div>
 
         {/* How it works */}
-        <div className="bg-white rounded-2xl shadow-sm p-5">
-          <p className="text-sm font-bold text-gray-900 mb-3">{t('referral.howItWorks')}</p>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
+          <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3">{t('referral.howItWorks')}</p>
           <div className="space-y-3">
             {[
-              { step: '1', icon: '📤', text: t('referral.step1') },
-              { step: '2', icon: '👥', text: t('referral.step2') },
-              { step: '3', icon: '🎁', text: t('referral.step3') },
+              { step: '1', icon: <ShareIcon className="w-4 h-4 text-[#FF9933]" />, text: t('referral.step1') },
+              { step: '2', icon: <UsersIcon className="w-4 h-4 text-[#FF9933]" />, text: t('referral.step2') },
+              { step: '3', icon: <GiftIcon className="w-4 h-4 text-[#FF9933]" />, text: t('referral.step3') },
             ].map((s, i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-[#FF9933]/10 rounded-full flex items-center justify-center text-sm">
+                <div className="w-8 h-8 bg-[#FF9933]/10 rounded-full flex items-center justify-center">
                   {s.icon}
                 </div>
                 <p className="text-sm text-gray-600 flex-1">{s.text}</p>

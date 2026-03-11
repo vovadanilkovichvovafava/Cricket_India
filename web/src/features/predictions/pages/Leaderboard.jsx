@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import BottomNav from '../../../shared/components/BottomNav';
 import TricolorBar from '../../../shared/components/TricolorBar';
-import { TrophyIcon } from '../../../shared/components/Icons';
+import { TrophyIcon, GoldMedalIcon, SilverMedalIcon, BronzeMedalIcon, FireIcon, CrownIcon } from '../../../shared/components/Icons';
 
 // Mock leaderboard data
 const WEEKLY_LEADERS = [
@@ -33,9 +33,9 @@ const MONTHLY_LEADERS = [
 ];
 
 function RankBadge({ rank }) {
-  if (rank === 1) return <span className="text-2xl">🥇</span>;
-  if (rank === 2) return <span className="text-2xl">🥈</span>;
-  if (rank === 3) return <span className="text-2xl">🥉</span>;
+  if (rank === 1) return <GoldMedalIcon className="w-6 h-6" />;
+  if (rank === 2) return <SilverMedalIcon className="w-6 h-6" />;
+  if (rank === 3) return <BronzeMedalIcon className="w-6 h-6" />;
   return (
     <span className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-bold text-gray-500">
       {rank}
@@ -66,7 +66,7 @@ function LeaderCard({ leader, isTop3 }) {
       <div className="text-right shrink-0">
         <p className="text-sm font-bold text-emerald-600">{leader.correct}/{leader.predictions}</p>
         <div className="flex items-center gap-0.5 justify-end mt-0.5">
-          <span className="text-[10px]">🔥</span>
+          <FireIcon className="w-4 h-4" />
           <span className="text-[10px] text-amber-600 font-semibold">{leader.streak}</span>
         </div>
       </div>
@@ -115,7 +115,7 @@ export default function Leaderboard() {
             >
               {topThree[1]?.name.split(' ').map(n => n[0]).join('')}
             </div>
-            <span className="text-lg mt-1">🥈</span>
+            <SilverMedalIcon className="w-6 h-6 mt-1" />
             <p className="text-xs text-white/80 font-medium mt-0.5">{topThree[1]?.name.split(' ')[0]}</p>
             <p className="text-[10px] text-emerald-300 font-bold">
               {topThree[1]?.predictions > 0 ? Math.round((topThree[1]?.correct / topThree[1]?.predictions) * 100) : 0}%
@@ -131,9 +131,9 @@ export default function Leaderboard() {
               >
                 {topThree[0]?.name.split(' ').map(n => n[0]).join('')}
               </div>
-              <div className="absolute -top-3 -right-1 text-xl">👑</div>
+              <div className="absolute -top-3 -right-1"><CrownIcon className="w-5 h-5 text-yellow-400" /></div>
             </div>
-            <span className="text-lg mt-1">🥇</span>
+            <GoldMedalIcon className="w-6 h-6 mt-1" />
             <p className="text-xs text-white font-bold mt-0.5">{topThree[0]?.name.split(' ')[0]}</p>
             <p className="text-[10px] text-emerald-300 font-bold">
               {topThree[0]?.predictions > 0 ? Math.round((topThree[0]?.correct / topThree[0]?.predictions) * 100) : 0}%
@@ -148,7 +148,7 @@ export default function Leaderboard() {
             >
               {topThree[2]?.name.split(' ').map(n => n[0]).join('')}
             </div>
-            <span className="text-lg mt-1">🥉</span>
+            <BronzeMedalIcon className="w-6 h-6 mt-1" />
             <p className="text-xs text-white/80 font-medium mt-0.5">{topThree[2]?.name.split(' ')[0]}</p>
             <p className="text-[10px] text-emerald-300 font-bold">
               {topThree[2]?.predictions > 0 ? Math.round((topThree[2]?.correct / topThree[2]?.predictions) * 100) : 0}%
@@ -203,7 +203,7 @@ export default function Leaderboard() {
             <h3 className="text-sm font-semibold text-gray-800">{t('leaderboard.rankings')}</h3>
             <div className="flex items-center gap-3 text-[10px] text-gray-400">
               <span>{t('leaderboard.correct')}</span>
-              <span>🔥 {t('leaderboard.streak')}</span>
+              <span className="flex items-center gap-0.5"><FireIcon className="w-4 h-4" /> {t('leaderboard.streak')}</span>
             </div>
           </div>
           <div className="divide-y divide-gray-50">
