@@ -8,6 +8,9 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.api.admin_auth import get_current_admin
+from app.config import settings
+
+_is_pg = settings.DATABASE_URL.startswith("postgresql")
 
 router = APIRouter(tags=["admin-stats"])
 
@@ -101,16 +104,28 @@ async def get_online_history(
     now = datetime.now(timezone.utc)
     start = now - timedelta(hours=24)
 
-    # SQLite-compatible hour extraction
-    rows = db.execute(text("""
-        SELECT strftime('%H:00', created_at) as hour,
-               COUNT(DISTINCT user_id) as unique_users,
-               COUNT(*) as total_events
-        FROM analytics_events
-        WHERE created_at >= :start AND user_id IS NOT NULL
-        GROUP BY strftime('%H', created_at)
-        ORDER BY hour
-    """), {"start": start}).fetchall()
+    # DB-agnostic hour extraction
+    if _is_pg:
+        sql = """
+            SELECT to_char(created_at, 'HH24:00') as hour,
+                   COUNT(DISTINCT user_id) as unique_users,
+                   COUNT(*) as total_events
+            FROM analytics_events
+            WHERE created_at >= :start AND user_id IS NOT NULL
+            GROUP BY to_char(created_at, 'HH24:00')
+            ORDER BY hour
+        """
+    else:
+        sql = """
+            SELECT strftime('%H:00', created_at) as hour,
+                   COUNT(DISTINCT user_id) as unique_users,
+                   COUNT(*) as total_events
+            FROM analytics_events
+            WHERE created_at >= :start AND user_id IS NOT NULL
+            GROUP BY strftime('%H', created_at)
+            ORDER BY hour
+        """
+    rows = db.execute(text(sql), {"start": start}).fetchall()
 
     hours = [{"hour": r[0], "unique_users": r[1], "total_events": r[2]} for r in rows]
 
@@ -146,10 +161,10 @@ async def get_users_stats(
 
     # Daily registrations (30 days)
     daily_rows = db.execute(text("""
-        SELECT date(created_at) as date, COUNT(*) as count
+        SELECT CAST(created_at AS DATE) as date, COUNT(*) as count
         FROM users
         WHERE created_at >= :start
-        GROUP BY date(created_at)
+        GROUP BY CAST(created_at AS DATE)
         ORDER BY date
     """), {"start": thirty_days_ago}).fetchall()
     daily_registrations = [{"date": r[0], "count": r[1]} for r in daily_rows]
@@ -309,10 +324,10 @@ async def get_predictions_stats(
 
     # Daily predictions
     daily_rows = db.execute(text("""
-        SELECT date(created_at) as date, COUNT(*) as count
+        SELECT CAST(created_at AS DATE) as date, COUNT(*) as count
         FROM prediction_history
         WHERE created_at >= :start
-        GROUP BY date(created_at)
+        GROUP BY CAST(created_at AS DATE)
         ORDER BY date
     """), {"start": thirty_days_ago}).fetchall()
     daily_predictions = [{"date": r[0], "count": r[1]} for r in daily_rows]

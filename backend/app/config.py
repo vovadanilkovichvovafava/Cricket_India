@@ -31,8 +31,6 @@ class Settings(BaseSettings):
         origins = list(self.CORS_ORIGINS)
         if self.WEB_URL:
             origins.append(self.WEB_URL.rstrip("/"))
-        # Accept all saturn.ac subdomains
-        origins.append("https://cricket-india-ddtrij.saturn.ac")
         return origins
 
     class Config:

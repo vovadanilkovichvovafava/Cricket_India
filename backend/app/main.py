@@ -26,9 +26,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware
+# CORS middleware — allow all saturn.ac subdomains + configured origins
 app.add_middleware(
     CORSMiddleware,
+    allow_origin_regex=r"https://.*\.saturn\.ac",
     allow_origins=settings.get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
