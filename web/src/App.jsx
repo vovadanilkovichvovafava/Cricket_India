@@ -113,23 +113,26 @@ export default function App() {
         <SupportChat />
         <Suspense fallback={<Spinner />}>
           <Routes>
-            <Route path="/" element={<Home />} />
+            {/* Public routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/referral" element={<ReferralPage />} />
-            <Route path="/matches" element={<Matches />} />
-            <Route path="/match/:id" element={<MatchDetail />} />
-            <Route path="/ai-chat" element={<AIChat />} />
-            <Route path="/ipl" element={<IPLEvent />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/tools" element={<ToolsHub />} />
-            <Route path="/tools/kelly" element={<KellyCalculator />} />
-            <Route path="/tools/odds" element={<OddsConverter />} />
-            <Route path="/tools/bet-calc" element={<BetCalculator />} />
-            <Route path="/tools/glossary" element={<CricketGlossary />} />
-            <Route path="/tools/tracker" element={<BetTracker />} />
-            <Route path="/tools/players" element={<PlayerStats />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
+
+            {/* Protected routes — require login */}
+            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/matches" element={<ProtectedRoute><Matches /></ProtectedRoute>} />
+            <Route path="/match/:id" element={<ProtectedRoute><MatchDetail /></ProtectedRoute>} />
+            <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
+            <Route path="/ipl" element={<ProtectedRoute><IPLEvent /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/tools" element={<ProtectedRoute><ToolsHub /></ProtectedRoute>} />
+            <Route path="/tools/kelly" element={<ProtectedRoute><KellyCalculator /></ProtectedRoute>} />
+            <Route path="/tools/odds" element={<ProtectedRoute><OddsConverter /></ProtectedRoute>} />
+            <Route path="/tools/bet-calc" element={<ProtectedRoute><BetCalculator /></ProtectedRoute>} />
+            <Route path="/tools/glossary" element={<ProtectedRoute><CricketGlossary /></ProtectedRoute>} />
+            <Route path="/tools/tracker" element={<ProtectedRoute><BetTracker /></ProtectedRoute>} />
+            <Route path="/tools/players" element={<ProtectedRoute><PlayerStats /></ProtectedRoute>} />
+            <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
