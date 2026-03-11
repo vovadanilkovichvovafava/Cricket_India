@@ -58,7 +58,9 @@ export default function Home() {
           all.push(m);
         }
       });
-      setMatches(all);
+      // Only show live + upcoming — no old completed matches
+      const active = all.filter(m => m.status === 'live' || m.status === 'upcoming');
+      setMatches(active);
       if (all.length === 0) setError(true);
     } catch {
       setMatches([]);

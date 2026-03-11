@@ -21,7 +21,8 @@ export default function Matches() {
     { key: 'all', label: t('matches.filters.all') },
     { key: 'live', label: t('common.live') },
     { key: 'today', label: t('matches.filters.today') },
-    { key: 'week', label: t('matches.filters.thisWeek') },
+    { key: 'upcoming', label: t('matches.filters.upcoming', 'Upcoming') },
+    { key: 'results', label: t('matches.filters.results', 'Results') },
   ];
 
   const loadMatches = useCallback(async () => {
@@ -62,23 +63,24 @@ export default function Matches() {
     const now = new Date();
     const todayStr = now.toISOString().slice(0, 10);
 
-    if (tab === 'live') {
+    if (tab === 'all') {
+      // Only live + upcoming — no old completed matches
+      filtered = filtered.filter(m => m.status === 'live' || m.status === 'upcoming');
+    } else if (tab === 'live') {
       filtered = filtered.filter(m => m.status === 'live');
     } else if (tab === 'today') {
       filtered = filtered.filter(m => new Date(m.date).toISOString().slice(0, 10) === todayStr);
-    } else if (tab === 'week') {
-      const weekEnd = new Date(now);
-      weekEnd.setDate(weekEnd.getDate() + 7);
-      filtered = filtered.filter(m => {
-        const d = new Date(m.date);
-        return d >= now && d <= weekEnd;
-      });
+    } else if (tab === 'upcoming') {
+      filtered = filtered.filter(m => m.status === 'upcoming');
+    } else if (tab === 'results') {
+      filtered = filtered.filter(m => m.status === 'completed');
     }
 
     return filtered;
   }, [matches, tab]);
 
   const liveCount = matches.filter(m => m.status === 'live').length;
+  const activeCount = matches.filter(m => m.status === 'live' || m.status === 'upcoming').length;
 
   // Group by date
   const groupedMatches = useMemo(() => {
@@ -109,7 +111,7 @@ export default function Matches() {
           </button>
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t('matches.title')}</h1>
-            <p className="text-gray-500 text-sm">{t('matches.matchCount', { count: matches.length })}</p>
+            <p className="text-gray-500 text-sm">{t('matches.matchCount', { count: filteredMatches.length })}</p>
           </div>
         </div>
 
@@ -129,9 +131,9 @@ export default function Matches() {
                   {liveCount}
                 </span>
               )}
-              {tabItem.key === 'all' && matches.length > 0 && (
+              {tabItem.key === 'all' && activeCount > 0 && (
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200">
-                  {matches.length}
+                  {activeCount}
                 </span>
               )}
               {tab === tabItem.key && (
