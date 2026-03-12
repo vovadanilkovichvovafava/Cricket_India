@@ -1679,12 +1679,9 @@ export default function MatchDetail() {
 
             <div className="p-5 space-y-3">
               {/* Option 1: Get Pro — big CTA */}
-              <a
-                href={affiliateLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setShowUpgradeModal(false)}
-                className="block w-full p-4 bg-gradient-to-r from-[#FF9933] to-[#FF8800] rounded-xl active:scale-[0.98] transition-transform shadow-lg shadow-orange-200/50"
+              <button
+                onClick={() => { setShowUpgradeModal(false); navigate('/pro'); }}
+                className="block w-full p-4 bg-gradient-to-r from-[#FF9933] to-[#FF8800] rounded-xl active:scale-[0.98] transition-transform shadow-lg shadow-orange-200/50 text-left"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
@@ -1709,7 +1706,7 @@ export default function MatchDetail() {
                     </div>
                   ))}
                 </div>
-              </a>
+              </button>
 
               {/* Option 2: Wait for reset */}
               <div className="flex items-center gap-3 p-3.5 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
