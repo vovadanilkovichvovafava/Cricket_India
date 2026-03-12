@@ -33,12 +33,11 @@ async function request(path, options = {}) {
 
   const res = await fetch(`${BASE}${path}`, { ...options, headers });
   if (res.status === 401) {
-    localStorage.removeItem('token');
-    // Don't hard-redirect for API calls (predictions, chat, support) —
-    // let components handle auth errors gracefully (show modal, not kick to login)
-    const isPageLoad = path === '/auth/me';
-    if (isPageLoad) {
-      // Only redirect on initial session check (app load)
+    // Only clear token & redirect for the initial session check (/auth/me)
+    // For all other endpoints (chat, predictions, etc.) — just throw error,
+    // let the component show an upgrade modal or error message
+    if (path === '/auth/me') {
+      localStorage.removeItem('token');
       window.location.href = '/login';
     }
     const err = new Error('Session expired');
