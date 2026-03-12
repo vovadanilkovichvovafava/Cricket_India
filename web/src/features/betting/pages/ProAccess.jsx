@@ -128,15 +128,12 @@ const Check = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 const CheckBold = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
 const Download = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
 const Card = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>;
-// Cricket ball icon
 const CricketBall = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 4c1 3 1 6 0 8s-1 6 0 8"/><path d="M16 4c-1 3-1 6 0 8s1 6 0 8"/></svg>;
 
-const features = [
-  'Unlimited AI Predictions',
-  'Value Bet Finder',
-  'Kelly Calculator',
-  'Advanced Analytics',
-];
+// Render HTML from translation (for <strong>, <em>, <span>)
+function H({ html }) {
+  return <span dangerouslySetInnerHTML={{ __html: html }} />;
+}
 
 const calcTiers = [
   { dep: '\u20b91,000',  bonus: '\u20b91,500',  total: '\u20b92,500',  months: 1 },
@@ -144,7 +141,6 @@ const calcTiers = [
   { dep: '\u20b95,000',  bonus: '\u20b97,500',  total: '\u20b912,500', months: 5 },
   { dep: '\u20b910,000', bonus: '\u20b915,000', total: '\u20b925,000', months: 8 },
 ];
-const calcLabels = ['Start', 'Popular', 'Best Value', 'Maximum'];
 
 export default function ProAccess() {
   const { t } = useTranslation();
@@ -153,6 +149,9 @@ export default function ProAccess() {
   const [sel, setSel] = useState(0);
   const [calcSel, setCalcSel] = useState(0);
   const bookmakerLink = getOfferLink();
+
+  const featureKeys = ['unlimitedAi', 'valueBetFinder', 'kellyCalc', 'advancedAnalytics'];
+  const calcLabels = t('proAccess.step4.calcLabels', { returnObjects: true });
 
   const next = () => { if (step < TOTAL) setStep(step + 1); };
   const prev = () => { if (step > 1) setStep(step - 1); else navigate(-1); };
@@ -174,38 +173,38 @@ export default function ProAccess() {
           <div className="q-sico red">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
           </div>
-          <div className="q-stit">Your Free Plan is{'\n'}<em>Limited</em></div>
-          <div className="q-ssub">Upgrade to Pro and unlock everything for IPL 2026 season</div>
+          <div className="q-stit"><H html={t('proAccess.step1.title')} /></div>
+          <div className="q-ssub">{t('proAccess.step1.subtitle')}</div>
           <div className="q-pgrid">
             <div className="q-pcol free">
-              <div className="q-plbl2">Free</div>
-              <div className="q-pi">3 AI predictions/day</div>
-              <div className="q-pi"><span className="q-px">&#10005;</span> Value Bet Finder</div>
-              <div className="q-pi"><span className="q-px">&#10005;</span> Advanced Analytics</div>
+              <div className="q-plbl2">{t('proAccess.step1.free')}</div>
+              <div className="q-pi">{t('proAccess.step1.freePredictions')}</div>
+              <div className="q-pi"><span className="q-px">&#10005;</span> {t('proAccess.features.valueBetFinder')}</div>
+              <div className="q-pi"><span className="q-px">&#10005;</span> {t('proAccess.features.advancedAnalytics')}</div>
               <div className="q-pi"><span className="q-px">&#10005;</span> Bankroll Tracker</div>
-              <div className="q-pi"><span className="q-px">&#10005;</span> Kelly Calculator</div>
+              <div className="q-pi"><span className="q-px">&#10005;</span> {t('proAccess.features.kellyCalc')}</div>
             </div>
             <div className="q-pcol pro">
-              <div className="q-plbl2">Pro</div>
-              <div className="q-pi"><span className="q-pc">&#8734;</span> Unlimited predictions</div>
-              <div className="q-pi"><span className="q-pc">&#10003;</span> Value Bet Finder</div>
-              <div className="q-pi"><span className="q-pc">&#10003;</span> Advanced Analytics</div>
+              <div className="q-plbl2">{t('proAccess.step1.pro')}</div>
+              <div className="q-pi"><span className="q-pc">&#8734;</span> {t('proAccess.step1.unlimitedPredictions')}</div>
+              <div className="q-pi"><span className="q-pc">&#10003;</span> {t('proAccess.features.valueBetFinder')}</div>
+              <div className="q-pi"><span className="q-pc">&#10003;</span> {t('proAccess.features.advancedAnalytics')}</div>
               <div className="q-pi"><span className="q-pc">&#10003;</span> Bankroll Tracker</div>
-              <div className="q-pi"><span className="q-pc">&#10003;</span> Kelly Calculator</div>
+              <div className="q-pi"><span className="q-pc">&#10003;</span> {t('proAccess.features.kellyCalc')}</div>
             </div>
           </div>
-          <div className="q-ibox gold"><strong>IPL 2026 has started!</strong> Get Pro now and don't miss winning predictions for the entire season.</div>
+          <div className="q-ibox gold"><H html={t('proAccess.step1.iplStarted')} /></div>
           <div className="q-unlock">
-            <div className="q-up-head">Unlock today<div className="q-up-tag">PRO</div></div>
-            {features.map((f, i) => (
+            <div className="q-up-head">{t('proAccess.step1.unlockToday')}<div className="q-up-tag">PRO</div></div>
+            {featureKeys.map((key, i) => (
               <div className="q-up-row" key={i}>
-                <div className="q-up-name">{f}</div>
-                <div className="q-up-ok"><Check />Unlocked</div>
+                <div className="q-up-name">{t(`proAccess.features.${key}`)}</div>
+                <div className="q-up-ok"><Check />{t('proAccess.step1.unlocked')}</div>
               </div>
             ))}
           </div>
         </div>
-        <div className="q-foot"><button className="q-btn blue" onClick={next}>How to get Pro<ArrowRight /></button></div>
+        <div className="q-foot"><button className="q-btn blue" onClick={next}>{t('proAccess.step1.btn')}<ArrowRight /></button></div>
       </div>
 
       {/* STEP 2 — Not a payment */}
@@ -214,30 +213,30 @@ export default function ProAccess() {
           <div className="q-sico green">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
           </div>
-          <div className="q-stit">This is NOT a payment.{'\n'}<em>Your money stays with you</em></div>
-          <div className="q-ssub">Deposit at our partner bookmaker. You keep all your money + get a bonus.</div>
+          <div className="q-stit"><H html={t('proAccess.step2.title')} /></div>
+          <div className="q-ssub">{t('proAccess.step2.subtitle')}</div>
           <div className="q-fcard green">
             <div className="q-fico green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
-            <div><div className="q-ftit">Your Bankroll</div><div className="q-fdsc">Deposit goes to YOUR betting account — not to us</div></div>
+            <div><div className="q-ftit">{t('proAccess.step2.bankrollTitle')}</div><div className="q-fdsc">{t('proAccess.step2.bankrollDesc')}</div></div>
           </div>
           <div className="q-fcard gold">
             <div className="q-fico gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg></div>
-            <div><div className="q-ftit">{'\u20b9'}1,500 Free Bet Bonus</div><div className="q-fdsc">Deposit {'\u20b9'}1,000 and get {'\u20b9'}1,500 bonus automatically</div></div>
+            <div><div className="q-ftit">{t('proAccess.step2.bonusTitle')}</div><div className="q-fdsc">{t('proAccess.step2.bonusDesc')}</div></div>
           </div>
           <div className="q-fcard blue">
             <div className="q-fico blue"><CricketBall /></div>
-            <div><div className="q-ftit">Pro Access Activated</div><div className="q-fdsc">Unlimited AI predictions + all premium tools for IPL</div></div>
+            <div><div className="q-ftit">{t('proAccess.step2.proTitle')}</div><div className="q-fdsc">{t('proAccess.step2.proDesc')}</div></div>
           </div>
           <div className="q-formula">
-            <div className="q-ftag">How it works</div>
+            <div className="q-ftag">{t('proAccess.step2.howItWorks')}</div>
             <div className="q-flines">
-              Deposit {'\u20b9'}1,000 (your money)<br />
-              + {'\u20b9'}1,500 free bet bonus<br />
-              <span className="q-fres">= {'\u20b9'}2,500 to bet with + Pro Access</span>
+              {t('proAccess.step2.formula1')}<br />
+              {t('proAccess.step2.formula2')}<br />
+              <span className="q-fres">{t('proAccess.step2.formula3')}</span>
             </div>
           </div>
         </div>
-        <div className="q-foot"><button className="q-btn blue" onClick={next}>Got it, continue<ArrowRight /></button></div>
+        <div className="q-foot"><button className="q-btn blue" onClick={next}>{t('proAccess.step2.btn')}<ArrowRight /></button></div>
       </div>
 
       {/* STEP 3 — Why this bookmaker */}
@@ -246,38 +245,38 @@ export default function ProAccess() {
           <div className="q-sico orange">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
           </div>
-          <div className="q-stit">Why this bookmaker?</div>
-          <div className="q-fcard green"><div className="q-fico green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div><div className="q-ftit">Best IPL Odds</div><div className="q-fdsc">Highest odds on cricket markets — more profit per winning bet</div></div></div>
-          <div className="q-fcard blue"><div className="q-fico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div><div className="q-ftit">Live Cricket Betting</div><div className="q-fdsc">Place bets during IPL matches with live odds updates</div></div></div>
-          <div className="q-fcard gold"><div className="q-fico gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div className="q-ftit">Fast Withdrawals</div><div className="q-fdsc">UPI, Paytm, bank transfer — get your winnings in minutes</div></div></div>
-          <div className="q-fcard purple"><div className="q-fico purple"><CricketBall /></div><div><div className="q-ftit">IPL + All Cricket</div><div className="q-fdsc">IPL, T20 World Cup, ODI, Test — all cricket markets covered</div></div></div>
-          <div className="q-ibox gold"><strong>Trusted by millions of Indian cricket fans.</strong> Licensed, secure, and designed for Indian bettors.</div>
+          <div className="q-stit">{t('proAccess.step3.title')}</div>
+          <div className="q-fcard green"><div className="q-fico green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div><div className="q-ftit">{t('proAccess.step3.bestOdds')}</div><div className="q-fdsc">{t('proAccess.step3.bestOddsDesc')}</div></div></div>
+          <div className="q-fcard blue"><div className="q-fico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div><div className="q-ftit">{t('proAccess.step3.liveBetting')}</div><div className="q-fdsc">{t('proAccess.step3.liveBettingDesc')}</div></div></div>
+          <div className="q-fcard gold"><div className="q-fico gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div className="q-ftit">{t('proAccess.step3.fastWithdraw')}</div><div className="q-fdsc">{t('proAccess.step3.fastWithdrawDesc')}</div></div></div>
+          <div className="q-fcard purple"><div className="q-fico purple"><CricketBall /></div><div><div className="q-ftit">{t('proAccess.step3.allCricket')}</div><div className="q-fdsc">{t('proAccess.step3.allCricketDesc')}</div></div></div>
+          <div className="q-ibox gold"><H html={t('proAccess.step3.trusted')} /></div>
           <div className="q-ai-stats">
-            <div className="q-abox g"><span className="av">87%</span><span className="al">AI Accuracy</span></div>
-            <div className="q-abox b"><span className="av">50+</span><span className="al">Cricket Leagues</span></div>
-            <div className="q-abox a"><span className="av">15 min</span><span className="al">Withdrawal</span></div>
+            <div className="q-abox g"><span className="av">87%</span><span className="al">{t('proAccess.step3.aiAccuracy')}</span></div>
+            <div className="q-abox b"><span className="av">50+</span><span className="al">{t('proAccess.step3.cricketLeagues')}</span></div>
+            <div className="q-abox a"><span className="av">15 min</span><span className="al">{t('proAccess.step3.withdrawal')}</span></div>
           </div>
         </div>
-        <div className="q-foot"><button className="q-btn blue" onClick={next}>See the bonus<ArrowRight /></button></div>
+        <div className="q-foot"><button className="q-btn blue" onClick={next}>{t('proAccess.step3.btn')}<ArrowRight /></button></div>
       </div>
 
       {/* STEP 4 — Bonus Calculator */}
       <div className={`q-step${step === 4 ? ' active' : ''}`}>
         <div className="q-body">
           <div className="q-bonus-header">
-            <div className="q-bh-tag"><div className="q-bh-dot" />Limited Offer</div>
-            <div className="q-bh-title">Get up to <span style={{color:'#FF9933'}}>{'\u20b9'}15,000</span> Free Bet</div>
-            <div className="q-bh-sub">+150% bonus on your first deposit<br/>Free bet credited automatically</div>
+            <div className="q-bh-tag"><div className="q-bh-dot" />{t('proAccess.step4.limitedOffer')}</div>
+            <div className="q-bh-title"><H html={t('proAccess.step4.headerTitle')} /></div>
+            <div className="q-bh-sub">{t('proAccess.step4.headerSub1')}<br/>{t('proAccess.step4.headerSub2')}</div>
           </div>
 
           <div className="q-calc-wrap">
             <div className="q-calc-opts">
               {calcTiers.map((tier, i) => (
                 <div key={i} className={`q-copt${calcSel === i ? ' active' : ''}`} onClick={() => setCalcSel(i)}>
-                  {i === 0 && <div className="co-min">Min PRO</div>}
-                  {i === 2 && <div className="co-rec">Best Value</div>}
+                  {i === 0 && <div className="co-min">{t('proAccess.step4.minPro')}</div>}
+                  {i === 2 && <div className="co-rec">{t('proAccess.step4.bestValue')}</div>}
                   <div className="co-dep">{tier.dep}</div>
-                  <div className="co-lbl">{calcLabels[i]}</div>
+                  <div className="co-lbl">{Array.isArray(calcLabels) ? calcLabels[i] : ['Start', 'Popular', 'Best Value', 'Maximum'][i]}</div>
                 </div>
               ))}
             </div>
@@ -285,20 +284,20 @@ export default function ProAccess() {
               {calcTiers.map((tier, i) => calcSel === i && (
                 <div key={i}>
                   <div className="q-cr-row">
-                    <div className="q-cr-label">Your deposit</div>
+                    <div className="q-cr-label">{t('proAccess.step4.yourDeposit')}</div>
                     <div className="q-cr-val">{tier.dep}</div>
                   </div>
                   <div className="q-cr-bonus">
                     <div className="q-cr-bonus-ico">🎁</div>
                     <div className="q-cr-bonus-body">
-                      <div className="q-cr-bonus-title">{tier.bonus} Free Bet Bonus</div>
-                      <div className="q-cr-bonus-sub">Credited automatically after deposit</div>
+                      <div className="q-cr-bonus-title">{tier.bonus} {t('proAccess.step4.freeBetBonus')}</div>
+                      <div className="q-cr-bonus-sub">{t('proAccess.step4.creditedAuto')}</div>
                     </div>
                   </div>
                   <div className="q-cr-total">
-                    <div className="q-cr-total-lbl">Total to bet with</div>
+                    <div className="q-cr-total-lbl">{t('proAccess.step4.totalToBet')}</div>
                     <div className="q-cr-total-num">{tier.total}</div>
-                    <div className="q-cr-total-sub">Your deposit + free bet bonus</div>
+                    <div className="q-cr-total-sub">{t('proAccess.step4.depositPlusBonus')}</div>
                   </div>
                 </div>
               ))}
@@ -310,25 +309,25 @@ export default function ProAccess() {
               <div className="q-mc-ico">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               </div>
-              <div className="q-mc-title">Your money stays 100% with you</div>
+              <div className="q-mc-title">{t('proAccess.step4.moneyStaysTitle')}</div>
             </div>
             <div className="q-mc-rows">
-              <div className="q-mc-row"><div className="q-mc-dot"/><span>The deposit is <strong>not a payment to us</strong>. Money goes to your bookmaker account.</span></div>
-              <div className="q-mc-row"><div className="q-mc-dot"/><span>Bet on cricket using our AI predictions and withdraw winnings anytime via UPI/Paytm.</span></div>
-              <div className="q-mc-row"><div className="q-mc-dot"/><span>Pro access activates automatically after deposit verification — no extra charges.</span></div>
+              <div className="q-mc-row"><div className="q-mc-dot"/><span><H html={t('proAccess.step4.moneyStays1')} /></span></div>
+              <div className="q-mc-row"><div className="q-mc-dot"/><span>{t('proAccess.step4.moneyStays2')}</span></div>
+              <div className="q-mc-row"><div className="q-mc-dot"/><span>{t('proAccess.step4.moneyStays3')}</span></div>
             </div>
           </div>
 
           <div className="q-once-box">
             <div className="q-once-ico">&#9888;&#65039;</div>
             <div className="q-once-text">
-              <strong>Minimum deposit for Pro is {'\u20b9'}1,000.</strong> Deposits below {'\u20b9'}1,000 won't activate Pro access. The system verifies your balance automatically.
+              <H html={t('proAccess.step4.minDepositWarn')} />
             </div>
           </div>
         </div>
         <div className="q-foot">
-          <button className="q-btn gold" onClick={next}>Choose deposit amount <ArrowRight /></button>
-          <div className="q-hint">Min {'\u20b9'}1,000 · your money stays with you · +{'\u20b9'}1,500 free bet</div>
+          <button className="q-btn gold" onClick={next}>{t('proAccess.step4.btn')} <ArrowRight /></button>
+          <div className="q-hint">{t('proAccess.step4.hint')}</div>
         </div>
       </div>
 
@@ -336,71 +335,71 @@ export default function ProAccess() {
       <div className={`q-step${step === 5 ? ' active' : ''}`}>
         <div className="q-body">
           <div className="q-sico blue"><Card /></div>
-          <div className="q-stit">Choose your{'\n'}<em>starting amount</em></div>
-          <div className="q-ssub">Pick a deposit amount. Your money + free bet bonus = your betting bankroll.</div>
+          <div className="q-stit"><H html={t('proAccess.step5.title')} /></div>
+          <div className="q-ssub">{t('proAccess.step5.subtitle')}</div>
 
           <div className="q-math-banner">
-            <div className="q-mb-label">Your starting balance with {'\u20b9'}1,000 deposit</div>
+            <div className="q-mb-label">{t('proAccess.step5.mathLabel')}</div>
             <div className="q-mb-row">
               <div className="q-mb-cell green">
                 <div className="q-mb-val">{'\u20b9'}1K</div>
-                <div className="q-mb-sub">your money<br/>stays with you</div>
+                <div className="q-mb-sub" style={{whiteSpace:'pre-line'}}>{t('proAccess.step5.yourMoney')}</div>
               </div>
               <div className="q-mb-op">+</div>
               <div className="q-mb-cell gold">
                 <div className="q-mb-val">{'\u20b9'}1.5K</div>
-                <div className="q-mb-sub">free bet<br/>bonus</div>
+                <div className="q-mb-sub" style={{whiteSpace:'pre-line'}}>{t('proAccess.step5.freeBet')}</div>
               </div>
               <div className="q-mb-op">=</div>
               <div className="q-mb-cell blue">
                 <div className="q-mb-val">{'\u20b9'}2.5K</div>
-                <div className="q-mb-sub">total to<br/>bet with</div>
+                <div className="q-mb-sub" style={{whiteSpace:'pre-line'}}>{t('proAccess.step5.totalTo')}</div>
               </div>
             </div>
-            <div className="q-mb-note">{'\u20b9'}2,500 is enough to start betting on IPL matches with our AI predictions</div>
+            <div className="q-mb-note">{t('proAccess.step5.mathNote')}</div>
           </div>
 
           <div className="q-min-alert">
             <div className="q-min-alert-ico">&#128274;</div>
             <div className="q-min-alert-body">
-              <div className="q-min-alert-title">Minimum {'\u20b9'}1,000 to activate Pro</div>
-              <div className="q-min-alert-text">Deposits below {'\u20b9'}1,000 won't unlock Pro access. Choose {'\u20b9'}1,000+ and your account will be upgraded to Pro automatically.</div>
+              <div className="q-min-alert-title">{t('proAccess.step5.minAlertTitle')}</div>
+              <div className="q-min-alert-text">{t('proAccess.step5.minAlertText')}</div>
             </div>
           </div>
 
           <div className="q-dgrid">
             <div className={`q-dopt${sel === 0 ? ' sel' : ''}`} onClick={() => setSel(0)}>
-              <div className="rtag blue">Min PRO</div>
+              <div className="rtag blue">{t('proAccess.step4.minPro')}</div>
               <div className="da">{'\u20b9'}1,000</div>
-              <div className="dl">Minimum for Pro</div>
+              <div className="dl">{t('proAccess.step5.opt1Label')}</div>
               <div className="dbonus">+{'\u20b9'}1,500 free bet</div>
             </div>
             <div className={`q-dopt rec${sel === 1 ? ' sel' : ''}`} onClick={() => setSel(1)}>
-              <div className="rtag">Recommended</div>
+              <div className="rtag">{t('proAccess.step5.recommended')}</div>
               <div className="da">{'\u20b9'}2,000</div>
-              <div className="dl">Better bankroll</div>
+              <div className="dl">{t('proAccess.step5.opt2Label')}</div>
               <div className="dbonus dbonus-green">+{'\u20b9'}3,000 free bet</div>
             </div>
             <div className={`q-dopt${sel === 2 ? ' sel' : ''}`} onClick={() => setSel(2)}>
               <div className="da">{'\u20b9'}5,000</div>
-              <div className="dl">Serious player</div>
+              <div className="dl">{t('proAccess.step5.opt3Label')}</div>
               <div className="dbonus">+{'\u20b9'}7,500 free bet</div>
             </div>
             <div className={`q-dopt${sel === 3 ? ' sel' : ''}`} onClick={() => setSel(3)}>
               <div className="da">{'\u20b9'}10,000</div>
-              <div className="dl">Max bonus</div>
+              <div className="dl">{t('proAccess.step5.opt4Label')}</div>
               <div className="dbonus">+{'\u20b9'}15,000 free bet</div>
             </div>
           </div>
 
           <div className="q-slist">
-            <div className="q-slrow"><div className="q-slico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><h4>2-minute setup</h4><p>Register, deposit via UPI — done in minutes</p></div></div>
-            <div className="q-slrow"><div className="q-slico green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></div><div><h4>Auto Pro activation</h4><p>Pro unlocks instantly after deposit is verified</p></div></div>
-            <div className="q-slrow"><div className="q-slico gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><h4>Zero risk</h4><p>Withdraw your money anytime — no lock-in period</p></div></div>
+            <div className="q-slrow"><div className="q-slico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><h4>{t('proAccess.step5.setup')}</h4><p>{t('proAccess.step5.setupDesc')}</p></div></div>
+            <div className="q-slrow"><div className="q-slico green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></div><div><h4>{t('proAccess.step5.autoActivation')}</h4><p>{t('proAccess.step5.autoActivationDesc')}</p></div></div>
+            <div className="q-slrow"><div className="q-slico gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><h4>{t('proAccess.step5.zeroRisk')}</h4><p>{t('proAccess.step5.zeroRiskDesc')}</p></div></div>
           </div>
-          <div style={{ textAlign: 'center' }}><div className="q-sbadge"><div className="q-sdot" />467 users activated Pro this week</div></div>
+          <div style={{ textAlign: 'center' }}><div className="q-sbadge"><div className="q-sdot" />{t('proAccess.step5.usersActivated')}</div></div>
           <div className="q-pay-row">
-            <div className="q-pay-title"><Card />Payment methods</div>
+            <div className="q-pay-title"><Card />{t('proAccess.step5.paymentMethods')}</div>
             <div className="q-pay-chips">
               <div className="q-pchip">UPI</div>
               <div className="q-pchip">Paytm</div>
@@ -411,8 +410,8 @@ export default function ProAccess() {
           </div>
         </div>
         <div className="q-foot">
-          <button className="q-btn green" onClick={next}>Continue<Check /></button>
-          <div className="q-hint">Deposit from {'\u20b9'}1,000 · money stays with you · +{'\u20b9'}1,500 free bet</div>
+          <button className="q-btn green" onClick={next}>{t('proAccess.step5.btn')}<Check /></button>
+          <div className="q-hint">{t('proAccess.step5.hint')}</div>
         </div>
       </div>
 
@@ -421,55 +420,55 @@ export default function ProAccess() {
         <div className="q-body">
           <div className="q-fhd">
             <div className="q-ficobig"><Download /></div>
-            <div className="ft">Activate Pro Now</div>
-            <div className="fs">Deposit {'\u20b9'}1,000 &#8594; {'\u20b9'}1,500 free bet &#8594; {'\u20b9'}2,500 to start</div>
+            <div className="ft">{t('proAccess.step6.title')}</div>
+            <div className="fs">{t('proAccess.step6.subtitle')}</div>
           </div>
 
           <div className="q-bfloat">
-            <div className="q-bfl">Your starting bankroll</div>
-            <div className="q-bfa">{'\u20b9'}2,500</div>
-            <div className="q-bfd">{'\u20b9'}1,000 yours + {'\u20b9'}1,500 free bet bonus</div>
+            <div className="q-bfl">{t('proAccess.step6.bankrollLabel')}</div>
+            <div className="q-bfa">{t('proAccess.step6.bankrollAmount')}</div>
+            <div className="q-bfd">{t('proAccess.step6.bankrollDesc')}</div>
           </div>
 
           <div className="q-bankroll">
-            <div className="q-br-head">How {'\u20b9'}2,500 is formed</div>
+            <div className="q-br-head">{t('proAccess.step6.howFormed')}</div>
             <div className="q-br-row">
-              <div className="q-br-label"><span className="g"/>Your deposit (stays with you)</div>
+              <div className="q-br-label"><span className="g"/>{t('proAccess.step6.depositLabel')}</div>
               <div className="q-br-val g">{'\u20b9'}1,000</div>
             </div>
             <div className="q-br-row">
-              <div className="q-br-label"><span className="a"/>Free bet bonus (+150%)</div>
+              <div className="q-br-label"><span className="a"/>{t('proAccess.step6.bonusLabel')}</div>
               <div className="q-br-val a">+{'\u20b9'}1,500</div>
             </div>
             <div className="q-br-total">
-              <div className="q-br-total-label">Total balance</div>
+              <div className="q-br-total-label">{t('proAccess.step6.totalBalance')}</div>
               <div className="q-br-total-val">{'\u20b9'}2,500</div>
             </div>
           </div>
 
           <div className="q-mflow">
-            <div className="q-mstep"><div className="q-mnum">1</div><div className="q-mlbl">Register</div></div>
+            <div className="q-mstep"><div className="q-mnum">1</div><div className="q-mlbl">{t('proAccess.step6.flowRegister')}</div></div>
             <div className="q-marr">&#8594;</div>
-            <div className="q-mstep"><div className="q-mnum">2</div><div className="q-mlbl">Deposit via UPI</div></div>
+            <div className="q-mstep"><div className="q-mnum">2</div><div className="q-mlbl">{t('proAccess.step6.flowDeposit')}</div></div>
             <div className="q-marr">&#8594;</div>
-            <div className="q-mstep"><div className="q-mnum">3</div><div className="q-mlbl">Deposit {'\u20b9'}1,000+</div></div>
+            <div className="q-mstep"><div className="q-mnum">3</div><div className="q-mlbl">{t('proAccess.step6.flowAmount')}</div></div>
             <div className="q-marr">&#8594;</div>
-            <div className="q-mstep"><div className="q-mnum done"><CheckBold /></div><div className="q-mlbl">Pro Active!</div></div>
+            <div className="q-mstep"><div className="q-mnum done"><CheckBold /></div><div className="q-mlbl">{t('proAccess.step6.flowDone')}</div></div>
           </div>
           <div className="q-fgrid">
-            <div className="q-fchip"><Check /> Unlimited AI predictions</div>
-            <div className="q-fchip"><Check /> Live cricket betting</div>
-            <div className="q-fchip"><Check /> Value Bet Finder</div>
-            <div className="q-fchip"><Check /> Fast UPI withdrawal</div>
+            <div className="q-fchip"><Check /> {t('proAccess.step6.chipUnlimitedAi')}</div>
+            <div className="q-fchip"><Check /> {t('proAccess.step6.chipLiveBetting')}</div>
+            <div className="q-fchip"><Check /> {t('proAccess.step6.chipValueBet')}</div>
+            <div className="q-fchip"><Check /> {t('proAccess.step6.chipFastWithdraw')}</div>
           </div>
           <div className="q-trow">
-            <div className="q-tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Secure</div>
-            <div className="q-tchip"><Check /> Licensed</div>
+            <div className="q-tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> {t('proAccess.step6.secure')}</div>
+            <div className="q-tchip"><Check /> {t('proAccess.step6.licensed')}</div>
             <div className="q-tchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> 4.9/5</div>
           </div>
           <div className="q-review">
             <div className="q-rav">R</div>
-            <div><div className="q-rtext">Deposited {'\u20b9'}1,000, got {'\u20b9'}1,500 free bet instantly. AI predictions helped me win {'\u20b9'}4,200 in the first week of IPL!</div><div className="q-rname"><span className="q-rstar">&#9733;&#9733;&#9733;&#9733;&#9733;</span> Rahul, Mumbai</div></div>
+            <div><div className="q-rtext">{t('proAccess.step6.review')}</div><div className="q-rname"><span className="q-rstar">&#9733;&#9733;&#9733;&#9733;&#9733;</span> {t('proAccess.step6.reviewName')}</div></div>
           </div>
         </div>
         <div className="q-foot">
@@ -480,9 +479,9 @@ export default function ProAccess() {
             className="q-btn gold"
             style={{ textDecoration: 'none' }}
           >
-            <Download />Deposit {'\u20b9'}1,000 &amp; Get Pro
+            <Download />{t('proAccess.step6.btn')}
           </a>
-          <div className="q-hint">{'\u20b9'}1,000 stays with you · +{'\u20b9'}1,500 free bet · Pro activates automatically</div>
+          <div className="q-hint">{t('proAccess.step6.hint')}</div>
         </div>
       </div>
     </div>
