@@ -21,10 +21,14 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def debug_schema(db: Session = Depends(get_db)):
     """TEMPORARY: check DB schema — remove after debugging."""
     try:
-        cols = db.execute(text("PRAGMA table_info(users)")).fetchall()
-        user_cols = [{"name": c[1], "type": c[2]} for c in cols]
+        # PostgreSQL-compatible schema check
+        cols = db.execute(text(
+            "SELECT column_name, data_type FROM information_schema.columns "
+            "WHERE table_name = 'users' ORDER BY ordinal_position"
+        )).fetchall()
+        user_cols = [{"name": c[0], "type": c[1]} for c in cols]
         count = db.execute(text("SELECT COUNT(*) FROM users")).scalar()
-        return {"users_columns": user_cols, "users_count": count, "status": "ok"}
+        return {"users_columns": user_cols, "users_count": count, "db": "postgresql", "status": "ok"}
     except Exception as e:
         return {"error": str(e), "traceback": traceback.format_exc()}
 

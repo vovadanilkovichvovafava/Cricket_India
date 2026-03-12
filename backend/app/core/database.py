@@ -79,19 +79,33 @@ def init_db():
 
 
 def _run_migrations():
-    """Add missing columns to existing tables (SQLite-safe, idempotent)."""
-    migrations = [
-        # Postback system — User premium fields (added 2026-03-12)
-        "ALTER TABLE users ADD COLUMN is_premium BOOLEAN DEFAULT 0",
-        "ALTER TABLE users ADD COLUMN premium_until DATETIME",
-        # PostbackLog new columns
-        "ALTER TABLE postback_logs ADD COLUMN user_db_id INTEGER",
-        "ALTER TABLE postback_logs ADD COLUMN source VARCHAR(50)",
-        "ALTER TABLE postback_logs ADD COLUMN transaction_id VARCHAR(100)",
-        "ALTER TABLE postback_logs ADD COLUMN premium_activated BOOLEAN DEFAULT 0",
-        "ALTER TABLE postback_logs ADD COLUMN error VARCHAR(500)",
-        "ALTER TABLE postback_logs ADD COLUMN country VARCHAR(10)",
-    ]
+    """Add missing columns to existing tables (works for both SQLite and PostgreSQL)."""
+    is_postgres = not settings.DATABASE_URL.startswith("sqlite")
+
+    if is_postgres:
+        # PostgreSQL: use IF NOT EXISTS or check information_schema
+        migrations = [
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS premium_until TIMESTAMP",
+            "ALTER TABLE postback_logs ADD COLUMN IF NOT EXISTS user_db_id INTEGER",
+            "ALTER TABLE postback_logs ADD COLUMN IF NOT EXISTS source VARCHAR(50)",
+            "ALTER TABLE postback_logs ADD COLUMN IF NOT EXISTS transaction_id VARCHAR(100)",
+            "ALTER TABLE postback_logs ADD COLUMN IF NOT EXISTS premium_activated BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE postback_logs ADD COLUMN IF NOT EXISTS error VARCHAR(500)",
+            "ALTER TABLE postback_logs ADD COLUMN IF NOT EXISTS country VARCHAR(10)",
+        ]
+    else:
+        # SQLite: no IF NOT EXISTS, rely on try/except
+        migrations = [
+            "ALTER TABLE users ADD COLUMN is_premium BOOLEAN DEFAULT 0",
+            "ALTER TABLE users ADD COLUMN premium_until DATETIME",
+            "ALTER TABLE postback_logs ADD COLUMN user_db_id INTEGER",
+            "ALTER TABLE postback_logs ADD COLUMN source VARCHAR(50)",
+            "ALTER TABLE postback_logs ADD COLUMN transaction_id VARCHAR(100)",
+            "ALTER TABLE postback_logs ADD COLUMN premium_activated BOOLEAN DEFAULT 0",
+            "ALTER TABLE postback_logs ADD COLUMN error VARCHAR(500)",
+            "ALTER TABLE postback_logs ADD COLUMN country VARCHAR(10)",
+        ]
 
     with engine.connect() as conn:
         for stmt in migrations:
@@ -99,5 +113,5 @@ def _run_migrations():
                 conn.execute(text(stmt))
                 conn.commit()
                 logger.info(f"Migration OK: {stmt[:60]}...")
-            except Exception:
-                pass  # Column already exists — skip silently
+            except Exception as e:
+                logger.debug(f"Migration skip: {stmt[:40]}... ({e})")
