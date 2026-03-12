@@ -160,11 +160,9 @@ export default function ProAccess() {
     <div className="q-wrap">
       <style>{quizCSS}</style>
       <div className="q-pbar"><div className="q-pfill" style={{ width: `${(step / TOTAL) * 100}%` }} /></div>
-      {step > 1 && (
-        <div className="q-back" onClick={prev}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </div>
-      )}
+      <div className="q-back" onClick={prev}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </div>
       <div className="q-spill">{step} / {TOTAL}</div>
 
       {/* STEP 1 — Free vs PRO */}

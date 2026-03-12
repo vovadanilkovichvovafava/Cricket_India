@@ -481,6 +481,25 @@
     "disclaimer": "18+ | T&C Apply"
   },
 
+  "betHook": {
+    "exclusive": "EXCLUSIVE FOR CRICKETBAAZI",
+    "onlyNow": "ONLY NOW",
+    "aiAnalyzed": "AI analyzed <strong>{{match}}</strong> with {{confidence}}% confidence. Why risk your money — place <strong>₹1,500 free</strong> on this match and keep the winnings.",
+    "freeBet": "FREE BET",
+    "freeBetAmount": "₹1,500",
+    "freeBetDesc": "Register — get ₹1,500 on your account. Zero risk — it's a partner bonus.",
+    "zeroRisk": "ZERO RISK",
+    "flowRegister": "Register",
+    "flowGetBonus": "Get bonus",
+    "flowBet": "Bet",
+    "autoBonus": "Bonus credited automatically. Valid for first registration only.",
+    "ctaBtn": "Bet ₹1,500 free",
+    "secure": "Secure",
+    "licensed": "Licensed",
+    "withdraw15min": "Withdraw 15 min",
+    "freeBetButton": "Free bet ₹1,500"
+  },
+
   "nav": {
     "home": "Home",
     "matches": "Matches",
@@ -534,9 +553,9 @@
     "trialUsed": "Pro Only",
     "limitReached": "Today's limit reached",
     "limitReachedDesc": "You've used all your free AI predictions for today. But there's a way to keep winning!",
-    "upgradeForMore": "Deposit from \u20b91,000 at our partner bookmaker to unlock unlimited AI predictions, all tools & premium features",
+    "upgradeForMore": "Register at our partner bookmaker to unlock unlimited AI predictions, all tools & premium features",
     "getProNow": "Get Pro — Unlimited Access",
-    "getProDesc": "Deposit from \u20b91,000 & unlock everything",
+    "getProDesc": "Register & unlock everything",
     "proFeature1": "Unlimited AI predictions",
     "proFeature2": "Advanced analytics & tools",
     "proFeature3": "Priority support",

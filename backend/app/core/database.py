@@ -1,7 +1,11 @@
 """SQLAlchemy database setup."""
 
-from sqlalchemy import create_engine
+import logging
+
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
+
+logger = logging.getLogger(__name__)
 
 from app.config import settings
 
@@ -69,3 +73,31 @@ def init_db():
     from app.models.errors import FeatureErrorLog  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
+
+    # Auto-migrate: add columns that create_all() doesn't add to existing tables
+    _run_migrations()
+
+
+def _run_migrations():
+    """Add missing columns to existing tables (SQLite-safe, idempotent)."""
+    migrations = [
+        # Postback system — User premium fields (added 2026-03-12)
+        "ALTER TABLE users ADD COLUMN is_premium BOOLEAN DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN premium_until DATETIME",
+        # PostbackLog new columns
+        "ALTER TABLE postback_logs ADD COLUMN user_db_id INTEGER",
+        "ALTER TABLE postback_logs ADD COLUMN source VARCHAR(50)",
+        "ALTER TABLE postback_logs ADD COLUMN transaction_id VARCHAR(100)",
+        "ALTER TABLE postback_logs ADD COLUMN premium_activated BOOLEAN DEFAULT 0",
+        "ALTER TABLE postback_logs ADD COLUMN error VARCHAR(500)",
+        "ALTER TABLE postback_logs ADD COLUMN country VARCHAR(10)",
+    ]
+
+    with engine.connect() as conn:
+        for stmt in migrations:
+            try:
+                conn.execute(text(stmt))
+                conn.commit()
+                logger.info(f"Migration OK: {stmt[:60]}...")
+            except Exception:
+                pass  # Column already exists — skip silently
