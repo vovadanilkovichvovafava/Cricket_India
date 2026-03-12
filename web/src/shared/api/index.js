@@ -34,8 +34,17 @@ async function request(path, options = {}) {
   const res = await fetch(`${BASE}${path}`, { ...options, headers });
   if (res.status === 401) {
     localStorage.removeItem('token');
-    window.location.href = '/login';
-    throw new Error('Unauthorized');
+    // Don't hard-redirect for API calls (predictions, chat, support) —
+    // let components handle auth errors gracefully (show modal, not kick to login)
+    const isPageLoad = path === '/auth/me';
+    if (isPageLoad) {
+      // Only redirect on initial session check (app load)
+      window.location.href = '/login';
+    }
+    const err = new Error('Session expired');
+    err.status = 401;
+    err.detail = 'session_expired';
+    throw err;
   }
   if (!res.ok) {
     let detail = '';

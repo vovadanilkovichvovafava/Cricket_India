@@ -263,8 +263,8 @@ export default function AIChat() {
     } catch (err) {
       console.error('AI Chat error:', err);
 
-      // Backend rate limit / daily limit exceeded → show upgrade modal
-      if (err.status === 429) {
+      // Backend rate limit / daily limit / auth error → show upgrade modal
+      if (err.status === 429 || err.status === 401) {
         setShowUpgradeModal(true);
         setMessages(prev => prev.filter(m => m.id !== userMessage.id)); // Remove user msg
       } else {
@@ -294,37 +294,51 @@ export default function AIChat() {
     <div className="flex flex-col" style={{ height: '100dvh' }}>
       {/* Upgrade Modal — limit reached */}
       {showUpgradeModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-6 animate-fade-in" onClick={() => setShowUpgradeModal(false)}>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 px-4 pb-4 sm:pb-0 animate-fade-in" onClick={() => setShowUpgradeModal(false)}>
           <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
             {/* Top gradient banner */}
-            <div className="bg-gradient-to-r from-[#0B1E4D] to-[#1a3a7a] px-6 pt-6 pb-5 text-center relative overflow-hidden">
-              <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full opacity-20 bg-[#FF9933] blur-xl" />
-              <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3 backdrop-blur-sm">
-                <LockIcon className="w-7 h-7 text-white/80" />
+            <div className="bg-gradient-to-br from-[#0B1E4D] via-[#162D6B] to-[#1a3a7a] px-6 pt-7 pb-6 text-center relative overflow-hidden">
+              <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 bg-[#FF9933] blur-2xl" />
+              <div className="absolute -bottom-4 -left-4 w-20 h-20 rounded-full opacity-10 bg-[#138808] blur-xl" />
+              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm border border-white/10">
+                <LockIcon className="w-8 h-8 text-white/90" />
               </div>
-              <h3 className="text-lg font-bold text-white">{t('premium.limitReached')}</h3>
-              <p className="text-sm text-white/60 mt-1">{t('premium.limitReachedDesc', 'Your free AI requests for today are used up')}</p>
+              <h3 className="text-xl font-black text-white">{t('premium.limitReached')}</h3>
+              <p className="text-sm text-white/60 mt-2 leading-relaxed">{t('premium.limitReachedDesc')}</p>
             </div>
 
             <div className="p-5 space-y-3">
-              {/* Option 1: Get Pro */}
+              {/* Option 1: Get Pro — big CTA */}
               <a
                 href={affiliateLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setShowUpgradeModal(false)}
-                className="flex items-center gap-3 w-full p-3.5 bg-gradient-to-r from-[#FF9933] to-[#FF8800] rounded-xl active:scale-[0.98] transition-transform"
+                className="block w-full p-4 bg-gradient-to-r from-[#FF9933] to-[#FF8800] rounded-xl active:scale-[0.98] transition-transform shadow-lg shadow-orange-200/50"
               >
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
-                  <SparkleIcon className="w-5 h-5 text-white" />
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                    <SparkleIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="text-[15px] font-bold text-white">{t('premium.getProNow')}</p>
+                    <p className="text-[11px] text-white/70 mt-0.5">{t('premium.getProDesc')}</p>
+                  </div>
+                  <svg className="w-5 h-5 text-white/70 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
                 </div>
-                <div className="text-left flex-1">
-                  <p className="text-sm font-bold text-white">{t('premium.upgradeNow')}</p>
-                  <p className="text-[11px] text-white/70">{t('premium.unlimitedAi')}</p>
+                {/* Pro features list */}
+                <div className="mt-3 pt-3 border-t border-white/20 flex flex-wrap gap-x-4 gap-y-1">
+                  {['proFeature1', 'proFeature2', 'proFeature3'].map(key => (
+                    <div key={key} className="flex items-center gap-1.5">
+                      <svg className="w-3 h-3 text-white/80" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-[11px] text-white/80">{t(`premium.${key}`)}</span>
+                    </div>
+                  ))}
                 </div>
-                <svg className="w-5 h-5 text-white/70 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                </svg>
               </a>
 
               {/* Option 2: Wait for reset */}
@@ -335,8 +349,8 @@ export default function AIChat() {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('premium.waitForReset', 'Wait for daily reset')}</p>
-                  <p className="text-[11px] text-gray-400">{t('premium.resetsIn24h', 'Free requests refresh every 24 hours')}</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('premium.waitForReset')}</p>
+                  <p className="text-[11px] text-gray-400">{t('premium.resetsIn24h')}</p>
                 </div>
               </div>
 
