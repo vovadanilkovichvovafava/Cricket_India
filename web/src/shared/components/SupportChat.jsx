@@ -108,8 +108,8 @@ export default function SupportChat() {
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
 
           {/* Chat panel */}
-          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl shadow-2xl flex flex-col animate-slide-up"
-               style={{ maxHeight: '80dvh', height: '80dvh', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+          <div className="absolute left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl shadow-2xl flex flex-col animate-slide-up"
+               style={{ bottom: '60px', maxHeight: 'calc(100dvh - 70px)', height: '75dvh' }}>
 
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700 shrink-0">
