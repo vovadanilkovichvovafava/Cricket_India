@@ -98,7 +98,20 @@ def _get_user_ai_requests_today(db: Session, user_id: int) -> int:
 
 def _check_ai_limit(db: Session, user_id: int):
     """Check if user has exceeded their daily AI request limit. Raises 429 if exceeded."""
-    # TODO: Check if user is premium (skip limit)
+    from app.models.user import User
+
+    # Check if user is premium — skip limit for Pro users
+    user = db.query(User).filter(User.id == user_id).first()
+    if user and user.is_premium:
+        now = datetime.utcnow()  # naive UTC to match SQLite storage
+        if user.premium_until is None or user.premium_until > now:
+            return  # Premium user — unlimited AI requests
+
+        # Premium expired — auto-downgrade
+        user.is_premium = False
+        user.premium_until = None
+        db.commit()
+
     used = _get_user_ai_requests_today(db, user_id)
     limit = settings.FREE_AI_LIMIT
 

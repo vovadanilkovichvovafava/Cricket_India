@@ -1,15 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ENV } from '../../../shared/config/env';
+import { useAuth } from '../../auth/context/AuthContext';
+import { getTrackingLink } from '../services/trackingService';
 
 const TOTAL = 6;
-
-const AFFILIATE_LINK = 'https://siteofficialred.com/Qhs6z2nP?external_id={external_id}&sub_id_1={sub_id_1}';
-function getOfferLink() {
-  const base = ENV.BOOKMAKER_LINK !== '#' ? ENV.BOOKMAKER_LINK : AFFILIATE_LINK;
-  return base.replace('{external_id}', 'cricketbaazi_offer').replace(/\{sub_id_\d+\}/g, '');
-}
 
 // Shared quiz CSS — adapted for Indian cricket (orange #FF9933)
 const quizCSS = `
@@ -110,10 +105,11 @@ const calcTiers = [
 export default function BookmakerPromo() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [sel, setSel] = useState(1);
   const [calcSel, setCalcSel] = useState(1);
-  const bookmakerLink = getOfferLink();
+  const bookmakerLink = getTrackingLink(user?.id, 'offer_page');
 
   const next = () => { if (step < TOTAL) setStep(step + 1); };
   const prev = () => { if (step > 1) setStep(step - 1); else navigate(-1); };

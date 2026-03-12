@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import api from '../api';
 
 const PremiumContext = createContext(null);
 
@@ -12,14 +13,13 @@ const STORAGE_KEYS = {
 
 const FREE_AI_LIMIT = 3;
 const FREE_TOOL_TRIALS = 1;
-const PRO_DURATION_DAYS = 15;
 
 function getToday() {
   return new Date().toISOString().split('T')[0]; // "2026-03-09"
 }
 
 function loadState() {
-  // --- Pro status with expiration ---
+  // --- Pro status with expiration (localStorage fallback) ---
   let isPro = localStorage.getItem(STORAGE_KEYS.isPro) === 'true';
   const proExpiresAt = parseInt(localStorage.getItem(STORAGE_KEYS.proExpiresAt) || '0', 10);
 
@@ -59,6 +59,60 @@ export function PremiumProvider({ children }) {
     ? Math.max(0, Math.ceil((state.proExpiresAt - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
 
+  // Sync premium status from server on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    api.getMe()
+      .then(user => {
+        if (user.is_premium && user.premium_until) {
+          const expiresAt = new Date(user.premium_until).getTime();
+          if (expiresAt > Date.now()) {
+            localStorage.setItem(STORAGE_KEYS.isPro, 'true');
+            localStorage.setItem(STORAGE_KEYS.proExpiresAt, String(expiresAt));
+            setState(prev => ({ ...prev, isPro: true, proExpiresAt: expiresAt }));
+          } else {
+            // Server says premium but expired — downgrade locally
+            localStorage.setItem(STORAGE_KEYS.isPro, 'false');
+            localStorage.removeItem(STORAGE_KEYS.proExpiresAt);
+            setState(prev => ({ ...prev, isPro: false, proExpiresAt: 0 }));
+          }
+        } else if (!user.is_premium) {
+          // Server says not premium — trust server, downgrade locally
+          localStorage.setItem(STORAGE_KEYS.isPro, 'false');
+          localStorage.removeItem(STORAGE_KEYS.proExpiresAt);
+          setState(prev => ({ ...prev, isPro: false, proExpiresAt: 0 }));
+        }
+      })
+      .catch(() => {
+        // Offline or error — keep local state as fallback
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Refresh premium status from server (call after postback or on demand)
+  const refreshPremiumStatus = useCallback(async () => {
+    try {
+      const user = await api.getMe();
+      if (user.is_premium && user.premium_until) {
+        const expiresAt = new Date(user.premium_until).getTime();
+        if (expiresAt > Date.now()) {
+          localStorage.setItem(STORAGE_KEYS.isPro, 'true');
+          localStorage.setItem(STORAGE_KEYS.proExpiresAt, String(expiresAt));
+          setState(prev => ({ ...prev, isPro: true, proExpiresAt: expiresAt }));
+          return true;
+        }
+      }
+      // Not premium
+      localStorage.setItem(STORAGE_KEYS.isPro, 'false');
+      localStorage.removeItem(STORAGE_KEYS.proExpiresAt);
+      setState(prev => ({ ...prev, isPro: false, proExpiresAt: 0 }));
+      return false;
+    } catch {
+      return state.isPro; // keep current state on error
+    }
+  }, [state.isPro]);
+
   // Check if user can make an AI request (silent, no UI)
   const canUseAI = useCallback(() => {
     // Pro users — unlimited, don't count
@@ -90,13 +144,18 @@ export function PremiumProvider({ children }) {
     });
   }, []);
 
-  // Activate Pro for 15 days
-  const upgradeToPro = useCallback(() => {
-    const expiresAt = Date.now() + PRO_DURATION_DAYS * 24 * 60 * 60 * 1000;
+  // Activate Pro — syncs with server state
+  const upgradeToPro = useCallback(async () => {
+    // Try to refresh from server first (postback may have already activated)
+    const activated = await refreshPremiumStatus();
+    if (activated) return;
+
+    // Fallback: activate locally (for testing or manual override)
+    const expiresAt = Date.now() + 15 * 24 * 60 * 60 * 1000;
     localStorage.setItem(STORAGE_KEYS.isPro, 'true');
     localStorage.setItem(STORAGE_KEYS.proExpiresAt, String(expiresAt));
     setState(prev => ({ ...prev, isPro: true, proExpiresAt: expiresAt }));
-  }, []);
+  }, [refreshPremiumStatus]);
 
   // Downgrade to free (manual or auto-expiry)
   const downgradeToFree = useCallback(() => {
@@ -115,6 +174,7 @@ export function PremiumProvider({ children }) {
       useToolTrial,
       upgradeToPro,
       downgradeToFree,
+      refreshPremiumStatus,
     }}>
       {children}
     </PremiumContext.Provider>

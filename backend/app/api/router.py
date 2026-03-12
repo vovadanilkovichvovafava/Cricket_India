@@ -11,6 +11,7 @@ from app.api.standings import router as standings_router
 from app.api.players import router as players_router
 from app.api.support import router as support_router
 from app.api.match_chat import router as match_chat_router
+from app.api.postbacks import router as postbacks_router
 
 api_router = APIRouter()
 
@@ -21,6 +22,7 @@ api_router.include_router(standings_router)
 api_router.include_router(players_router)
 api_router.include_router(support_router)
 api_router.include_router(match_chat_router)
+api_router.include_router(postbacks_router)
 
 
 @api_router.get("/health", tags=["health"])

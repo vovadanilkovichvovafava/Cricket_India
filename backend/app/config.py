@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     CLAUDE_API_KEY: Optional[str] = None
     CRICKET_API_KEY: Optional[str] = None
     THE_ODDS_API_KEY: Optional[str] = None
+    POSTBACK_SECRET: Optional[str] = None         # shared secret for postback verification
     DATABASE_URL: str = "sqlite:///./cricket.db"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 days
 

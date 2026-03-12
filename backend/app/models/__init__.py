@@ -36,6 +36,8 @@ class UserResponse(BaseModel):
     country_code: str
     referral_code: Optional[str] = None
     referral_count: int = 0
+    is_premium: bool = False
+    premium_until: Optional[datetime] = None
     created_at: Optional[datetime] = None
 
 

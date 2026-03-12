@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer, String, Float, Text, DateTime, JSON
+from sqlalchemy import Column, Integer, String, Float, Text, DateTime, JSON, Boolean
 from app.core.database import Base
 
 
@@ -42,14 +42,18 @@ class PostbackLog(Base):
     __tablename__ = "postback_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, index=True, nullable=True)
-    click_id = Column(String(100), index=True, nullable=True)  # from affiliate link
-    bookmaker = Column(String(100), nullable=False)
-    event_type = Column(String(50), nullable=False)  # registration, deposit, first_bet, cashout
-    amount = Column(Float, nullable=True)  # deposit/cashout amount
-    currency = Column(String(5), nullable=True)  # INR, USD
-    status = Column(String(20), default="pending")  # pending, approved, rejected
-    raw_data = Column(JSON, nullable=True)  # full postback payload
+    user_id = Column(String(50), index=True, nullable=True)       # original user_id from postback (can be string)
+    user_db_id = Column(Integer, index=True, nullable=True)       # resolved User.id in our DB
+    source = Column(String(50), nullable=True)                    # "direct", "keitaro", "manual"
+    click_id = Column(String(100), index=True, nullable=True)     # from affiliate link
+    transaction_id = Column(String(100), nullable=True)           # unique transaction from bookmaker
+    event = Column(String(50), nullable=False)                    # deposit, ftd, registration, etc.
+    amount = Column(Float, nullable=True)                         # deposit/cashout amount
+    currency = Column(String(5), nullable=True)                   # INR, USD
+    country = Column(String(10), nullable=True)                   # country code from geo
+    premium_activated = Column(Boolean, default=False)            # whether this postback activated Pro
+    error = Column(String(500), nullable=True)                    # error message if activation failed
+    raw_params = Column(JSON, nullable=True)                      # full postback query params
     ip_address = Column(String(45), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
