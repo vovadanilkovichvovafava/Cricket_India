@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePremium } from '../../../shared/context/PremiumContext';
-import { ENV } from '../../../shared/config/env';
 import BottomNav from '../../../shared/components/BottomNav';
 import { CalculatorIcon, RefreshIcon, CricketBatIcon, ChartIcon, RocketIcon, SparkleIcon, UserIcon } from '../../../shared/components/Icons';
 import TricolorBar from '../../../shared/components/TricolorBar';
@@ -69,7 +68,6 @@ export default function ToolsHub() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isPro, canUseTool, useToolTrial } = usePremium();
-  const affiliateLink = ENV.BOOKMAKER_LINK !== '#' ? ENV.BOOKMAKER_LINK : 'https://siteofficialred.com/Qhs6z2nP';
 
   function handleToolClick(tool) {
     if (tool.free || isPro || canUseTool(tool.toolId)) {
@@ -124,14 +122,12 @@ export default function ToolsHub() {
               </div>
 
               <p className="text-white/80 text-xs mb-3">{t('premium.upgradeDesc')}</p>
-              <a
-                href={affiliateLink}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => navigate('/pro')}
                 className="block w-full bg-white text-[#FF8800] font-bold py-2.5 rounded-xl text-sm active:scale-95 transition-transform shadow-md text-center"
               >
                 {t('premium.upgradeNow')} →
-              </a>
+              </button>
             </div>
           </div>
         ) : (

@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { IPL_TEAMS } from '../../../shared/utils/teamColors';
-import { ENV } from '../../../shared/config/env';
 import api from '../../../shared/api';
 import BottomNav from '../../../shared/components/BottomNav';
 import BookmakerBanner from '../../../shared/components/BookmakerBanner';
@@ -17,12 +16,6 @@ import {
 } from '../../../shared/components/Icons';
 import TricolorBar from '../../../shared/components/TricolorBar';
 import { usePremium } from '../../../shared/context/PremiumContext';
-
-const AFFILIATE_LINK = 'https://siteofficialred.com/Qhs6z2nP?external_id={external_id}&sub_id_1={sub_id_1}';
-function getOfferLink() {
-  const base = ENV.BOOKMAKER_LINK !== '#' ? ENV.BOOKMAKER_LINK : AFFILIATE_LINK;
-  return base.replace('{external_id}', 'cricketbaazi').replace(/\{sub_id_\d+\}/g, '');
-}
 
 // Helper: get team display info from match data + IPL fallback
 function getTeamInfo(match, side) {
@@ -686,7 +679,7 @@ function OddsTab({ match, totals }) {
   );
 }
 
-function PredictionTab({ match, prediction, loading, onGetPrediction }) {
+function PredictionTab({ match, prediction, loading, onGetPrediction, navigate }) {
   const { t } = useTranslation();
   const [sharing, setSharing] = useState(false);
 
@@ -779,12 +772,10 @@ function PredictionTab({ match, prediction, loading, onGetPrediction }) {
             'from-[#0f3460] via-[#1a5276] to-[#0f3460]',
           ];
           return (
-            <a
+            <div
               key={i}
-              href={getOfferLink()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`block bg-gradient-to-r ${gradients[i % 3]} rounded-2xl p-4 shadow-lg active:scale-[0.98] transition-transform overflow-hidden relative`}
+              onClick={() => navigate('/pro')}
+              className={`block bg-gradient-to-r ${gradients[i % 3]} rounded-2xl p-4 shadow-lg active:scale-[0.98] transition-transform overflow-hidden relative cursor-pointer`}
             >
               {/* Shimmer effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent -skew-x-12"
@@ -834,7 +825,7 @@ function PredictionTab({ match, prediction, loading, onGetPrediction }) {
                   </div>
                 </div>
               </div>
-            </a>
+            </div>
           );
         })}
       </div>
@@ -1460,7 +1451,6 @@ export default function MatchDetail() {
   const [prediction, setPrediction] = useState(null);
   const [predictionLoading, setPredictionLoading] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const affiliateLink = getOfferLink();
   const [scorecard, setScorecard] = useState(null);
   const [scorecardLoading, setScorecardLoading] = useState(false);
   const [scorecardFetched, setScorecardFetched] = useState(false);
@@ -1585,7 +1575,7 @@ export default function MatchDetail() {
     venue: <VenueTab match={match} />,
     h2h: <H2HTab match={match} />,
     odds: <OddsTab match={match} totals={totals} />,
-    prediction: <PredictionTab match={match} prediction={prediction} loading={predictionLoading} onGetPrediction={handleGetPrediction} />,
+    prediction: <PredictionTab match={match} prediction={prediction} loading={predictionLoading} onGetPrediction={handleGetPrediction} navigate={navigate} />,
     chat: <MatchChatTab match={match} />,
   };
 

@@ -1,28 +1,18 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ENV } from '../config/env';
 
-const AFFILIATE_LINK = 'https://siteofficialred.com/Qhs6z2nP?external_id={external_id}&sub_id_1={sub_id_1}&sub_id_2={sub_id_2}&sub_id_3={sub_id_3}&sub_id_4={sub_id_4}&sub_id_5={sub_id_5}&sub_id_6={sub_id_6}&sub_id_7={sub_id_7}&sub_id_8={sub_id_8}&sub_id_9={sub_id_9}&sub_id_10={sub_id_10}&sub_id_11={sub_id_11}&sub_id_12={sub_id_12}&sub_id_13={sub_id_13}&sub_id_14={sub_id_14}&sub_id_15={sub_id_15}&sub_id_16={sub_id_16}';
-
-function getBannerLink() {
-  const base = ENV.BOOKMAKER_LINK !== '#' ? ENV.BOOKMAKER_LINK : AFFILIATE_LINK;
-  return base
-    .replace('{external_id}', 'cricketbaazi')
-    .replace(/\{sub_id_\d+\}/g, '');
-}
-
 function HeroBanner() {
   const { t } = useTranslation();
-  const link = getBannerLink();
+  const navigate = useNavigate();
   const name = ENV.BOOKMAKER_NAME;
   const bonus = ENV.BOOKMAKER_BONUS || t('banner.welcomeBonus');
 
   return (
-    <a
-      href={link}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block bg-gradient-to-r from-[#1a1a2e] via-[#16213e] to-[#0f3460] rounded-2xl p-5 text-white shadow-lg active:scale-[0.98] transition-transform overflow-hidden relative"
+    <div
+      onClick={() => navigate('/pro')}
+      className="block bg-gradient-to-r from-[#1a1a2e] via-[#16213e] to-[#0f3460] rounded-2xl p-5 text-white shadow-lg active:scale-[0.98] transition-transform overflow-hidden relative cursor-pointer"
     >
       {/* Shine overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -skew-x-12 animate-[shimmerBg_3s_ease-in-out_infinite]" />
@@ -50,21 +40,19 @@ function HeroBanner() {
           <span className="text-[10px] text-blue-300/50">{t('banner.disclaimer')}</span>
         </div>
       </div>
-    </a>
+    </div>
   );
 }
 
 function InlineBanner() {
   const { t } = useTranslation();
-  const link = getBannerLink();
+  const navigate = useNavigate();
   const bonus = ENV.BOOKMAKER_BONUS || t('banner.welcomeBonus');
 
   return (
-    <a
-      href={link}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block bg-white rounded-xl p-3.5 shadow-sm border-l-4 border-[#FF9933] active:scale-[0.98] transition-transform my-4"
+    <div
+      onClick={() => navigate('/pro')}
+      className="block bg-white rounded-xl p-3.5 shadow-sm border-l-4 border-[#FF9933] active:scale-[0.98] transition-transform my-4 cursor-pointer"
     >
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 bg-[#FF9933]/10 rounded-lg flex items-center justify-center shrink-0">
@@ -82,7 +70,7 @@ function InlineBanner() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
       </div>
-    </a>
+    </div>
   );
 }
 
@@ -94,7 +82,7 @@ function StickyBanner() {
   if (dismissed) return null;
 
   const { t } = useTranslation();
-  const link = getBannerLink();
+  const navigate = useNavigate();
   const name = ENV.BOOKMAKER_NAME;
 
   function handleDismiss(e) {
@@ -106,11 +94,9 @@ function StickyBanner() {
 
   return (
     <div className="fixed bottom-20 left-0 right-0 z-20 px-4 pb-2 safe-bottom">
-      <a
-        href={link}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center justify-between bg-gradient-to-r from-[#0B1E4D] to-[#162D6B] text-white rounded-xl px-4 py-3 shadow-xl"
+      <div
+        onClick={() => navigate('/pro')}
+        className="flex items-center justify-between bg-gradient-to-r from-[#0B1E4D] to-[#162D6B] text-white rounded-xl px-4 py-3 shadow-xl cursor-pointer"
       >
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 bg-[#FF9933]/20 rounded-lg flex items-center justify-center">
@@ -136,7 +122,7 @@ function StickyBanner() {
             </svg>
           </button>
         </div>
-      </a>
+      </div>
     </div>
   );
 }

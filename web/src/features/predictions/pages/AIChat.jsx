@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePremium } from '../../../shared/context/PremiumContext';
-import { ENV } from '../../../shared/config/env';
 import api from '../../../shared/api';
 import { parseMarkdown, formatInline } from '../../../shared/utils/parseMarkdown';
 import { ChatBotIcon, LockIcon, SparkleIcon, ShieldCheckIcon, FireIcon, LightningIcon, TargetIcon } from '../../../shared/components/Icons';
@@ -73,13 +72,6 @@ function MessageContent({ text, isUser }) {
   );
 }
 
-// --- Affiliate link helper ---
-const AFFILIATE_LINK = 'https://siteofficialred.com/Qhs6z2nP?external_id={external_id}&sub_id_1={sub_id_1}';
-function getOfferLink() {
-  const base = ENV.BOOKMAKER_LINK !== '#' ? ENV.BOOKMAKER_LINK : AFFILIATE_LINK;
-  return base.replace('{external_id}', 'cricketbaazi').replace(/\{sub_id_\d+\}/g, '');
-}
-
 // --- Risk styling helper ---
 function riskStyle(risk) {
   if (risk === 'Low') return { bg: 'bg-green-100', text: 'text-green-700', glow: '#22c55e', Icon: ShieldCheckIcon };
@@ -88,7 +80,7 @@ function riskStyle(risk) {
 }
 
 // --- Value Bet Cards (same design as MatchDetail) ---
-function ValueBetCards({ bets }) {
+function ValueBetCards({ bets, onBetClick }) {
   if (!bets || bets.length === 0) return null;
 
   const gradients = [
@@ -118,12 +110,10 @@ function ValueBetCards({ bets }) {
       {normalized.map((bet, i) => {
         const rc = riskStyle(bet.risk);
         return (
-          <a
+          <div
             key={i}
-            href={getOfferLink()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`block bg-gradient-to-r ${gradients[i % 3]} rounded-xl p-3.5 shadow-lg active:scale-[0.98] transition-transform overflow-hidden relative`}
+            onClick={onBetClick}
+            className={`block bg-gradient-to-r ${gradients[i % 3]} rounded-xl p-3.5 shadow-lg active:scale-[0.98] transition-transform overflow-hidden relative cursor-pointer`}
           >
             {/* Shimmer effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent -skew-x-12"
@@ -173,7 +163,7 @@ function ValueBetCards({ bets }) {
                 </div>
               </div>
             </div>
-          </a>
+          </div>
         );
       })}
     </div>
@@ -187,7 +177,6 @@ export default function AIChat() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { canUseAI, useAIRequest } = usePremium();
-  const affiliateLink = ENV.BOOKMAKER_LINK !== '#' ? ENV.BOOKMAKER_LINK : 'https://siteofficialred.com/Qhs6z2nP';
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const fallbackResponses = useMemo(() => ({
@@ -415,7 +404,7 @@ export default function AIChat() {
             {/* Value Bet Cards */}
             {msg.role === 'assistant' && msg.valueBets && msg.valueBets.length > 0 && !isTyping && (
               <div className="mt-2 max-w-[92%]">
-                <ValueBetCards bets={msg.valueBets} />
+                <ValueBetCards bets={msg.valueBets} onBetClick={() => navigate('/pro')} />
               </div>
             )}
             {/* Follow-up chips — hidden when limit reached */}

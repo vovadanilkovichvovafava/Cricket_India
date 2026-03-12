@@ -394,37 +394,65 @@ class CricketDataService:
 
     async def get_matches(self, offset: int = 0) -> list[MatchSummary]:
         """Get upcoming/recent cricket matches.
-        Fetches from multiple sources: standard matches + active series matches.
+        Fetches from multiple sources:
+        1. Standard matches endpoint (upcoming/scheduled)
+        2. currentMatches endpoint (live + recently completed this week)
+        3. Active series matches (series within ±30 days, paginated)
         """
         cache_key = f"matches_enriched_{offset}"
         cached = _cache_get(cache_key)
         if cached is not None:
             return cached
 
-        # 1. Standard matches endpoint
-        data = await _cricapi_request("matches", {"offset": str(offset)})
+        import asyncio
+
         seen_ids: set[str] = set()
         matches: list[MatchSummary] = []
 
-        if data and data.get("data"):
-            for m in data["data"]:
-                parsed = _parse_match(m)
-                if parsed and parsed.id not in seen_ids:
-                    seen_ids.add(parsed.id)
-                    matches.append(parsed)
-
-        # 2. Fetch matches from active/upcoming series (only on first page)
         if offset == 0:
-            try:
-                series_matches = await self._get_active_series_matches()
-                for m in series_matches:
+            # On first page, fetch from ALL sources in parallel
+            std_task = _cricapi_request("matches", {"offset": "0"})
+            current_task = self.get_current_matches()
+            series_task = self._get_active_series_matches()
+
+            std_data, current_matches, series_result = await asyncio.gather(
+                std_task, current_task, series_task, return_exceptions=True
+            )
+
+            # 1. Standard matches endpoint
+            if not isinstance(std_data, Exception) and std_data and std_data.get("data"):
+                for m in std_data["data"]:
+                    parsed = _parse_match(m)
+                    if parsed and parsed.id not in seen_ids:
+                        seen_ids.add(parsed.id)
+                        matches.append(parsed)
+
+            # 2. Current matches (live + recently completed — THIS WEEK's matches)
+            if not isinstance(current_matches, Exception) and current_matches:
+                for m in current_matches:
                     if m.id not in seen_ids:
                         seen_ids.add(m.id)
                         matches.append(m)
-            except Exception as e:
-                logger.warning(f"Failed to fetch active series matches: {e}")
 
-        # Sort: live first, then upcoming by date, then completed
+            # 3. Active series matches
+            if not isinstance(series_result, Exception) and series_result:
+                for m in series_result:
+                    if m.id not in seen_ids:
+                        seen_ids.add(m.id)
+                        matches.append(m)
+
+            logger.info(f"Merged matches: {len(matches)} total (std + current + series)")
+        else:
+            # Subsequent pages — only standard endpoint
+            data = await _cricapi_request("matches", {"offset": str(offset)})
+            if data and data.get("data"):
+                for m in data["data"]:
+                    parsed = _parse_match(m)
+                    if parsed and parsed.id not in seen_ids:
+                        seen_ids.add(parsed.id)
+                        matches.append(parsed)
+
+        # Sort: live first, then upcoming by date, then completed (newest first)
         def sort_key(m):
             if m.status == MatchStatus.LIVE:
                 return (0, m.date)
@@ -438,39 +466,73 @@ class CricketDataService:
 
     async def _get_active_series_matches(self) -> list[MatchSummary]:
         """Fetch matches from currently active/upcoming series.
-        Finds series starting within ±30 days and fetches their matches.
+        Scans multiple pages of the series endpoint to find series that:
+        - Start within the next 30 days, OR
+        - Already started but haven't ended yet (endDate in the future)
         """
         cache_key = "active_series_matches"
         cached = _cache_get(cache_key)
         if cached is not None:
             return cached
 
-        # Get series list
-        series_data = await _cricapi_request("series", {"offset": "0"})
-        if not series_data or not series_data.get("data"):
-            return []
+        import asyncio
 
         now = datetime.utcnow()
         active_series_ids = []
 
-        for s in series_data["data"]:
-            start_str = s.get("startDate", "")
-            try:
-                # Parse various date formats from CricAPI
-                start = datetime.strptime(start_str, "%Y-%m-%d") if "-" in start_str else None
-                if start and abs((start - now).days) <= 30:
-                    active_series_ids.append(s.get("id"))
-            except (ValueError, TypeError):
+        # Paginate through multiple offsets to find current series
+        # CricAPI returns series sorted from far future, so we need several pages
+        offsets = [0, 25, 50, 75, 100]
+
+        async def fetch_series_page(offset):
+            return await _cricapi_request("series", {"offset": str(offset)})
+
+        page_tasks = [fetch_series_page(off) for off in offsets]
+        page_results = await asyncio.gather(*page_tasks, return_exceptions=True)
+
+        seen_series = set()
+        for page_data in page_results:
+            if isinstance(page_data, Exception) or not page_data or not page_data.get("data"):
                 continue
 
+            for s in page_data["data"]:
+                sid = s.get("id")
+                if not sid or sid in seen_series:
+                    continue
+                seen_series.add(sid)
+
+                start_str = s.get("startDate", "")
+                end_str = s.get("endDate", "")
+
+                try:
+                    start = datetime.strptime(start_str, "%Y-%m-%d") if start_str and "-" in start_str else None
+                    end = datetime.strptime(end_str, "%Y-%m-%d") if end_str and "-" in end_str else None
+                except (ValueError, TypeError):
+                    continue
+
+                if not start:
+                    continue
+
+                # Include series if:
+                # 1. Starts within next 30 days (upcoming)
+                # 2. Already started AND hasn't ended yet (currently active)
+                # 3. Started within last 7 days (recently started, even if no endDate)
+                days_until_start = (start - now).days
+                is_upcoming = 0 <= days_until_start <= 30
+                is_active = (start <= now and end is not None and end >= now)
+                is_recent = -7 <= days_until_start < 0
+
+                if is_upcoming or is_active or is_recent:
+                    active_series_ids.append(sid)
+
         if not active_series_ids:
+            logger.info("No active series found across paginated scan")
             return []
 
-        # Fetch matches from each active series (limit to 5 series to save API calls)
+        # Fetch matches from each active series (limit to 15 to balance coverage vs API calls)
         all_matches = []
-        import asyncio
 
-        async def fetch_series(sid):
+        async def fetch_series_matches(sid):
             data = await _cricapi_request("series_info", {"id": sid})
             if data and data.get("data", {}).get("matchList"):
                 results = []
@@ -481,14 +543,15 @@ class CricketDataService:
                 return results
             return []
 
-        tasks = [fetch_series(sid) for sid in active_series_ids[:8]]
+        tasks = [fetch_series_matches(sid) for sid in active_series_ids[:15]]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         for result in results:
             if isinstance(result, list):
                 all_matches.extend(result)
 
-        logger.info(f"Active series: {len(active_series_ids)} series, {len(all_matches)} total matches")
+        logger.info(f"Active series scan: {len(seen_series)} total scanned, "
+                     f"{len(active_series_ids)} active, {len(all_matches)} matches")
         _cache_set(cache_key, all_matches)
         return all_matches
 

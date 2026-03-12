@@ -87,7 +87,7 @@ async def register(body: RegisterRequest, request: Request, db: Session = Depend
             referrer.referral_count = (referrer.referral_count or 0) + 1
             db.commit()
 
-    token = create_access_token({"sub": user.id})
+    token = create_access_token({"sub": str(user.id)})
     return AuthResponse(
         token=token,
         user=UserResponse.model_validate(user),
@@ -113,7 +113,7 @@ async def login(body: LoginRequest, request: Request, db: Session = Depends(get_
             detail="invalid_credentials",
         )
 
-    token = create_access_token({"sub": user.id})
+    token = create_access_token({"sub": str(user.id)})
     return AuthResponse(
         token=token,
         user=UserResponse.model_validate(user),

@@ -16,7 +16,14 @@ export function AuthProvider({ children }) {
     }
     api.getMe()
       .then(u => setUser(u))
-      .catch(() => localStorage.removeItem('token'))
+      .catch((err) => {
+        // Only clear token on auth errors (401) — NOT on network errors
+        // Network errors (server temporarily down, CORS issues, etc.)
+        // should not log the user out
+        if (err?.status === 401) {
+          localStorage.removeItem('token');
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
