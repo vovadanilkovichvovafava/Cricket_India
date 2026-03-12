@@ -186,7 +186,7 @@ function ValueBetCards({ bets }) {
 export default function AIChat() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { isPro, aiRequestsLeft, canUseAI, useAIRequest, FREE_AI_LIMIT } = usePremium();
+  const { canUseAI, useAIRequest } = usePremium();
   const affiliateLink = ENV.BOOKMAKER_LINK !== '#' ? ENV.BOOKMAKER_LINK : 'https://siteofficialred.com/Qhs6z2nP';
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
@@ -263,8 +263,8 @@ export default function AIChat() {
     } catch (err) {
       console.error('AI Chat error:', err);
 
-      // Backend rate limit / daily limit / auth error → show upgrade modal
-      if (err.status === 429 || err.status === 401) {
+      // Backend rate limit → show upgrade modal
+      if (err.status === 429) {
         setShowUpgradeModal(true);
         setMessages(prev => prev.filter(m => m.id !== userMessage.id)); // Remove user msg
       } else {
@@ -380,18 +380,6 @@ export default function AIChat() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* Requests badge */}
-          {isPro ? (
-            <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-50 text-emerald-600">
-              <SparkleIcon className="w-3 h-3 inline text-yellow-500" /> {t('premium.unlimited')}
-            </span>
-          ) : (
-            <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${
-              aiRequestsLeft > 0 ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-500'
-            }`}>
-              {t('premium.requestsLeft', { count: aiRequestsLeft })}
-            </span>
-          )}
           <button onClick={clearChat} className="w-8 h-8 flex items-center justify-center text-gray-400">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -431,7 +419,7 @@ export default function AIChat() {
               </div>
             )}
             {/* Follow-up chips — hidden when limit reached */}
-            {msg.role === 'assistant' && msg.suggestions && msg.id !== 'welcome' && !isTyping && (isPro || aiRequestsLeft > 0) && (
+            {msg.role === 'assistant' && msg.suggestions && msg.id !== 'welcome' && !isTyping && canUseAI() && (
               <div className="flex flex-wrap gap-2 mt-2 ml-1">
                 {msg.suggestions.map(s => (
                   <button key={s} onClick={() => sendMessage(s)}
@@ -462,7 +450,7 @@ export default function AIChat() {
       </div>
 
       {/* Quick questions — hidden when limit reached */}
-      {showQuick && messages.length <= 1 && (isPro || aiRequestsLeft > 0) && (
+      {showQuick && messages.length <= 1 && canUseAI() && (
         <div className="px-5 pb-2 shrink-0">
           <p className="text-xs text-gray-400 mb-2">{t('aiChat.tryAsking')}</p>
           <div className="flex gap-2 mb-2">
@@ -501,7 +489,7 @@ export default function AIChat() {
       )}
 
       {/* Bottom area: input OR limit-reached banner */}
-      {!isPro && aiRequestsLeft <= 0 ? (
+      {!canUseAI() ? (
         /* Limit reached — replace input with upgrade banner */
         <div className="px-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 shrink-0 py-3"
           style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}>

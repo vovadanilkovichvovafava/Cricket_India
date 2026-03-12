@@ -545,6 +545,8 @@
     "sessionExpired": "Session expired. Please login again.",
     "tapToUpgrade": "Tap to get Pro or wait for daily reset",
     "downgrade": "Downgrade",
+    "daysLeft": "{{count}} days left",
+    "freeDesc": "Basic AI analysis",
     "goProTitle": "Go Pro — Unlimited AI",
     "goProDesc": "Deposit at partner & unlock everything free"
   },

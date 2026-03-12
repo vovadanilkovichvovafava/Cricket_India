@@ -63,7 +63,7 @@ export default function Settings() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { user, isAuthenticated, logout } = useAuth();
-  const { isPro, aiRequestsLeft, FREE_AI_LIMIT, downgradeToFree } = usePremium();
+  const { isPro, proDaysLeft, downgradeToFree } = usePremium();
   const { isDark, toggleDarkMode } = useTheme();
   const [language, setLanguage] = useState(() => i18n.language?.split('-')[0] || 'en');
   const [apiStatus, setApiStatus] = useState('checking');
@@ -169,7 +169,11 @@ export default function Settings() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{t('premium.proPlan')}</p>
-                  <p className="text-[11px] text-emerald-600 font-medium">{t('premium.unlimited')}</p>
+                  <p className="text-[11px] text-emerald-600 font-medium">
+                    {proDaysLeft > 0
+                      ? t('premium.daysLeft', { count: proDaysLeft }) || `${proDaysLeft} days left`
+                      : t('premium.unlimited')}
+                  </p>
                 </div>
                 <button
                   onClick={downgradeToFree}
@@ -187,16 +191,14 @@ export default function Settings() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{t('premium.freePlan')}</p>
-                  <p className="text-[11px] text-gray-400">{t('premium.requestsLeft', { count: aiRequestsLeft })} ({FREE_AI_LIMIT}/day)</p>
+                  <p className="text-[11px] text-gray-400">{t('premium.freeDesc') || 'Basic AI analysis'}</p>
                 </div>
-                <a
-                  href={ENV.BOOKMAKER_LINK !== '#' ? ENV.BOOKMAKER_LINK : 'https://siteofficialred.com/Qhs6z2nP'}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => navigate('/pro')}
                   className="bg-gradient-to-r from-[#FF9933] to-[#FF8800] text-white text-xs font-bold px-3 py-1.5 rounded-lg active:scale-95 transition-transform"
                 >
                   {t('premium.upgradeNow')}
-                </a>
+                </button>
               </div>
             </div>
           )}

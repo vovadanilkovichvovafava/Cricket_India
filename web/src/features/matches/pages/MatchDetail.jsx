@@ -1556,9 +1556,6 @@ export default function MatchDetail() {
       // If 429 (limit exceeded on server side) — show upgrade modal
       if (err?.status === 429) {
         setShowUpgradeModal(true);
-      } else if (err?.status === 401) {
-        // Session expired — show upgrade modal with login hint
-        setShowUpgradeModal(true);
       }
       console.error('Failed to fetch prediction:', err);
       setPrediction(null);
