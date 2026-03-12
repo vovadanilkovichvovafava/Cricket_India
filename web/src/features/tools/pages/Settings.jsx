@@ -18,7 +18,6 @@ const BUILD = '2026.03.09';
 const LANGUAGES = [
   { code: 'en', label: 'English', native: 'English' },
   { code: 'hi', label: 'Hindi', native: 'हिन्दी' },
-  { code: 'ru', label: 'Russian', native: 'Русский' },
 ];
 
 const TOOLS = [

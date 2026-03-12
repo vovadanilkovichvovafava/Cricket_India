@@ -13,7 +13,9 @@ i18n
       en: { translation: en },
       hi: { translation: hi },
     },
+    supportedLngs: ['en', 'hi'],
     fallbackLng: 'en',
+    load: 'languageOnly', // hi-IN → hi, en-US → en
     interpolation: {
       escapeValue: false, // React already escapes by default
     },
