@@ -117,16 +117,24 @@ export default function LoginPage() {
         navigate('/', { replace: true });
       }
     } catch (err) {
-      // Show actual backend error if available, fallback to generic message
-      const msg = err?.detail || err?.message || '';
-      if (msg.includes('409') || msg.includes('already')) {
-        setError(t('auth.phoneAlreadyTaken'));
-      } else if (msg.includes('401') || msg.includes('Invalid')) {
-        setError(t('auth.loginError'));
+      // Map backend error codes to user-friendly translated messages
+      const detail = err?.detail || err?.message || '';
+      const errorMap = {
+        'phone_already_registered': t('auth.phoneAlreadyTaken'),
+        'invalid_credentials': t('auth.invalidCredentials'),
+        'password_too_short': t('auth.passwordTooShort'),
+        'password_needs_letter': t('auth.passwordNeedsLetter'),
+        'password_needs_digit': t('auth.passwordNeedsDigit'),
+      };
+      const mapped = errorMap[detail];
+      if (mapped) {
+        setError(mapped);
+      } else if (detail.includes('429') || detail.includes('rate') || detail.includes('Too Many')) {
+        setError(t('auth.tooManyAttempts'));
       } else {
         setError(isRegister ? t('auth.registerError') : t('auth.loginError'));
       }
-      console.error('Auth error:', msg);
+      console.error('Auth error:', detail);
     } finally {
       setLoading(false);
     }

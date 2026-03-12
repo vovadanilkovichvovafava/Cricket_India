@@ -26,21 +26,21 @@ def normalize_phone(country_code: str, phone: str) -> str:
 
 
 def _validate_password(password: str):
-    """Validate password strength: min 8 chars, at least one letter + one digit."""
-    if len(password) < 8:
+    """Validate password strength: min 6 chars, at least one letter + one digit."""
+    if len(password) < 6:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Password must be at least 8 characters",
+            detail="password_too_short",
         )
     if not re.search(r"[a-zA-Z]", password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Password must contain at least one letter",
+            detail="password_needs_letter",
         )
     if not re.search(r"\d", password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Password must contain at least one digit",
+            detail="password_needs_digit",
         )
 
 
@@ -57,7 +57,7 @@ async def register(body: RegisterRequest, request: Request, db: Session = Depend
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Phone number already registered",
+            detail="phone_already_registered",
         )
 
     # Resolve referral (validate format: alphanumeric only)
@@ -110,7 +110,7 @@ async def login(body: LoginRequest, request: Request, db: Session = Depends(get_
     if not user or not password_ok:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
+            detail="invalid_credentials",
         )
 
     token = create_access_token({"sub": user.id})
