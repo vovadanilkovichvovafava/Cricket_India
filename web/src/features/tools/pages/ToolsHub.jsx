@@ -123,7 +123,7 @@ export default function ToolsHub() {
 
               <p className="text-white/80 text-xs mb-3">{t('premium.upgradeDesc')}</p>
               <button
-                onClick={() => navigate('/pro')}
+                onClick={() => navigate('/offer')}
                 className="block w-full bg-white text-[#FF8800] font-bold py-2.5 rounded-xl text-sm active:scale-95 transition-transform shadow-md text-center"
               >
                 {t('premium.upgradeNow')} →

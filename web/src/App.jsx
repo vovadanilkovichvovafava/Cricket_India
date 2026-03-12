@@ -27,6 +27,7 @@ const ReferralPage = lazy(() => import('./features/auth/pages/ReferralPage'));
 const OnboardingPage = lazy(() => import('./features/auth/pages/OnboardingPage'));
 const Leaderboard = lazy(() => import('./features/predictions/pages/Leaderboard'));
 const ProAccess = lazy(() => import('./features/betting/pages/ProAccess'));
+const BookmakerPromo = lazy(() => import('./features/betting/pages/BookmakerPromo'));
 const AdminRoutes = lazy(() => import('./features/admin/AdminRoutes'));
 
 function Spinner() {
@@ -136,6 +137,7 @@ export default function App() {
             <Route path="/tools/players" element={<ProtectedRoute><PlayerStats /></ProtectedRoute>} />
             <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
             <Route path="/pro" element={<ProtectedRoute><ProAccess /></ProtectedRoute>} />
+            <Route path="/offer" element={<ProtectedRoute><BookmakerPromo /></ProtectedRoute>} />
 
             {/* Admin panel — separate auth, no ProtectedRoute */}
             <Route path="/admin/*" element={<AdminRoutes />} />

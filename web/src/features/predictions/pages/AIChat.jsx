@@ -404,7 +404,7 @@ export default function AIChat() {
             {/* Value Bet Cards */}
             {msg.role === 'assistant' && msg.valueBets && msg.valueBets.length > 0 && !isTyping && (
               <div className="mt-2 max-w-[92%]">
-                <ValueBetCards bets={msg.valueBets} onBetClick={() => navigate('/pro')} />
+                <ValueBetCards bets={msg.valueBets} onBetClick={() => navigate('/offer')} />
               </div>
             )}
             {/* Follow-up chips — hidden when limit reached */}

@@ -11,7 +11,7 @@ function HeroBanner() {
 
   return (
     <div
-      onClick={() => navigate('/pro')}
+      onClick={() => navigate('/offer')}
       className="block bg-gradient-to-r from-[#1a1a2e] via-[#16213e] to-[#0f3460] rounded-2xl p-5 text-white shadow-lg active:scale-[0.98] transition-transform overflow-hidden relative cursor-pointer"
     >
       {/* Shine overlay */}
@@ -51,7 +51,7 @@ function InlineBanner() {
 
   return (
     <div
-      onClick={() => navigate('/pro')}
+      onClick={() => navigate('/offer')}
       className="block bg-white rounded-xl p-3.5 shadow-sm border-l-4 border-[#FF9933] active:scale-[0.98] transition-transform my-4 cursor-pointer"
     >
       <div className="flex items-center gap-3">
@@ -95,7 +95,7 @@ function StickyBanner() {
   return (
     <div className="fixed bottom-20 left-0 right-0 z-20 px-4 pb-2 safe-bottom">
       <div
-        onClick={() => navigate('/pro')}
+        onClick={() => navigate('/offer')}
         className="flex items-center justify-between bg-gradient-to-r from-[#0B1E4D] to-[#162D6B] text-white rounded-xl px-4 py-3 shadow-xl cursor-pointer"
       >
         <div className="flex items-center gap-2.5">

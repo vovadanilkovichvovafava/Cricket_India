@@ -774,7 +774,7 @@ function PredictionTab({ match, prediction, loading, onGetPrediction, navigate }
           return (
             <div
               key={i}
-              onClick={() => navigate('/pro')}
+              onClick={() => navigate('/offer')}
               className={`block bg-gradient-to-r ${gradients[i % 3]} rounded-2xl p-4 shadow-lg active:scale-[0.98] transition-transform overflow-hidden relative cursor-pointer`}
             >
               {/* Shimmer effect */}
