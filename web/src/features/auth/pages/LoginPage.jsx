@@ -7,7 +7,7 @@ import { SparkleIcon, GiftIcon } from '../../../shared/components/Icons';
 // Country codes with phone format info
 // digits = expected digit count (local number), placeholder = formatted example
 const COUNTRIES = [
-  { code: '+91',  flag: '🇮🇳', name: 'India',        digits: 10, placeholder: '(98765) 43210',  format: [5, 5] },
+  { code: '+91',  flag: '🇮🇳', name: 'India',        digits: 10, placeholder: '98765 43210',  format: [5, 5] },
   { code: '+92',  flag: '🇵🇰', name: 'Pakistan',      digits: 10, placeholder: '(312) 345 6789', format: [3, 3, 4] },
   { code: '+94',  flag: '🇱🇰', name: 'Sri Lanka',     digits: 9,  placeholder: '(71) 234 5678',  format: [2, 3, 4] },
   { code: '+880', flag: '🇧🇩', name: 'Bangladesh',    digits: 10, placeholder: '(1712) 345678',  format: [4, 6] },
@@ -41,18 +41,18 @@ function detectCountryCode() {
 }
 
 // Format phone digits according to country format pattern
-// First group wrapped in parentheses: (98765) 43210
+// Parentheses on first group only if it's a short operator/area code (≤4 digits)
 function formatPhone(digits, format) {
+  const useParens = format[0] <= 4;
   let result = '';
   let pos = 0;
   for (let i = 0; i < format.length && pos < digits.length; i++) {
     const chunk = digits.slice(pos, pos + format[i]);
-    if (i === 0) {
-      // First group: wrap in parentheses
+    if (i === 0 && useParens) {
       const complete = chunk.length === format[i];
       result = complete ? `(${chunk})` : `(${chunk}`;
     } else {
-      result += ' ' + chunk;
+      result += (result ? ' ' : '') + chunk;
     }
     pos += format[i];
   }
