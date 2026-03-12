@@ -58,7 +58,9 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Warn if using default secret key, auto-generate in dev
+# Warn if using default secret key
+# NOTE: Do NOT auto-generate in dev — random key on each restart
+# invalidates all JWT tokens and kicks users out of their sessions.
 if settings.SECRET_KEY == "change-me":
     if settings.ENVIRONMENT == "production":
         logger.critical(
@@ -66,9 +68,7 @@ if settings.SECRET_KEY == "change-me":
             "Set SECRET_KEY environment variable to a random 32+ char string."
         )
     else:
-        _auto_key = _secrets.token_urlsafe(32)
-        settings.SECRET_KEY = _auto_key
         logger.warning(
-            "⚠️  SECRET_KEY was 'change-me' — auto-generated for dev. "
+            "⚠️  SECRET_KEY is 'change-me' (default). "
             "Set SECRET_KEY env variable for production."
         )
