@@ -398,16 +398,6 @@ export default function ProAccess() {
             <div className="q-slrow"><div className="q-slico gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><h4>{t('proAccess.step5.zeroRisk')}</h4><p>{t('proAccess.step5.zeroRiskDesc')}</p></div></div>
           </div>
           <div style={{ textAlign: 'center' }}><div className="q-sbadge"><div className="q-sdot" />{t('proAccess.step5.usersActivated')}</div></div>
-          <div className="q-pay-row">
-            <div className="q-pay-title"><Card />{t('proAccess.step5.paymentMethods')}</div>
-            <div className="q-pay-chips">
-              <div className="q-pchip">UPI</div>
-              <div className="q-pchip">Paytm</div>
-              <div className="q-pchip">PhonePe</div>
-              <div className="q-pchip">Net Banking</div>
-              <div className="q-pchip">Card</div>
-            </div>
-          </div>
         </div>
         <div className="q-foot">
           <button className="q-btn green" onClick={next}>{t('proAccess.step5.btn')}<Check /></button>

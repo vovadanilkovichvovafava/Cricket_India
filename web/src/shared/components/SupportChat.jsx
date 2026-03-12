@@ -43,9 +43,8 @@ export default function SupportChat() {
     }
   }, [open]);
 
-  // Hide on login/onboarding pages (AFTER all hooks to respect Rules of Hooks)
-  const hiddenPaths = ['/login', '/onboarding'];
-  if (hiddenPaths.includes(location.pathname)) return null;
+  // Show only on Home page (AFTER all hooks to respect Rules of Hooks)
+  if (location.pathname !== '/') return null;
 
   const quickQuestions = [
     { key: 'howApp', label: t('support.quick.howApp') },
