@@ -75,8 +75,13 @@ const RECENT_WINNERS = [
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { login, register } = useAuth();
+  const { login, register, isAuthenticated } = useAuth();
   const [searchParams] = useSearchParams();
+
+  // Already logged in — redirect to home
+  useEffect(() => {
+    if (isAuthenticated) navigate('/', { replace: true });
+  }, [isAuthenticated, navigate]);
   const refCode = searchParams.get('ref') || '';
 
   const [isRegister, setIsRegister] = useState(true); // default to register
