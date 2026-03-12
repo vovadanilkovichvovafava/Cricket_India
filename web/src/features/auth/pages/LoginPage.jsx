@@ -7,19 +7,19 @@ import { SparkleIcon, GiftIcon } from '../../../shared/components/Icons';
 // Country codes with phone format info
 // digits = expected digit count (local number), placeholder = formatted example
 const COUNTRIES = [
-  { code: '+91',  flag: '🇮🇳', name: 'India',        digits: 10, placeholder: '98765 43210',  format: [5, 5] },
-  { code: '+92',  flag: '🇵🇰', name: 'Pakistan',      digits: 10, placeholder: '312 345 6789', format: [3, 3, 4] },
-  { code: '+94',  flag: '🇱🇰', name: 'Sri Lanka',     digits: 9,  placeholder: '71 234 5678',  format: [2, 3, 4] },
-  { code: '+880', flag: '🇧🇩', name: 'Bangladesh',    digits: 10, placeholder: '1712 345678',  format: [4, 6] },
-  { code: '+977', flag: '🇳🇵', name: 'Nepal',         digits: 10, placeholder: '9812 345678',  format: [4, 6] },
-  { code: '+93',  flag: '🇦🇫', name: 'Afghanistan',   digits: 9,  placeholder: '70 123 4567',  format: [2, 3, 4] },
-  { code: '+971', flag: '🇦🇪', name: 'UAE',           digits: 9,  placeholder: '50 123 4567',  format: [2, 3, 4] },
-  { code: '+44',  flag: '🇬🇧', name: 'UK',            digits: 10, placeholder: '7911 123456',  format: [4, 6] },
+  { code: '+91',  flag: '🇮🇳', name: 'India',        digits: 10, placeholder: '(98765) 43210',  format: [5, 5] },
+  { code: '+92',  flag: '🇵🇰', name: 'Pakistan',      digits: 10, placeholder: '(312) 345 6789', format: [3, 3, 4] },
+  { code: '+94',  flag: '🇱🇰', name: 'Sri Lanka',     digits: 9,  placeholder: '(71) 234 5678',  format: [2, 3, 4] },
+  { code: '+880', flag: '🇧🇩', name: 'Bangladesh',    digits: 10, placeholder: '(1712) 345678',  format: [4, 6] },
+  { code: '+977', flag: '🇳🇵', name: 'Nepal',         digits: 10, placeholder: '(9812) 345678',  format: [4, 6] },
+  { code: '+93',  flag: '🇦🇫', name: 'Afghanistan',   digits: 9,  placeholder: '(70) 123 4567',  format: [2, 3, 4] },
+  { code: '+971', flag: '🇦🇪', name: 'UAE',           digits: 9,  placeholder: '(50) 123 4567',  format: [2, 3, 4] },
+  { code: '+44',  flag: '🇬🇧', name: 'UK',            digits: 10, placeholder: '(7911) 123456',  format: [4, 6] },
   { code: '+1',   flag: '🇺🇸', name: 'USA',           digits: 10, placeholder: '(555) 123-4567', format: [3, 3, 4] },
-  { code: '+61',  flag: '🇦🇺', name: 'Australia',     digits: 9,  placeholder: '412 345 678',  format: [3, 3, 3] },
-  { code: '+27',  flag: '🇿🇦', name: 'South Africa',  digits: 9,  placeholder: '71 234 5678',  format: [2, 3, 4] },
-  { code: '+64',  flag: '🇳🇿', name: 'New Zealand',   digits: 9,  placeholder: '21 234 5678',  format: [2, 3, 4] },
-  { code: '+263', flag: '🇿🇼', name: 'Zimbabwe',      digits: 9,  placeholder: '71 234 5678',  format: [2, 3, 4] },
+  { code: '+61',  flag: '🇦🇺', name: 'Australia',     digits: 9,  placeholder: '(412) 345 678',  format: [3, 3, 3] },
+  { code: '+27',  flag: '🇿🇦', name: 'South Africa',  digits: 9,  placeholder: '(71) 234 5678',  format: [2, 3, 4] },
+  { code: '+64',  flag: '🇳🇿', name: 'New Zealand',   digits: 9,  placeholder: '(21) 234 5678',  format: [2, 3, 4] },
+  { code: '+263', flag: '🇿🇼', name: 'Zimbabwe',      digits: 9,  placeholder: '(71) 234 5678',  format: [2, 3, 4] },
 ];
 
 // Auto-detect country from browser language
@@ -41,15 +41,22 @@ function detectCountryCode() {
 }
 
 // Format phone digits according to country format pattern
+// First group wrapped in parentheses: (98765) 43210
 function formatPhone(digits, format) {
   let result = '';
   let pos = 0;
   for (let i = 0; i < format.length && pos < digits.length; i++) {
     const chunk = digits.slice(pos, pos + format[i]);
-    result += (result ? ' ' : '') + chunk;
+    if (i === 0) {
+      // First group: wrap in parentheses
+      const complete = chunk.length === format[i];
+      result = complete ? `(${chunk})` : `(${chunk}`;
+    } else {
+      result += ' ' + chunk;
+    }
     pos += format[i];
   }
-  if (pos < digits.length) result += (result ? ' ' : '') + digits.slice(pos);
+  if (pos < digits.length) result += ' ' + digits.slice(pos);
   return result;
 }
 
