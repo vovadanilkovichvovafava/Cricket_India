@@ -30,11 +30,8 @@ function HeroBanner() {
         <p className="text-blue-200/70 text-sm mb-4">{t('banner.freebetAndPro')}</p>
 
         <div className="flex items-center justify-between">
-          <div className="bg-[#FF9933] text-white font-bold px-5 py-2.5 rounded-xl text-sm flex items-center gap-2 shadow-lg shadow-[#FF9933]/30">
+          <div className="bg-[#FF9933] text-white font-bold px-5 py-2.5 rounded-xl text-sm shadow-lg shadow-[#FF9933]/30">
             {t('banner.claimGift')}
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
           </div>
           <span className="text-[10px] text-blue-300/50">{t('banner.disclaimer')}</span>
         </div>
