@@ -14,7 +14,7 @@ from app.models.user import User
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 # Allowed origins for referral links
-_ALLOWED_ORIGINS = {"https://cricketbaazi.com", "https://www.cricketbaazi.com"}
+_ALLOWED_ORIGINS = {"https://prescoreai.app", "https://www.prescoreai.app", "https://cricketbaazi.com", "https://www.cricketbaazi.com"}
 _ORIGIN_REGEX = re.compile(r"^https://cricket-india-[a-z0-9]+\.saturn\.ac$")
 
 
@@ -133,7 +133,7 @@ async def get_referral_info(request: Request, current_user: User = Depends(get_c
 
     # Validate origin against whitelist to prevent XSS via Origin header
     if origin not in _ALLOWED_ORIGINS and not _ORIGIN_REGEX.match(origin):
-        origin = "https://cricketbaazi.com"
+        origin = "https://prescoreai.app"
 
     referral_link = f"{origin}/login?ref={current_user.referral_code}"
 

@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     RATE_LIMIT_GENERAL: str = "60/minute"   # general API
 
     # App metadata
-    APP_NAME: str = "Cricket Bet Analyzer API"
+    APP_NAME: str = "PreScoreAI API"
     APP_VERSION: str = "1.0.0"
     API_V1_PREFIX: str = "/api/v1"
 
@@ -43,6 +43,8 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
+        "https://prescoreai.app",
+        "https://www.prescoreai.app",
     ]
 
     def get_cors_origins(self) -> list[str]:

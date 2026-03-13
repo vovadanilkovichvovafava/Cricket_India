@@ -63,7 +63,7 @@ export default function ReferralPage() {
   function handleNativeShare() {
     if (navigator.share) {
       navigator.share({
-        title: 'CricketBaazi',
+        title: 'PreScoreAI',
         text: t('referral.shareText', { code: referralCode }),
         url: referralLink,
       }).catch(() => {});

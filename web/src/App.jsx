@@ -34,7 +34,7 @@ function Spinner() {
   return (
     <div className="h-dvh flex flex-col items-center justify-center bg-gradient-to-b from-[#0B1E4D] to-[#162D6B]">
       <div className="w-12 h-12 border-4 border-white/20 border-t-[#FF9933] rounded-full animate-spin" />
-      <p className="mt-4 text-white/80 text-sm font-bold">CricketBaazi</p>
+      <p className="mt-4 text-white/80 text-sm font-bold">PreScoreAI</p>
       <div className="flex h-[3px] w-16 mt-3 rounded-full overflow-hidden">
         <div className="flex-1 bg-[#FF9933]" />
         <div className="flex-1 bg-white" />
@@ -79,7 +79,7 @@ function SplashScreen({ onDone }) {
       </div>
 
       {/* Brand */}
-      <h1 className="text-3xl font-black text-white mb-1 tracking-tight">CricketBaazi</h1>
+      <h1 className="text-3xl font-black text-white mb-1 tracking-tight">PreScoreAI</h1>
       <p className="text-blue-200/60 text-sm mb-6">AI-Powered IPL Predictions</p>
 
       {/* Tricolor bar */}

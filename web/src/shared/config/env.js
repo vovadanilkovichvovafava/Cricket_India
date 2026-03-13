@@ -1,4 +1,5 @@
 const rc = window.__APP_CONFIG__ || {};
+export const APP_DOMAIN = 'prescoreai.app';
 export const ENV = {
   API_URL:          rc.API_URL          || import.meta.env.VITE_API_URL          || '/api/v1',
   CRICKET_API_KEY:  rc.CRICKET_API_KEY  || import.meta.env.VITE_CRICKET_API_KEY  || '',

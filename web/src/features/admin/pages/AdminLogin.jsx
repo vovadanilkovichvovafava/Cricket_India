@@ -32,7 +32,7 @@ export default function AdminLogin() {
             OP
           </div>
           <h1 className="text-lg font-semibold text-slate-100">Ops Panel</h1>
-          <p className="text-xs text-slate-500 mt-1">CricketBaazi — Admin access only</p>
+          <p className="text-xs text-slate-500 mt-1">PreScoreAI — Admin access only</p>
         </div>
 
         {error && (

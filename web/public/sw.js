@@ -1,5 +1,5 @@
-// CricketBaazi Service Worker — Push Notifications + Caching
-const CACHE_NAME = 'cricketbaazi-v1';
+// PreScoreAI Service Worker — Push Notifications + Caching
+const CACHE_NAME = 'prescoreai-v1';
 
 // Install — cache shell
 self.addEventListener('install', () => {
@@ -17,7 +17,7 @@ self.addEventListener('activate', (event) => {
 
 // Push notification received
 self.addEventListener('push', (event) => {
-  let data = { title: 'CricketBaazi', body: 'New update available! 🏏', url: '/' };
+  let data = { title: 'PreScoreAI', body: 'New update available! 🏏', url: '/' };
 
   if (event.data) {
     try {

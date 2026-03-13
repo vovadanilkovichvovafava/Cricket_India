@@ -1,6 +1,6 @@
 {
-  "name": "CricketBaazi",
-  "short_name": "CricketBaazi",
+  "name": "PreScoreAI",
+  "short_name": "PreScoreAI",
   "description": "AI-powered cricket betting predictions for IPL 2026",
   "start_url": "/",
   "display": "standalone",

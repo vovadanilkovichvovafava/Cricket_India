@@ -131,7 +131,7 @@ export default function AdminLayout() {
               </div>
               <div>
                 <p className="font-semibold text-sm">Ops Panel</p>
-                <p className="text-[10px] text-slate-500">CricketBaazi</p>
+                <p className="text-[10px] text-slate-500">PreScoreAI</p>
               </div>
             </div>
           </div>

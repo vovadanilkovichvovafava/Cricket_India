@@ -46,7 +46,7 @@ export async function generatePredictionImage({ match, prediction }) {
   ctx.fillStyle = '#FFFFFF';
   ctx.font = 'bold 52px Inter, system-ui, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('CricketBaazi', CARD_WIDTH / 2, 100);
+  ctx.fillText('PreScoreAI', CARD_WIDTH / 2, 100);
 
   ctx.fillStyle = 'rgba(147, 197, 253, 0.6)';
   ctx.font = '28px Inter, system-ui, sans-serif';
@@ -256,7 +256,7 @@ export async function generatePredictionImage({ match, prediction }) {
   ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
   ctx.font = '20px Inter, system-ui, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('cricketbaazi.com • AI-Powered Cricket Predictions', CARD_WIDTH / 2, CARD_HEIGHT - 60);
+  ctx.fillText('prescoreai.app • AI-Powered Cricket Predictions', CARD_WIDTH / 2, CARD_HEIGHT - 60);
 
   // Tricolor bar at bottom
   const btBarY = CARD_HEIGHT - 30;
@@ -279,14 +279,14 @@ export async function sharePrediction({ match, prediction }) {
 
   if (!blob) return false;
 
-  const file = new File([blob], 'cricketbaazi-prediction.png', { type: 'image/png' });
+  const file = new File([blob], 'prescoreai-prediction.png', { type: 'image/png' });
 
   // Web Share API (mobile-first)
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
       await navigator.share({
         title: `${match.home || '?'} vs ${match.away || '?'} — AI Prediction`,
-        text: `🏏 AI predicts ${prediction.winner} with ${prediction.confidence}% confidence! Check out CricketBaazi for more predictions.`,
+        text: `🏏 AI predicts ${prediction.winner} with ${prediction.confidence}% confidence! Check out PreScoreAI for more predictions.`,
         files: [file],
       });
       return true;
@@ -299,7 +299,7 @@ export async function sharePrediction({ match, prediction }) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'cricketbaazi-prediction.png';
+  a.download = 'prescoreai-prediction.png';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

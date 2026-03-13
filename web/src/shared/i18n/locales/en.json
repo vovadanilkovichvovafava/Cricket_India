@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "CricketBaazi",
+    "name": "PreScoreAI",
     "tagline": "India's Smartest Cricket Predictions",
     "disclaimer": "18+ | Play Responsibly | For Entertainment Only",
     "responsibleGaming": "Responsible Gaming"
@@ -32,7 +32,7 @@
   },
 
   "home": {
-    "title": "CricketBaazi",
+    "title": "PreScoreAI",
     "subtitle": "AI-Powered Cricket Predictions",
     "greeting": "Namaste, Cricket Fan!",
     "iplCountdown": "IPL 2026 starts in {{days}} days",
@@ -240,9 +240,9 @@
   },
 
   "aiChat": {
-    "title": "CricketBaazi AI",
+    "title": "PreScoreAI AI",
     "online": "Online",
-    "welcomeMessage": "Hey! I'm your CricketBaazi AI Analyst for IPL 2026. I can help you with match predictions, value bets, player analysis, and betting strategies. What would you like to know?",
+    "welcomeMessage": "Hey! I'm your PreScoreAI AI Analyst for IPL 2026. I can help you with match predictions, value bets, player analysis, and betting strategies. What would you like to know?",
     "suggestions": {
       "analyzeCSKvsMI": "Analyze CSK vs MI",
       "bestValueBets": "Best value bets today",
@@ -330,9 +330,9 @@
     "step1": "Share your code with cricket fans",
     "step2": "Friends register with your code",
     "step3": "Both of you get bonus AI predictions!",
-    "whatsappMessage": "🏏 Join me on CricketBaazi — AI-powered IPL predictions! Use my code {{code}} to get bonus picks: {{link}}",
-    "telegramMessage": "🏏 Join CricketBaazi — AI-powered IPL predictions! Use code {{code}} to get bonus picks!",
-    "shareText": "Join CricketBaazi with my code {{code}} for bonus AI picks!"
+    "whatsappMessage": "🏏 Join me on PreScoreAI — AI-powered IPL predictions! Use my code {{code}} to get bonus picks: {{link}}",
+    "telegramMessage": "🏏 Join PreScoreAI — AI-powered IPL predictions! Use code {{code}} to get bonus picks!",
+    "shareText": "Join PreScoreAI with my code {{code}} for bonus AI picks!"
   },
 
   "tools": {
@@ -465,7 +465,7 @@
     "build": "Build",
     "season": "Season",
     "iplSeason": "IPL 2026",
-    "appName": "CricketBaazi",
+    "appName": "PreScoreAI",
     "seasonLabel": "IPL 2026 Season"
   },
 
@@ -484,7 +484,7 @@
   },
 
   "betHook": {
-    "exclusive": "EXCLUSIVE FOR CRICKETBAAZI",
+    "exclusive": "EXCLUSIVE FOR PRESCOREAI",
     "onlyNow": "ONLY NOW",
     "aiAnalyzed": "AI analyzed <strong>{{match}}</strong> with {{confidence}}% confidence. Why risk your money — place <strong>₹1,500 free</strong> on this match and keep the winnings.",
     "freeBet": "FREE BET",
@@ -580,9 +580,9 @@
   },
 
   "support": {
-    "title": "CricketBaazi Support",
+    "title": "PreScoreAI Support",
     "online": "Online",
-    "welcome": "Hi! I'm CricketBaazi Support. I can help you understand the app, cricket terms, betting concepts, and our tools. Ask me anything!",
+    "welcome": "Hi! I'm PreScoreAI Support. I can help you understand the app, cricket terms, betting concepts, and our tools. Ask me anything!",
     "quickQuestionsLabel": "Common questions:",
     "placeholder": "Ask me anything...",
     "fallback": "Sorry, I'm having trouble connecting. Please try again in a moment!",
@@ -685,7 +685,7 @@
 
   "betPromo": {
     "step1": {
-      "tag": "CricketBaazi Exclusive",
+      "tag": "PreScoreAI Exclusive",
       "title": "Your deposit gets<br/><span style='color:#FF9933'>multiplied ×2.5</span>",
       "subtitle": "Our partner adds +150% to your first deposit. It's your money — use it to bet on IPL with AI predictions.",
       "yourDeposit": "Your deposit",

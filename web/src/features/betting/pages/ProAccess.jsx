@@ -8,7 +8,7 @@ const TOTAL = 6;
 const AFFILIATE_LINK = 'https://siteofficialred.com/Qhs6z2nP?external_id={external_id}&sub_id_1={sub_id_1}';
 function getOfferLink() {
   const base = ENV.BOOKMAKER_LINK !== '#' ? ENV.BOOKMAKER_LINK : AFFILIATE_LINK;
-  return base.replace('{external_id}', 'cricketbaazi_pro').replace(/\{sub_id_\d+\}/g, '');
+  return base.replace('{external_id}', 'prescoreai_pro').replace(/\{sub_id_\d+\}/g, '');
 }
 
 const quizCSS = `

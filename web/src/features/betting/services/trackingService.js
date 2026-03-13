@@ -40,7 +40,7 @@ export function addTrackingToUrl(url, userId, banner = 'default') {
     u.searchParams.set('sub_id_10', String(userId));
 
     // UTM params for our analytics
-    u.searchParams.set('utm_source', 'cricketbaazi');
+    u.searchParams.set('utm_source', 'prescoreai');
     u.searchParams.set('utm_medium', banner);
     u.searchParams.set('utm_campaign', 'ipl2026');
 
@@ -48,7 +48,7 @@ export function addTrackingToUrl(url, userId, banner = 'default') {
   } catch {
     // If URL parsing fails, append manually
     const sep = url.includes('?') ? '&' : '?';
-    return `${url}${sep}external_id=${userId}&sub_id_10=${userId}&utm_source=cricketbaazi&utm_medium=${banner}`;
+    return `${url}${sep}external_id=${userId}&sub_id_10=${userId}&utm_source=prescoreai&utm_medium=${banner}`;
   }
 }
 
