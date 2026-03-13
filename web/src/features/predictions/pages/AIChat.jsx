@@ -75,20 +75,16 @@ function MessageContent({ text, isUser }) {
 
 // --- Risk styling helper ---
 function riskStyle(risk) {
-  if (risk === 'Low') return { bg: 'bg-green-100', text: 'text-green-700', glow: '#22c55e', Icon: ShieldCheckIcon };
-  if (risk === 'High') return { bg: 'bg-red-100', text: 'text-red-700', glow: '#ef4444', Icon: FireIcon };
-  return { bg: 'bg-yellow-100', text: 'text-yellow-700', glow: '#FF9933', Icon: LightningIcon };
+  if (risk === 'Low') return { bg: 'bg-green-100', text: 'text-green-700', Icon: ShieldCheckIcon, card: 'from-emerald-50 to-green-100 border-green-200', accent: 'text-green-700' };
+  if (risk === 'High') return { bg: 'bg-red-100', text: 'text-red-700', Icon: FireIcon, card: 'from-red-50 to-rose-100 border-red-200', accent: 'text-red-700' };
+  return { bg: 'bg-yellow-100', text: 'text-yellow-700', Icon: LightningIcon, card: 'from-amber-50 to-yellow-100 border-amber-200', accent: 'text-amber-700' };
 }
 
-// --- Value Bet Cards (same design as MatchDetail) ---
+const BET_CTAS = ['Lock This Pick 🔒', 'Grab These Odds 🎯', 'Place Smart Bet ⚡'];
+
+// --- Value Bet Cards (color-coded by risk) ---
 function ValueBetCards({ bets, onBetClick }) {
   if (!bets || bets.length === 0) return null;
-
-  const gradients = [
-    'from-[#0B1E4D] via-[#1a3a7a] to-[#0d2b5e]',
-    'from-[#1a1a2e] via-[#2d1b4e] to-[#1a1a2e]',
-    'from-[#0f3460] via-[#1a5276] to-[#0f3460]',
-  ];
 
   // Normalize bet fields (backend returns selection/reasoning, frontend expects pick/value)
   const normalized = bets.map(b => ({
@@ -114,54 +110,41 @@ function ValueBetCards({ bets, onBetClick }) {
           <div
             key={i}
             onClick={onBetClick}
-            className={`block bg-gradient-to-r ${gradients[i % 3]} rounded-xl p-3.5 shadow-lg active:scale-[0.98] transition-transform overflow-hidden relative cursor-pointer`}
+            className={`block bg-gradient-to-br ${rc.card} border rounded-xl p-3.5 shadow-sm active:scale-[0.98] transition-transform cursor-pointer`}
           >
-            {/* Shimmer effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent -skew-x-12"
-              style={{ animation: `shimmer ${2 + i * 0.3}s ease-in-out infinite` }} />
-            {/* Glow */}
-            <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-20"
-              style={{ background: `radial-gradient(circle, ${rc.glow} 0%, transparent 70%)` }} />
+            {/* Market + Risk */}
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[9px] text-gray-500 font-medium uppercase tracking-wider">{bet.market}</span>
+              <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-0.5 ${rc.bg} ${rc.text}`}>
+                <rc.Icon className="w-2.5 h-2.5" /> {bet.risk}
+              </span>
+            </div>
 
-            <div className="relative z-10">
-              {/* Market + Risk */}
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[9px] text-white/50 font-medium uppercase tracking-wider">{bet.market}</span>
-                <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-0.5 ${rc.bg} ${rc.text}`}>
-                  <rc.Icon className="w-2.5 h-2.5" /> {bet.risk}
-                </span>
+            {/* Pick + Odds */}
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-base font-bold text-gray-900">{bet.pick}</span>
+              <span className="text-xl font-black text-[#FF9933] tracking-tight">@{bet.odds}</span>
+            </div>
+
+            {/* Confidence bar */}
+            <div className="flex items-center gap-2 mb-2.5">
+              <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${(bet.confidence === 'High' ? 82 : bet.confidence === 'Medium' ? 58 : 35)}%`,
+                    background: 'linear-gradient(90deg, #FF9933, #138808)',
+                  }} />
               </div>
+              <span className={`text-[10px] font-bold ${rc.accent}`}>{bet.confidence}</span>
+            </div>
 
-              {/* Pick + Odds */}
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm font-bold text-white">{bet.pick}</span>
-                <span className="text-lg font-black text-[#FF9933] tracking-tight">@{bet.odds}</span>
-              </div>
+            {/* Reasoning — prominent */}
+            {bet.value && <p className="text-[13px] text-gray-600 leading-relaxed mb-3 font-medium">{bet.value}</p>}
 
-              {/* Confidence bar */}
-              <div className="flex items-center gap-2 mb-2">
-                <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${(bet.confidence === 'High' ? 82 : bet.confidence === 'Medium' ? 58 : 35)}%`,
-                      background: 'linear-gradient(90deg, #FF9933, #138808)',
-                    }} />
-                </div>
-                <span className="text-[9px] font-bold text-white/70">{bet.confidence}</span>
-              </div>
-
-              {/* Reasoning */}
-              {bet.value && <p className="text-[10px] text-white/40 leading-relaxed mb-2">{bet.value}</p>}
-
-              {/* CTA */}
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] text-white/30">Tap to place bet</span>
-                <div className="flex items-center gap-1 bg-[#FF9933] px-2.5 py-1 rounded-lg">
-                  <span className="text-[10px] font-bold text-white">Bet Now</span>
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                  </svg>
-                </div>
+            {/* CTA */}
+            <div className="flex items-center justify-end">
+              <div className="flex items-center gap-1.5 bg-[#FF9933] px-3.5 py-1.5 rounded-xl shadow-sm">
+                <span className="text-[11px] font-bold text-white">{BET_CTAS[i % 3]}</span>
               </div>
             </div>
           </div>

@@ -471,9 +471,15 @@
 
   "banner": {
     "giftForYou": "आपके लिए गिफ्ट",
+    "hurryUp": "समय ख़त्म हो रहा है",
+    "lastChance": "आख़िरी मौका",
     "thanksForReg": "रजिस्ट्रेशन के लिए धन्यवाद!",
+    "thanksForRegName": "{{name}}, आपका गिफ्ट तैयार है!",
     "freebetAndPro": "₹1,500 फ्री बेट + Pro एक्सेस!",
+    "bonusDisappearing": "{{name}}, बोनस ख़त्म होने वाला है!",
+    "lastChanceDesc": "टाइमर ख़त्म होते ही ₹1,500 फ्री बेट हमेशा के लिए गायब! मिस मत करो!",
     "claimGift": "गिफ्ट पाएं",
+    "claimNow": "अभी लो!",
     "disclaimer": "18+ | नियम लागू"
   },
 

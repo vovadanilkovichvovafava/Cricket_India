@@ -471,9 +471,15 @@
 
   "banner": {
     "giftForYou": "GIFT FOR YOU",
+    "hurryUp": "TIME IS RUNNING OUT",
+    "lastChance": "LAST CHANCE",
     "thanksForReg": "Thanks for signing up!",
+    "thanksForRegName": "{{name}}, your gift is waiting!",
     "freebetAndPro": "₹1,500 Free Bet + Pro Access!",
+    "bonusDisappearing": "{{name}}, bonus disappearing soon!",
+    "lastChanceDesc": "After the timer ends, this ₹1,500 free bet is gone forever. Don't miss it!",
     "claimGift": "Claim Gift",
+    "claimNow": "Claim Now!",
     "disclaimer": "18+ | T&C Apply"
   },
 
