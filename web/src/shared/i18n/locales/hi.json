@@ -470,34 +470,29 @@
   },
 
   "banner": {
-    "betWithKnowledge": "समझदारी से खेलो",
-    "startBetting": "{{name}} के साथ क्रिकेट बेटिंग शुरू करो",
-    "placeBet": "{{name}} पर बेट लगाओ",
-    "sponsored": "प्रायोजित · 18+ · नियम लागू",
-    "sponsoredShort": "प्रायोजित",
-    "welcomeBonus": "स्वागत बोनस",
-    "claimBonus": "बोनस पाएं",
-    "betNow": "अभी बेट लगाओ →",
+    "giftForYou": "आपके लिए गिफ्ट",
+    "thanksForReg": "रजिस्ट्रेशन के लिए धन्यवाद!",
+    "freebetAndPro": "₹1,500 फ्री बेट + Pro एक्सेस!",
+    "claimGift": "गिफ्ट पाएं →",
     "disclaimer": "18+ | नियम लागू"
   },
 
   "betHook": {
-    "exclusive": "CRICKETBAAZI एक्सक्लूसिव",
-    "onlyNow": "सिर्फ अभी",
-    "aiAnalyzed": "AI ने <strong>{{match}}</strong> का {{confidence}}% कॉन्फिडेंस से विश्लेषण किया। अपने पैसे क्यों रिस्क करें — <strong>₹1,500 फ्री</strong> इस मैच पर लगाओ और जीत रखो।",
-    "freeBet": "फ्री बेट",
+    "specialBonus": "आपके लिए स्पेशल बोनस",
+    "hurryUp": "जल्दी करो, क्लेम करो!",
+    "timeLeft": "बचा समय",
+    "hours": "घं",
+    "minutes": "मि",
+    "seconds": "से",
     "freeBetAmount": "₹1,500",
-    "freeBetDesc": "रजिस्टर करो — अकाउंट में ₹1,500 मिलेंगे। ज़ीरो रिस्क — पार्टनर बोनस है।",
+    "freeBetDesc": "रजिस्टर करो और ₹1,500 फ्री बेट पाओ। ज़ीरो रिस्क — पार्टनर बोनस।",
+    "claimBonus": "₹1,500 बोनस क्लेम करो",
     "zeroRisk": "ज़ीरो रिस्क",
-    "flowRegister": "रजिस्टर",
-    "flowGetBonus": "बोनस लो",
-    "flowBet": "बेट लगाओ",
-    "autoBonus": "बोनस अपने आप क्रेडिट होगा। पहली रजिस्ट्रेशन पर वैलिड।",
-    "ctaBtn": "₹1,500 फ्री बेट लगाओ",
     "secure": "सुरक्षित",
     "licensed": "लाइसेंस्ड",
     "withdraw15min": "15 मिनट में निकालो",
-    "freeBetButton": "फ्री बेट ₹1,500"
+    "freeBetButton": "फ्री बेट ₹1,500",
+    "limitedOffer": "सीमित ऑफर — सिर्फ पहली रजिस्ट्रेशन पर"
   },
 
   "nav": {

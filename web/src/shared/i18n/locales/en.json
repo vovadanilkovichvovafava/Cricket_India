@@ -470,34 +470,29 @@
   },
 
   "banner": {
-    "betWithKnowledge": "Bet with Knowledge",
-    "startBetting": "Start betting on cricket with {{name}}",
-    "placeBet": "Place Bet with {{name}}",
-    "sponsored": "Sponsored · 18+ · T&C Apply",
-    "sponsoredShort": "Sponsored",
-    "welcomeBonus": "Welcome Bonus",
-    "claimBonus": "Claim Bonus",
-    "betNow": "Bet Now →",
+    "giftForYou": "GIFT FOR YOU",
+    "thanksForReg": "Thanks for signing up!",
+    "freebetAndPro": "₹1,500 Free Bet + Pro Access!",
+    "claimGift": "Claim Gift →",
     "disclaimer": "18+ | T&C Apply"
   },
 
   "betHook": {
-    "exclusive": "EXCLUSIVE FOR CRICKETBAAZI",
-    "onlyNow": "ONLY NOW",
-    "aiAnalyzed": "AI analyzed <strong>{{match}}</strong> with {{confidence}}% confidence. Why risk your money — place <strong>₹1,500 free</strong> on this match and keep the winnings.",
-    "freeBet": "FREE BET",
+    "specialBonus": "Special bonus for you",
+    "hurryUp": "Hurry up and claim!",
+    "timeLeft": "Time left",
+    "hours": "h",
+    "minutes": "m",
+    "seconds": "s",
     "freeBetAmount": "₹1,500",
-    "freeBetDesc": "Register — get ₹1,500 on your account. Zero risk — it's a partner bonus.",
+    "freeBetDesc": "Register and get ₹1,500 free bet on your account. Zero risk — partner bonus.",
+    "claimBonus": "Claim ₹1,500 Bonus",
     "zeroRisk": "ZERO RISK",
-    "flowRegister": "Register",
-    "flowGetBonus": "Get bonus",
-    "flowBet": "Bet",
-    "autoBonus": "Bonus credited automatically. Valid for first registration only.",
-    "ctaBtn": "Bet ₹1,500 free",
     "secure": "Secure",
     "licensed": "Licensed",
     "withdraw15min": "Withdraw 15 min",
-    "freeBetButton": "Free bet ₹1,500"
+    "freeBetButton": "Free bet ₹1,500",
+    "limitedOffer": "Limited offer — first registration only"
   },
 
   "nav": {

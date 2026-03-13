@@ -5,6 +5,7 @@ import { IPL_TEAMS } from '../../../shared/utils/teamColors';
 import api from '../../../shared/api';
 import BottomNav from '../../../shared/components/BottomNav';
 import BookmakerBanner from '../../../shared/components/BookmakerBanner';
+import BetPromoHook from '../../../shared/components/BetPromoHook';
 import usePushNotifications from '../../../shared/hooks/usePushNotifications';
 import {
   CalendarIcon, ClockIcon, StadiumIcon, LocationIcon, StatusIcon,
@@ -679,7 +680,7 @@ function OddsTab({ match, totals }) {
   );
 }
 
-function PredictionTab({ match, prediction, loading, onGetPrediction, navigate }) {
+function PredictionTab({ match, prediction, loading, onGetPrediction, navigate, isPro }) {
   const { t } = useTranslation();
   const [sharing, setSharing] = useState(false);
 
@@ -829,6 +830,9 @@ function PredictionTab({ match, prediction, loading, onGetPrediction, navigate }
           );
         })}
       </div>
+
+      {/* Bet Promo Hook — non-pro users only */}
+      {!isPro && <BetPromoHook onCtaClick={() => navigate('/offer')} />}
 
       {/* Key factors */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
@@ -1575,7 +1579,7 @@ export default function MatchDetail() {
     venue: <VenueTab match={match} />,
     h2h: <H2HTab match={match} />,
     odds: <OddsTab match={match} totals={totals} />,
-    prediction: <PredictionTab match={match} prediction={prediction} loading={predictionLoading} onGetPrediction={handleGetPrediction} navigate={navigate} />,
+    prediction: <PredictionTab match={match} prediction={prediction} loading={predictionLoading} onGetPrediction={handleGetPrediction} navigate={navigate} isPro={isPro} />,
     chat: <MatchChatTab match={match} />,
   };
 
