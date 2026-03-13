@@ -478,21 +478,29 @@
   },
 
   "betHook": {
-    "specialBonus": "Special bonus for you",
-    "hurryUp": "Hurry up and claim!",
-    "timeLeft": "Time left",
-    "hours": "h",
-    "minutes": "m",
-    "seconds": "s",
+    "exclusive": "EXCLUSIVE FOR CRICKETBAAZI",
+    "onlyNow": "ONLY NOW",
+    "aiAnalyzed": "AI analyzed <strong>{{match}}</strong> with {{confidence}}% confidence. Why risk your money — place <strong>₹1,500 free</strong> on this match and keep the winnings.",
+    "freeBet": "FREE BET",
     "freeBetAmount": "₹1,500",
-    "freeBetDesc": "Register and get ₹1,500 free bet on your account. Zero risk — partner bonus.",
-    "claimBonus": "Claim ₹1,500 Bonus",
+    "freeBetDesc": "Register — get ₹1,500 on your account. Zero risk — it's a partner bonus.",
     "zeroRisk": "ZERO RISK",
+    "flowRegister": "Register",
+    "flowGetBonus": "Get bonus",
+    "flowBet": "Bet",
+    "autoBonus": "Bonus credited automatically. Valid for first registration only.",
+    "ctaBtn": "Bet ₹1,500 free",
     "secure": "Secure",
     "licensed": "Licensed",
     "withdraw15min": "Withdraw 15 min",
-    "freeBetButton": "Free bet ₹1,500",
-    "limitedOffer": "Limited offer — first registration only"
+    "freeBetButton": "Free bet ₹1,500"
+  },
+
+  "bannerTimer": {
+    "timeLeft": "Time left",
+    "hours": "h",
+    "minutes": "m",
+    "seconds": "s"
   },
 
   "nav": {

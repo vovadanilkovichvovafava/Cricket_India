@@ -832,7 +832,13 @@ function PredictionTab({ match, prediction, loading, onGetPrediction, navigate, 
       </div>
 
       {/* Bet Promo Hook — non-pro users only */}
-      {!isPro && <BetPromoHook onCtaClick={() => navigate('/offer')} />}
+      {!isPro && (
+        <BetPromoHook
+          matchContext={match?.teamA && match?.teamB ? `${match.teamA} vs ${match.teamB}` : null}
+          confidence={prediction?.confidence || null}
+          onCtaClick={() => navigate('/offer')}
+        />
+      )}
 
       {/* Key factors */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">

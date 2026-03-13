@@ -1,15 +1,65 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ENV } from '../config/env';
 import { usePremium } from '../context/PremiumContext';
 
+// Shared 24h countdown hook
+function useCountdown() {
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const key = 'bannerTimerStart';
+    let start = localStorage.getItem(key);
+    if (!start) {
+      start = Date.now().toString();
+      localStorage.setItem(key, start);
+    }
+    return Math.max(0, 24 * 60 * 60 * 1000 - (Date.now() - parseInt(start)));
+  });
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+    const timer = setInterval(() => {
+      const start = parseInt(localStorage.getItem('bannerTimerStart') || '0');
+      const remaining = Math.max(0, 24 * 60 * 60 * 1000 - (Date.now() - start));
+      setTimeLeft(remaining);
+      if (remaining <= 0) clearInterval(timer);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const h = Math.floor(timeLeft / (1000 * 60 * 60));
+  const m = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+  const s = Math.floor((timeLeft % (1000 * 60)) / 1000);
+  return { h, m, s, timeLeft };
+}
+
+function TimerDisplay({ h, m, s, t }) {
+  return (
+    <div className="flex items-center gap-1">
+      <div className="bg-white/10 rounded px-1.5 py-0.5 text-center">
+        <span className="text-sm font-black text-white tabular-nums">{String(h).padStart(2, '0')}</span>
+        <span className="text-[7px] text-white/50 ml-0.5">{t('bannerTimer.hours')}</span>
+      </div>
+      <span className="text-sm font-bold text-white/40">:</span>
+      <div className="bg-white/10 rounded px-1.5 py-0.5 text-center">
+        <span className="text-sm font-black text-white tabular-nums">{String(m).padStart(2, '0')}</span>
+        <span className="text-[7px] text-white/50 ml-0.5">{t('bannerTimer.minutes')}</span>
+      </div>
+      <span className="text-sm font-bold text-white/40">:</span>
+      <div className="bg-white/10 rounded px-1.5 py-0.5 text-center">
+        <span className="text-sm font-black text-[#FF9933] tabular-nums">{String(s).padStart(2, '0')}</span>
+        <span className="text-[7px] text-white/50 ml-0.5">{t('bannerTimer.seconds')}</span>
+      </div>
+    </div>
+  );
+}
+
 function HeroBanner() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isPro } = usePremium();
+  const { h, m, s } = useCountdown();
 
-  // Pro users don't see the banner
   if (isPro) return null;
 
   return (
@@ -21,9 +71,12 @@ function HeroBanner() {
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -skew-x-12 animate-[shimmerBg_3s_ease-in-out_infinite]" />
 
       <div className="relative z-10">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-2xl">🎁</span>
-          <span className="text-xs text-[#FF9933] font-bold uppercase tracking-wide">{t('banner.giftForYou')}</span>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🎁</span>
+            <span className="text-xs text-[#FF9933] font-bold uppercase tracking-wide">{t('banner.giftForYou')}</span>
+          </div>
+          <TimerDisplay h={h} m={m} s={s} t={t} />
         </div>
 
         <h3 className="text-xl font-bold mb-1">{t('banner.thanksForReg')}</h3>

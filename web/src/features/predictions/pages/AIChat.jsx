@@ -413,7 +413,11 @@ export default function AIChat() {
             {/* Bet Promo Hook — after value bets, non-pro only */}
             {msg.role === 'assistant' && msg.valueBets && msg.valueBets.length > 0 && !isTyping && !isPro && (
               <div className="mt-2 max-w-[95%]">
-                <BetPromoHook onCtaClick={() => navigate('/offer')} />
+                <BetPromoHook
+                  matchContext={msg.content?.match(/(?:CSK|MI|RCB|KKR|DC|SRH|RR|PBKS|LSG|GT)\s*(?:vs?\.?\s*)(?:CSK|MI|RCB|KKR|DC|SRH|RR|PBKS|LSG|GT)/i)?.[0] || null}
+                  confidence={msg.valueBets?.[0]?.confidence ? parseInt(msg.valueBets[0].confidence) : null}
+                  onCtaClick={() => navigate('/offer')}
+                />
               </div>
             )}
             {/* Follow-up chips — hidden when limit reached */}
