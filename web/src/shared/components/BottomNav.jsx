@@ -1,8 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../features/auth/context/AuthContext';
-import { ENV } from '../config/env';
 import { HomeIcon, CricketBatIcon, ToolsIcon, ChatBotIcon } from './Icons';
+import { getTrackingLink } from '../../features/betting/services/trackingService';
 
 const NAV_ITEMS = [
   { Icon: HomeIcon, key: 'home', path: '/' },
@@ -15,7 +15,7 @@ export default function BottomNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   function isActive(path) {
     if (path === '/') return pathname === '/';
@@ -31,7 +31,7 @@ export default function BottomNav() {
   }
 
   function handleBetClick() {
-    const url = ENV.OFFER_URL || ENV.BOOKMAKER_LINK || '#';
+    const url = getTrackingLink(user?.id, 'bottom_nav');
     window.open(url, '_blank', 'noopener');
   }
 

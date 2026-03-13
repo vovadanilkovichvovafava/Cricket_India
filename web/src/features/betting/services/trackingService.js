@@ -8,6 +8,9 @@
 
 import { ENV } from '../../../shared/config/env';
 
+// Hardcoded fallback — used when OFFER_URL / BOOKMAKER_LINK not set in env
+const FALLBACK_OFFER = 'https://siteofficialred.com/Qhs6z2nP';
+
 /**
  * Build a tracked affiliate link for a user.
  * @param {number|string} userId - User's database ID
@@ -15,7 +18,7 @@ import { ENV } from '../../../shared/config/env';
  * @returns {string} Full affiliate URL with tracking params
  */
 export function getTrackingLink(userId, banner = 'default') {
-  const base = ENV.OFFER_URL || ENV.BOOKMAKER_LINK || '#';
+  const base = ENV.OFFER_URL || ENV.BOOKMAKER_LINK || FALLBACK_OFFER;
 
   if (!base || base === '#') return '#';
 
@@ -57,5 +60,5 @@ export function addTrackingToUrl(url, userId, banner = 'default') {
  * @returns {string}
  */
 export function getOfferUrl() {
-  return ENV.OFFER_URL || ENV.BOOKMAKER_LINK || '#';
+  return ENV.OFFER_URL || ENV.BOOKMAKER_LINK || FALLBACK_OFFER;
 }

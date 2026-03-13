@@ -1,15 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ENV } from '../../../shared/config/env';
+import { useAuth } from '../../auth/context/AuthContext';
+import { getTrackingLink } from '../services/trackingService';
 
 const TOTAL = 6;
-
-const AFFILIATE_LINK = 'https://siteofficialred.com/Qhs6z2nP?external_id={external_id}&sub_id_1={sub_id_1}';
-function getOfferLink() {
-  const base = ENV.BOOKMAKER_LINK !== '#' ? ENV.BOOKMAKER_LINK : AFFILIATE_LINK;
-  return base.replace('{external_id}', 'prescoreai_pro').replace(/\{sub_id_\d+\}/g, '');
-}
 
 const quizCSS = `
 :root{--qbg:#EEF1F7;--qcard:#FFF;--qprimary:#1B3A5C;--qaccent:#E8A317;--qgreen:#1DAA61;--qblue:#2B7AE8;--qpurple:#6366F1;--qred:#EF4444;--qtext:#1E293B;--qtext2:#5A6B80;--qtext3:#94A3B8;--qborder:#E2E8F0;--gold-g:linear-gradient(135deg,#F7C948 0%,#E8A317 100%);--blue-g:linear-gradient(135deg,#2B7AE8 0%,#1B6DD9 100%);--green-g:linear-gradient(135deg,#1DAA61 0%,#16894E 100%);--purple-g:linear-gradient(135deg,#6366F1 0%,#4F46E5 100%);--dark-g:linear-gradient(160deg,#0F2744 0%,#1B3A5C 40%,#2B5A8C 100%);--orange-g:linear-gradient(135deg,#FF9933 0%,#FF8800 100%)}
@@ -145,10 +140,11 @@ const calcTiers = [
 export default function ProAccess() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [sel, setSel] = useState(0);
   const [calcSel, setCalcSel] = useState(0);
-  const bookmakerLink = getOfferLink();
+  const bookmakerLink = getTrackingLink(user?.id, 'pro_access');
 
   const featureKeys = ['unlimitedAi', 'valueBetFinder', 'kellyCalc', 'advancedAnalytics'];
   const calcLabels = t('proAccess.step4.calcLabels', { returnObjects: true });
