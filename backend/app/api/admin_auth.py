@@ -32,7 +32,7 @@ class AdminLoginRequest(BaseModel):
 
 
 class AdminRegisterRequest(BaseModel):
-    invite_code: str = ""  # temporarily optional
+    invite_code: str
     username: str
     password: str
     name: str
@@ -133,17 +133,13 @@ async def register(body: AdminRegisterRequest, request: Request, db: Session = D
     """Register a new admin using an invite code."""
     from app.models.admin import AdminUser, AdminInvite
 
-    # Validate invite (skip if empty — temporary open registration)
-    invite = None
-    role = "superadmin"
-    if body.invite_code:
-        invite = db.query(AdminInvite).filter(
-            AdminInvite.code == body.invite_code,
-            AdminInvite.is_used == False,
-        ).first()
-        if invite is None:
-            raise HTTPException(status_code=400, detail="Invalid or used invite code")
-        role = invite.role
+    # Validate invite
+    invite = db.query(AdminInvite).filter(
+        AdminInvite.code == body.invite_code,
+        AdminInvite.is_used == False,
+    ).first()
+    if invite is None:
+        raise HTTPException(status_code=400, detail="Invalid or used invite code")
 
     # Check username uniqueness
     existing = db.query(AdminUser).filter(AdminUser.username == body.username).first()
@@ -155,15 +151,14 @@ async def register(body: AdminRegisterRequest, request: Request, db: Session = D
         username=body.username,
         hashed_password=hash_password(body.password),
         name=body.name,
-        role=role,
+        role=invite.role,
     )
     db.add(admin)
     db.flush()
 
     # Mark invite as used
-    if invite:
-        invite.is_used = True
-        invite.used_by = admin.id
+    invite.is_used = True
+    invite.used_by = admin.id
         invite.used_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(admin)
