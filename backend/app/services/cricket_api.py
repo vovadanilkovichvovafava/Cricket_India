@@ -214,8 +214,28 @@ def _resolve_ipl_code(name: str) -> Optional[str]:
 # CricAPI HTTP client
 # ──────────────────────────────────────────────
 
+_api_call_count = 0
+_api_call_date = ""
+
+def get_api_usage() -> int:
+    """Return today's API call count."""
+    from datetime import date
+    global _api_call_count, _api_call_date
+    today = date.today().isoformat()
+    if _api_call_date != today:
+        return 0
+    return _api_call_count
+
 async def _cricapi_request(endpoint: str, params: dict = None) -> Optional[dict]:
     """Make a request to CricAPI. Returns None on failure."""
+    global _api_call_count, _api_call_date
+    from datetime import date
+    today = date.today().isoformat()
+    if _api_call_date != today:
+        _api_call_count = 0
+        _api_call_date = today
+    _api_call_count += 1
+
     if not settings.CRICKET_API_KEY:
         logger.warning("CRICKET_API_KEY not configured")
         return None

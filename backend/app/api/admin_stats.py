@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.api.admin_auth import get_current_admin
 from app.config import settings
+from app.services.cricket_api import get_api_usage as _get_cricket_api_usage
 
 _is_pg = settings.DATABASE_URL.startswith("postgresql")
 
@@ -86,7 +87,7 @@ async def get_overview(
         "support_sessions_today": support_today,
         "ai_chats_today": ai_chats_today,
         "cricket_api": {
-            "used": 0,  # TODO: track API usage
+            "used": _get_cricket_api_usage(),
             "limit": 100,
         },
     }
