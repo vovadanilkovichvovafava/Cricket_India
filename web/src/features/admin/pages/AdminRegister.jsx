@@ -49,9 +49,8 @@ export default function AdminRegister() {
             type="text"
             value={inviteCode}
             onChange={e => setInviteCode(e.target.value)}
-            required
             className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none transition-colors font-mono"
-            placeholder="adm_..."
+            placeholder="optional"
           />
         </div>
 
