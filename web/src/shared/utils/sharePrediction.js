@@ -1,6 +1,8 @@
 // Generate a shareable prediction card image using Canvas API
 // Returns a Blob (PNG) that can be shared via Web Share API
 
+import analyticsTracker from '../services/analyticsTracker';
+
 const CARD_WIDTH = 1080;
 const CARD_HEIGHT = 1350; // Instagram story ratio (4:5 close)
 
@@ -281,6 +283,12 @@ export async function sharePrediction({ match, prediction }) {
 
   const file = new File([blob], 'prescoreai-prediction.png', { type: 'image/png' });
 
+  const shareContext = {
+    match_id: match.id || match.match_id,
+    home: match.home || match.homeName,
+    away: match.away || match.awayName,
+  };
+
   // Web Share API (mobile-first)
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
@@ -289,6 +297,7 @@ export async function sharePrediction({ match, prediction }) {
         text: `🏏 AI predicts ${prediction.winner} with ${prediction.confidence}% confidence! Check out PreScoreAI for more predictions.`,
         files: [file],
       });
+      analyticsTracker.trackShare('prediction', 'native', shareContext);
       return true;
     } catch {
       // User cancelled or error — fallback to download
@@ -304,5 +313,6 @@ export async function sharePrediction({ match, prediction }) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  analyticsTracker.trackShare('prediction', 'download', shareContext);
   return true;
 }

@@ -621,7 +621,11 @@ async def get_traffic_stats(
     admin: dict = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
-    from app.models.analytics import TrackingParameter, BannerClick
+    from app.models.analytics import TrackingParameter, BannerClick, AnalyticsEvent
+    from app.models.user import User
+
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     # Traffic by UTM source
     source_rows = db.execute(text("""
@@ -632,13 +636,197 @@ async def get_traffic_stats(
         ORDER BY count DESC
         LIMIT 15
     """)).fetchall()
-
     by_source = [{"source": r[0], "count": r[1]} for r in source_rows]
 
     # Banner clicks
     total_banner_clicks = db.query(func.count(BannerClick.id)).scalar() or 0
 
+    # --- Sessions (from analytics_events) ---
+    sessions_today = db.execute(text("""
+        SELECT COUNT(DISTINCT session_id)
+        FROM analytics_events
+        WHERE event_type = 'session_start' AND created_at >= :today
+    """), {"today": today_start}).scalar() or 0
+
+    # Avg session duration from session_end events
+    if _is_pg:
+        avg_duration_row = db.execute(text("""
+            SELECT AVG((event_data->>'duration_ms')::float),
+                   AVG((event_data->>'pages_visited')::float)
+            FROM analytics_events
+            WHERE event_type = 'session_end' AND created_at >= :today
+        """), {"today": today_start}).fetchone()
+    else:
+        avg_duration_row = db.execute(text("""
+            SELECT AVG(CAST(json_extract(event_data, '$.duration_ms') AS REAL)),
+                   AVG(CAST(json_extract(event_data, '$.pages_visited') AS REAL))
+            FROM analytics_events
+            WHERE event_type = 'session_end' AND created_at >= :today
+        """), {"today": today_start}).fetchone()
+
+    avg_duration_ms = round(avg_duration_row[0] or 0) if avg_duration_row else 0
+    avg_pages = round(avg_duration_row[1] or 0, 1) if avg_duration_row else 0
+
+    # --- Top pages ---
+    if _is_pg:
+        top_pages_rows = db.execute(text("""
+            SELECT event_data->>'path' as path,
+                   COUNT(*) as views,
+                   AVG((event_data->>'duration_ms')::float) as avg_duration
+            FROM analytics_events
+            WHERE event_type = 'page_view'
+              AND event_data->>'path' IS NOT NULL
+              AND created_at >= :start
+            GROUP BY event_data->>'path'
+            ORDER BY views DESC
+            LIMIT 15
+        """), {"start": today_start - timedelta(days=7)}).fetchall()
+    else:
+        top_pages_rows = db.execute(text("""
+            SELECT json_extract(event_data, '$.path') as path,
+                   COUNT(*) as views,
+                   AVG(CAST(json_extract(event_data, '$.duration_ms') AS REAL)) as avg_duration
+            FROM analytics_events
+            WHERE event_type = 'page_view'
+              AND json_extract(event_data, '$.path') IS NOT NULL
+              AND created_at >= :start
+            GROUP BY json_extract(event_data, '$.path')
+            ORDER BY views DESC
+            LIMIT 15
+        """), {"start": today_start - timedelta(days=7)}).fetchall()
+
+    top_pages = [
+        {"path": r[0], "views": r[1], "avg_duration_ms": round(r[2] or 0)}
+        for r in top_pages_rows
+    ]
+
+    # --- Banner funnel ---
+    sessions_with_click = db.execute(text("""
+        SELECT COUNT(DISTINCT session_id)
+        FROM analytics_events
+        WHERE event_type = 'banner_click' AND created_at >= :today
+    """), {"today": today_start}).scalar() or 0
+
+    if _is_pg:
+        avg_time_to_click_row = db.execute(text("""
+            SELECT AVG((event_data->>'session_duration_ms')::float)
+            FROM analytics_events
+            WHERE event_type = 'banner_click' AND created_at >= :today
+        """), {"today": today_start}).scalar()
+    else:
+        avg_time_to_click_row = db.execute(text("""
+            SELECT AVG(CAST(json_extract(event_data, '$.session_duration_ms') AS REAL))
+            FROM analytics_events
+            WHERE event_type = 'banner_click' AND created_at >= :today
+        """), {"today": today_start}).scalar()
+
+    banner_funnel = {
+        "total_sessions": sessions_today,
+        "with_banner_click": sessions_with_click,
+        "avg_time_to_click_ms": round(avg_time_to_click_row or 0),
+        "conversion_pct": round(sessions_with_click / sessions_today * 100, 1) if sessions_today > 0 else 0,
+    }
+
+    # --- Referrals ---
+    total_referrers = db.query(func.count(User.id)).filter(User.referral_count > 0).scalar() or 0
+    total_referred = db.query(func.coalesce(func.sum(User.referral_count), 0)).scalar() or 0
+
+    top_referrers_rows = db.query(
+        User.id, User.name, User.phone, User.referral_count
+    ).filter(User.referral_count > 0).order_by(desc(User.referral_count)).limit(10).all()
+
+    top_referrers = [
+        {"name": r[1] or "—", "phone": r[2], "count": r[3]}
+        for r in top_referrers_rows
+    ]
+
+    # --- Referral shares by channel ---
+    if _is_pg:
+        share_rows = db.execute(text("""
+            SELECT event_data->>'channel' as channel, COUNT(*) as count
+            FROM analytics_events
+            WHERE event_type = 'share_referral'
+            GROUP BY event_data->>'channel'
+            ORDER BY count DESC
+        """)).fetchall()
+    else:
+        share_rows = db.execute(text("""
+            SELECT json_extract(event_data, '$.channel') as channel, COUNT(*) as count
+            FROM analytics_events
+            WHERE event_type = 'share_referral'
+            GROUP BY json_extract(event_data, '$.channel')
+            ORDER BY count DESC
+        """)).fetchall()
+
+    referral_shares_total = sum(r[1] for r in share_rows)
+    referral_shares_by_channel = [{"channel": r[0] or "unknown", "count": r[1]} for r in share_rows]
+
+    # --- Prediction shares ---
+    if _is_pg:
+        pred_share_rows = db.execute(text("""
+            SELECT event_data->>'channel' as channel, COUNT(*) as count
+            FROM analytics_events
+            WHERE event_type = 'share_prediction'
+            GROUP BY event_data->>'channel'
+            ORDER BY count DESC
+        """)).fetchall()
+    else:
+        pred_share_rows = db.execute(text("""
+            SELECT json_extract(event_data, '$.channel') as channel, COUNT(*) as count
+            FROM analytics_events
+            WHERE event_type = 'share_prediction'
+            GROUP BY json_extract(event_data, '$.channel')
+            ORDER BY count DESC
+        """)).fetchall()
+
+    prediction_shares_total = sum(r[1] for r in pred_share_rows)
+
+    # --- User journeys to banner click (top paths) ---
+    if _is_pg:
+        journey_rows = db.execute(text("""
+            SELECT event_data->>'referrer_page' as page, COUNT(*) as count
+            FROM analytics_events
+            WHERE event_type = 'banner_click'
+              AND event_data->>'referrer_page' IS NOT NULL
+            GROUP BY event_data->>'referrer_page'
+            ORDER BY count DESC
+            LIMIT 10
+        """)).fetchall()
+    else:
+        journey_rows = db.execute(text("""
+            SELECT json_extract(event_data, '$.referrer_page') as page, COUNT(*) as count
+            FROM analytics_events
+            WHERE event_type = 'banner_click'
+              AND json_extract(event_data, '$.referrer_page') IS NOT NULL
+            GROUP BY json_extract(event_data, '$.referrer_page')
+            ORDER BY count DESC
+            LIMIT 10
+        """)).fetchall()
+
+    user_journeys = [{"path": r[0], "count": r[1]} for r in journey_rows]
+
     return {
+        "sessions": {
+            "total_today": sessions_today,
+            "avg_duration_ms": avg_duration_ms,
+            "avg_pages_per_session": avg_pages,
+        },
+        "top_pages": top_pages,
+        "banner_funnel": banner_funnel,
+        "referrals": {
+            "total_referrers": total_referrers,
+            "total_referred": total_referred,
+            "top_referrers": top_referrers,
+        },
+        "referral_shares": {
+            "total": referral_shares_total,
+            "by_channel": referral_shares_by_channel,
+        },
+        "prediction_shares": {
+            "total": prediction_shares_total,
+            "by_channel": [{"channel": r[0] or "unknown", "count": r[1]} for r in pred_share_rows],
+        },
+        "user_journeys": user_journeys,
         "by_source": by_source,
         "total_banner_clicks": total_banner_clicks,
     }

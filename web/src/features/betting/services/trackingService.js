@@ -7,6 +7,7 @@
  */
 
 import { ENV } from '../../../shared/config/env';
+import analyticsTracker from '../../../shared/services/analyticsTracker';
 
 // Hardcoded fallback — used when OFFER_URL / BOOKMAKER_LINK not set in env
 const FALLBACK_OFFER = 'https://siteofficialred.com/Qhs6z2nP';
@@ -68,6 +69,10 @@ export function getOfferUrl() {
  * Fire-and-forget — never blocks the user.
  */
 export function trackBannerClick(banner = 'default', page = '', matchId = '') {
+  // Track via batched analytics (session context, pages_before, etc.)
+  analyticsTracker.trackBannerClick(banner, page, matchId);
+
+  // Also track via direct endpoint (backward compatibility)
   try {
     const url = `${ENV.API_URL}/analytics/banner-click`;
     const token = localStorage.getItem('auth_token');

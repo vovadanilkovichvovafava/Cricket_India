@@ -1,10 +1,11 @@
-import { lazy, Suspense, useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense, useState, useEffect, useRef } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './features/auth/context/AuthContext';
 import { PremiumProvider } from './shared/context/PremiumContext';
 import { ThemeProvider } from './shared/context/ThemeContext';
 import NotificationPrompt from './shared/components/NotificationPrompt';
 import SupportChat from './shared/components/SupportChat';
+import analyticsTracker from './shared/services/analyticsTracker';
 
 // Eagerly loaded
 import Home from './features/matches/pages/Home';
@@ -99,6 +100,27 @@ function SplashScreen({ onDone }) {
   );
 }
 
+// Track page views on every route change
+function AnalyticsProvider({ children }) {
+  const location = useLocation();
+  const prevPath = useRef(null);
+
+  useEffect(() => {
+    analyticsTracker.init();
+    return () => analyticsTracker.destroy();
+  }, []);
+
+  useEffect(() => {
+    const path = location.pathname;
+    if (path !== prevPath.current) {
+      analyticsTracker.trackPageView(path);
+      prevPath.current = path;
+    }
+  }, [location]);
+
+  return children;
+}
+
 export default function App() {
   const [showSplash, setShowSplash] = useState(() => {
     // Only show splash on first visit per session
@@ -111,6 +133,7 @@ export default function App() {
     <ThemeProvider>
     <AuthProvider>
       <PremiumProvider>
+        <AnalyticsProvider>
         {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
         <NotificationPrompt />
         <SupportChat />
@@ -145,6 +168,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
+        </AnalyticsProvider>
       </PremiumProvider>
     </AuthProvider>
     </ThemeProvider>

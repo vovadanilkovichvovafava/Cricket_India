@@ -6,6 +6,7 @@ import api from '../../../shared/api';
 import { ShareIcon, UsersIcon, GiftIcon } from '../../../shared/components/Icons';
 import BottomNav from '../../../shared/components/BottomNav';
 import TricolorBar from '../../../shared/components/TricolorBar';
+import analyticsTracker from '../../../shared/services/analyticsTracker';
 
 export default function ReferralPage() {
   const { t } = useTranslation();
@@ -35,6 +36,7 @@ export default function ReferralPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }).catch(() => {});
+    analyticsTracker.trackShare('referral', 'copy', { referral_code: referralCode });
   }
 
   function handleCopyCode() {
@@ -42,6 +44,7 @@ export default function ReferralPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }).catch(() => {});
+    analyticsTracker.trackShare('referral', 'copy', { referral_code: referralCode });
   }
 
   function handleWhatsAppShare() {
@@ -50,6 +53,7 @@ export default function ReferralPage() {
       link: referralLink,
     });
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    analyticsTracker.trackShare('referral', 'whatsapp', { referral_code: referralCode });
   }
 
   function handleTelegramShare() {
@@ -58,6 +62,7 @@ export default function ReferralPage() {
       link: referralLink,
     });
     window.open(`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(text)}`, '_blank');
+    analyticsTracker.trackShare('referral', 'telegram', { referral_code: referralCode });
   }
 
   function handleNativeShare() {
@@ -67,6 +72,7 @@ export default function ReferralPage() {
         text: t('referral.shareText', { code: referralCode }),
         url: referralLink,
       }).catch(() => {});
+      analyticsTracker.trackShare('referral', 'native', { referral_code: referralCode });
     } else {
       handleCopyLink();
     }

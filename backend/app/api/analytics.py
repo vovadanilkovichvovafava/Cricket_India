@@ -1,7 +1,8 @@
-"""Analytics endpoints — banner clicks, UTM tracking."""
+"""Analytics endpoints — banner clicks, UTM tracking, batched events."""
 
 import logging
-from typing import Optional
+from datetime import datetime, timezone
+from typing import Optional, List, Any
 
 from fastapi import APIRouter, Request, Depends
 from pydantic import BaseModel
@@ -10,7 +11,7 @@ from jose import jwt, JWTError
 
 from app.core.database import get_db
 from app.config import settings
-from app.models.analytics import BannerClick, TrackingParameter
+from app.models.analytics import AnalyticsEvent, BannerClick, TrackingParameter
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,71 @@ async def track_banner_click(
         db.rollback()
 
     return {"ok": True}
+
+
+# --- Batched events (full analytics) ---
+
+class EventItem(BaseModel):
+    type: str
+    data: dict = {}
+    ts: Optional[int] = None  # client timestamp (epoch ms)
+
+class BatchEventsRequest(BaseModel):
+    session_id: Optional[str] = None
+    events: List[EventItem] = []
+
+
+@router.post("/events")
+async def track_events_batch(
+    body: BatchEventsRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Receive batched analytics events from frontend tracker."""
+    if not body.events:
+        return {"ok": True, "count": 0}
+
+    user_id = _extract_user_id(request)
+    ip = request.client.host if request.client else None
+    ua = request.headers.get("user-agent", "")[:500]
+
+    try:
+        rows = []
+        for evt in body.events[:100]:  # cap at 100 events per batch
+            event_data = dict(evt.data)
+            if evt.ts:
+                event_data["client_ts"] = evt.ts
+
+            row = AnalyticsEvent(
+                user_id=user_id,
+                session_id=body.session_id,
+                event_type=evt.type,
+                event_data=event_data,
+                ip_address=ip,
+                user_agent=ua,
+                platform="web",
+            )
+            rows.append(row)
+
+            # Also write to BannerClick for backward compatibility
+            if evt.type == "banner_click":
+                bc = BannerClick(
+                    user_id=user_id,
+                    banner_id=event_data.get("banner_id"),
+                    bookmaker=event_data.get("bookmaker", "partner"),
+                    page=event_data.get("page"),
+                    match_id=event_data.get("match_id"),
+                    ip_address=ip,
+                )
+                rows.append(bc)
+
+        db.add_all(rows)
+        db.commit()
+    except Exception as e:
+        logger.warning(f"Failed to track events batch: {e}")
+        db.rollback()
+
+    return {"ok": True, "count": len(body.events)}
 
 
 @router.post("/utm")
