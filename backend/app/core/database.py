@@ -70,7 +70,7 @@ def init_db():
     from app.models.notifications import FCMToken  # noqa: F401
 
     # Session Replay
-    from app.models.session_replay import SessionReplay  # noqa: F401
+    from app.models.session_replay import SessionReplay, ReplayChunk  # noqa: F401
 
     # Errors
     from app.models.errors import FeatureErrorLog  # noqa: F401

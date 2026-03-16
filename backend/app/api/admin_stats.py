@@ -840,28 +840,43 @@ async def get_session_replay(
     admin: dict = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
-    """Return decompressed rrweb events for admin playback."""
-    import gzip
+    """Merge all replay chunks and return rrweb events for admin playback."""
     import json as _json
-    from app.models.session_replay import SessionReplay
+    from app.models.session_replay import SessionReplay, ReplayChunk
 
     replay = db.query(SessionReplay).filter(
         SessionReplay.session_id == session_id
     ).first()
 
-    if not replay or not replay.events_gz:
+    if not replay:
         raise HTTPException(status_code=404, detail="No replay data for this session")
 
-    try:
-        events = _json.loads(gzip.decompress(replay.events_gz))
-    except Exception:
-        raise HTTPException(status_code=500, detail="Failed to decompress replay data")
+    # Fetch all chunks in order and merge events
+    chunks = db.query(ReplayChunk).filter(
+        ReplayChunk.session_id == session_id
+    ).order_by(ReplayChunk.chunk_index.asc(), ReplayChunk.id.asc()).all()
+
+    if not chunks:
+        raise HTTPException(status_code=404, detail="No replay chunks found")
+
+    all_events = []
+    for chunk in chunks:
+        try:
+            events = _json.loads(chunk.events_json)
+            if isinstance(events, list):
+                all_events.extend(events)
+        except Exception:
+            continue
+
+    if not all_events:
+        raise HTTPException(status_code=404, detail="No valid replay events")
 
     return {
         "session_id": session_id,
-        "events": events,
-        "events_count": replay.events_count,
-        "size_bytes": replay.uncompressed_size,
+        "events": all_events,
+        "events_count": len(all_events),
+        "chunks": len(chunks),
+        "size_bytes": replay.total_size,
         "is_complete": replay.is_complete,
     }
 

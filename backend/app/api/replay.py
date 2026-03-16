@@ -1,6 +1,5 @@
 """Session replay endpoints — receive rrweb chunks, serve replay data."""
 
-import gzip
 import json
 import logging
 import random
@@ -12,13 +11,13 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.session_replay import SessionReplay
+from app.models.session_replay import SessionReplay, ReplayChunk
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/analytics", tags=["replay"])
 
-MAX_UNCOMPRESSED_SIZE = 2 * 1024 * 1024  # 2MB per session
+MAX_TOTAL_SIZE = 2 * 1024 * 1024  # 2MB per session (sum of all chunks)
 RETENTION_DAYS = 7
 
 
@@ -48,68 +47,68 @@ async def store_replay_chunk(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    """Receive a chunk of rrweb events and append to session replay."""
+    """
+    Receive a chunk of rrweb events — append-only, no decompression needed.
+    Each flush creates a new ReplayChunk row. Fast O(1) writes.
+    """
     if not body.events or not body.session_id:
         return {"ok": True, "events_total": 0, "capped": False}
 
     try:
-        # Find or create replay record
+        # Find or create session metadata
         replay = db.query(SessionReplay).filter(
             SessionReplay.session_id == body.session_id
         ).first()
 
-        if replay and replay.uncompressed_size >= MAX_UNCOMPRESSED_SIZE:
-            return {"ok": True, "events_total": replay.events_count, "capped": True}
+        if replay and replay.total_size >= MAX_TOTAL_SIZE:
+            return {"ok": True, "events_total": replay.total_events, "capped": True}
 
-        # Deserialize existing events
-        existing_events = []
-        if replay and replay.events_gz:
-            try:
-                existing_events = json.loads(gzip.decompress(replay.events_gz))
-            except Exception:
-                existing_events = []
+        # Serialize this chunk's events
+        chunk_json = json.dumps(body.events, separators=(",", ":"))
+        chunk_size = len(chunk_json.encode("utf-8"))
+        chunk_events = len(body.events)
 
-        # Append new events
-        all_events = existing_events + body.events
-        raw_json = json.dumps(all_events, separators=(",", ":"))
-        new_size = len(raw_json.encode("utf-8"))
-
-        # Enforce cap
+        # Check cap
         capped = False
-        if new_size > MAX_UNCOMPRESSED_SIZE:
-            # Truncate: keep only what fits
-            all_events = existing_events + body.events[:max(1, len(body.events) // 2)]
-            raw_json = json.dumps(all_events, separators=(",", ":"))
-            new_size = len(raw_json.encode("utf-8"))
+        current_size = replay.total_size if replay else 0
+        if current_size + chunk_size > MAX_TOTAL_SIZE:
             capped = True
 
-        compressed = gzip.compress(raw_json.encode("utf-8"), compresslevel=6)
-
-        if replay:
-            replay.events_gz = compressed
-            replay.events_count = len(all_events)
-            replay.uncompressed_size = new_size
-            replay.updated_at = datetime.now(timezone.utc)
-            if body.is_final or capped:
-                replay.is_complete = True
-        else:
-            replay = SessionReplay(
+        if not capped:
+            # Create chunk row — simple INSERT, no reads needed
+            chunk_index = replay.chunks_count if replay else 0
+            chunk = ReplayChunk(
                 session_id=body.session_id,
-                user_id=_extract_user_id(request),
-                events_gz=compressed,
-                events_count=len(all_events),
-                uncompressed_size=new_size,
-                is_complete=body.is_final or capped,
+                chunk_index=chunk_index,
+                events_json=chunk_json,
+                events_count=chunk_events,
+                size_bytes=chunk_size,
             )
-            db.add(replay)
+            db.add(chunk)
 
-        db.commit()
+            # Update or create session metadata
+            if replay:
+                replay.chunks_count += 1
+                replay.total_events += chunk_events
+                replay.total_size += chunk_size
+                replay.updated_at = datetime.now(timezone.utc)
+                if body.is_final or capped:
+                    replay.is_complete = True
+            else:
+                replay = SessionReplay(
+                    session_id=body.session_id,
+                    user_id=_extract_user_id(request),
+                    chunks_count=1,
+                    total_events=chunk_events,
+                    total_size=chunk_size,
+                    is_complete=body.is_final,
+                )
+                db.add(replay)
 
-        # Probabilistic cleanup (~1% of requests)
-        if random.random() < 0.01:
-            _cleanup_old_replays(db)
+            db.commit()
 
-        return {"ok": True, "events_total": len(all_events), "capped": capped}
+        total = replay.total_events if replay else chunk_events
+        return {"ok": True, "events_total": total, "capped": capped}
 
     except Exception as e:
         logger.warning(f"Failed to store replay chunk: {e}")
@@ -117,16 +116,24 @@ async def store_replay_chunk(
         return {"ok": False, "error": str(e)}
 
 
-def _cleanup_old_replays(db: Session):
-    """Remove replays older than RETENTION_DAYS."""
+def cleanup_old_replays(db: Session):
+    """Remove replays older than RETENTION_DAYS. Called probabilistically."""
     try:
         cutoff = datetime.now(timezone.utc) - timedelta(days=RETENTION_DAYS)
-        deleted = db.query(SessionReplay).filter(
+        # Delete chunks first
+        old_sessions = db.query(SessionReplay.session_id).filter(
             SessionReplay.created_at < cutoff
-        ).delete()
-        if deleted:
+        ).all()
+        old_sids = [s[0] for s in old_sessions]
+        if old_sids:
+            db.query(ReplayChunk).filter(
+                ReplayChunk.session_id.in_(old_sids)
+            ).delete(synchronize_session=False)
+            db.query(SessionReplay).filter(
+                SessionReplay.session_id.in_(old_sids)
+            ).delete(synchronize_session=False)
             db.commit()
-            logger.info(f"Cleaned up {deleted} old session replays")
+            logger.info(f"Cleaned up {len(old_sids)} old session replays")
     except Exception as e:
         logger.warning(f"Replay cleanup failed: {e}")
         db.rollback()

@@ -23,6 +23,7 @@ class ReplayRecorder {
     this.sessionId = null;
     this.totalSize = 0;
     this.capped = false;
+    this._fullSnapshotSent = false;
     this._boundLeave = null;
   }
 
@@ -36,6 +37,7 @@ class ReplayRecorder {
     this.buffer = [];
     this.totalSize = 0;
     this.capped = false;
+    this._fullSnapshotSent = false;
 
     // Dynamic import to keep rrweb out of the main bundle for non-recorded pages
     import('rrweb').then(({ record }) => {
@@ -94,6 +96,13 @@ class ReplayRecorder {
     }
 
     this.buffer.push(event);
+
+    // Flush FullSnapshot (type 2) immediately — it's critical for replay
+    if (event.type === 2 && !this._fullSnapshotSent) {
+      this._fullSnapshotSent = true;
+      this.flush(false);
+      return;
+    }
 
     // Client-side cap
     if (this.totalSize >= MAX_SIZE) {
