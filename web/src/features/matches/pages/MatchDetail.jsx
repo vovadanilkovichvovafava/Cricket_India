@@ -17,6 +17,7 @@ import {
 } from '../../../shared/components/Icons';
 import TricolorBar from '../../../shared/components/TricolorBar';
 import { usePremium } from '../../../shared/context/PremiumContext';
+import { trackBannerClick } from '../../betting/services/trackingService';
 
 // Helper: get team display info from match data + IPL fallback
 function getTeamInfo(match, side) {
@@ -770,7 +771,7 @@ function PredictionTab({ match, prediction, loading, onGetPrediction, navigate, 
           return (
             <div
               key={i}
-              onClick={() => navigate('/offer')}
+              onClick={() => { trackBannerClick('value_bet', 'MatchDetail', id); navigate('/offer'); }}
               className={`block bg-gradient-to-br ${rc.card} border rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-transform cursor-pointer`}
             >
               {/* Top: market + risk */}

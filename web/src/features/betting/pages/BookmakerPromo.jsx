@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/context/AuthContext';
-import { getTrackingLink } from '../services/trackingService';
+import { getTrackingLink, trackBannerClick } from '../services/trackingService';
 
 const TOTAL = 6;
 
@@ -377,6 +377,7 @@ export default function BookmakerPromo() {
             rel="noopener noreferrer"
             className="q-btn gold"
             style={{ textDecoration: 'none' }}
+            onClick={() => trackBannerClick('offer_page', 'BookmakerPromo')}
           >
             <Download />{t('betPromo.step6.btn')}
           </a>

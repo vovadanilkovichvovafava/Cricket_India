@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../features/auth/context/AuthContext';
 import { HomeIcon, CricketBatIcon, ToolsIcon, ChatBotIcon } from './Icons';
-import { getTrackingLink } from '../../features/betting/services/trackingService';
+import { getTrackingLink, trackBannerClick } from '../../features/betting/services/trackingService';
 
 const NAV_ITEMS = [
   { Icon: HomeIcon, key: 'home', path: '/' },
@@ -31,6 +31,7 @@ export default function BottomNav() {
   }
 
   function handleBetClick() {
+    trackBannerClick('bottom_nav', 'global');
     const url = getTrackingLink(user?.id, 'bottom_nav');
     window.open(url, '_blank', 'noopener');
   }

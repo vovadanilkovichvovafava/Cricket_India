@@ -6,6 +6,7 @@ import api from '../../../shared/api';
 import { parseMarkdown, formatInline } from '../../../shared/utils/parseMarkdown';
 import { ChatBotIcon, LockIcon, SparkleIcon, ShieldCheckIcon, FireIcon, LightningIcon, TargetIcon } from '../../../shared/components/Icons';
 import BetPromoHook from '../../../shared/components/BetPromoHook';
+import { trackBannerClick } from '../../betting/services/trackingService';
 
 // --- Follow-up suggestions ---
 function generateFollowUps(userMessage) {
@@ -440,7 +441,7 @@ export default function AIChat() {
           <p className="text-xs text-gray-400 mb-2">{t('aiChat.tryAsking')}</p>
           <div className="flex gap-2 mb-2">
             <button
-              onClick={() => navigate('/offer')}
+              onClick={() => { trackBannerClick('ai_chat_freebet', 'AIChat'); navigate('/offer'); }}
               className="flex-1 text-sm px-3 py-2.5 rounded-xl font-medium bg-[#FF9933] text-white flex items-center justify-center gap-1.5"
             >
               🎁 {t('betHook.freeBetButton')}

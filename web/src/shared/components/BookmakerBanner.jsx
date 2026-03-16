@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ENV } from '../config/env';
 import { usePremium } from '../context/PremiumContext';
 import { useAuth } from '../../features/auth/context/AuthContext';
+import { trackBannerClick } from '../../features/betting/services/trackingService';
 
 // Shared 24h countdown hook
 function useCountdown() {
@@ -123,7 +124,7 @@ function HeroBanner() {
 
   return (
     <div
-      onClick={() => navigate('/offer')}
+      onClick={() => { trackBannerClick('hero_banner', 'home'); navigate('/offer'); }}
       className={`block bg-gradient-to-r ${ps.card} rounded-2xl p-5 text-white shadow-lg active:scale-[0.98] transition-all overflow-hidden relative cursor-pointer ${phase === 'critical' ? 'ring-2 ring-red-400/60 ring-offset-2 ring-offset-gray-50 dark:ring-offset-gray-900' : ''}`}
     >
       {/* Shine overlay */}
@@ -181,7 +182,7 @@ function InlineBanner() {
 
   return (
     <div
-      onClick={() => navigate('/offer')}
+      onClick={() => { trackBannerClick('inline_banner', 'matches'); navigate('/offer'); }}
       className={`block bg-white dark:bg-gray-800 rounded-xl p-3.5 shadow-sm border-l-4 ${borderColor} active:scale-[0.98] transition-transform my-4 cursor-pointer`}
     >
       <div className="flex items-center gap-3">
@@ -226,7 +227,7 @@ function StickyBanner() {
   return (
     <div className="fixed bottom-20 left-0 right-0 z-20 px-4 pb-2 safe-bottom">
       <div
-        onClick={() => navigate('/offer')}
+        onClick={() => { trackBannerClick('sticky_banner', 'global'); navigate('/offer'); }}
         className={`flex items-center justify-between bg-gradient-to-r ${ps.card} text-white rounded-xl px-4 py-3 shadow-xl cursor-pointer ${phase === 'critical' ? 'animate-pulse' : ''}`}
       >
         <div className="flex items-center gap-2.5">

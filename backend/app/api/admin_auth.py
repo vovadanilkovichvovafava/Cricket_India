@@ -159,7 +159,7 @@ async def register(body: AdminRegisterRequest, request: Request, db: Session = D
     # Mark invite as used
     invite.is_used = True
     invite.used_by = admin.id
-        invite.used_at = datetime.now(timezone.utc)
+    invite.used_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(admin)
 
