@@ -84,4 +84,6 @@ export const adminApi = {
     request(`/stats/chats/ai-sessions/${userId}`),
   getMLStats: () => request('/stats/ml'),
   getTrafficStats: () => request('/stats/traffic'),
+  getRecentVisits: (limit = 50, offset = 0) =>
+    request(`/stats/recent-visits?limit=${limit}&offset=${offset}`),
 }

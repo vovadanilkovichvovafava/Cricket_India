@@ -830,3 +830,203 @@ async def get_traffic_stats(
         "by_source": by_source,
         "total_banner_clicks": total_banner_clicks,
     }
+
+
+# ── Recent visits (Yandex Metrika-style table) ───
+
+@router.get("/recent-visits")
+async def get_recent_visits(
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """
+    Return recent visit sessions with aggregated data:
+    time, activity, duration, page views, referrer, country, device, goals.
+    Similar to Yandex Metrika's visitor table.
+    """
+    from app.models.analytics import AnalyticsEvent
+    import json as _json
+
+    # Get distinct recent sessions from session_start events
+    if _is_pg:
+        sessions_sql = """
+            SELECT
+                s.session_id,
+                s.created_at as visit_time,
+                s.user_id,
+                s.ip_address,
+                s.user_agent,
+                s.country,
+                s.event_data->>'landing_page' as landing_page,
+                s.event_data->>'referrer' as referrer,
+                s.event_data->>'utm_source' as utm_source,
+
+                -- Duration from session_end event
+                (SELECT (e2.event_data->>'duration_ms')::int
+                 FROM analytics_events e2
+                 WHERE e2.session_id = s.session_id AND e2.event_type = 'session_end'
+                 ORDER BY e2.created_at DESC LIMIT 1) as duration_ms,
+
+                -- Page views count
+                (SELECT COUNT(*) FROM analytics_events e3
+                 WHERE e3.session_id = s.session_id AND e3.event_type = 'page_view') as page_views,
+
+                -- Banner clicks (goals)
+                (SELECT COUNT(*) FROM analytics_events e4
+                 WHERE e4.session_id = s.session_id AND e4.event_type = 'banner_click') as goals,
+
+                -- Total events (for activity indicator)
+                (SELECT COUNT(*) FROM analytics_events e5
+                 WHERE e5.session_id = s.session_id) as total_events,
+
+                -- Visit number: how many sessions this user/ip had before
+                (SELECT COUNT(DISTINCT e6.session_id) FROM analytics_events e6
+                 WHERE e6.event_type = 'session_start'
+                   AND (
+                     (s.user_id IS NOT NULL AND e6.user_id = s.user_id)
+                     OR (s.user_id IS NULL AND e6.ip_address = s.ip_address)
+                   )
+                   AND e6.created_at <= s.created_at) as visit_number,
+
+                -- Pages list (for expandable detail)
+                (SELECT json_agg(json_build_object(
+                    'path', e7.event_data->>'path',
+                    'duration_ms', (e7.event_data->>'duration_ms')::int
+                 ) ORDER BY e7.created_at)
+                 FROM analytics_events e7
+                 WHERE e7.session_id = s.session_id AND e7.event_type = 'page_view') as pages_json
+
+            FROM analytics_events s
+            WHERE s.event_type = 'session_start'
+            ORDER BY s.created_at DESC
+            LIMIT :limit OFFSET :offset
+        """
+    else:
+        sessions_sql = """
+            SELECT
+                s.session_id,
+                s.created_at as visit_time,
+                s.user_id,
+                s.ip_address,
+                s.user_agent,
+                s.country,
+                json_extract(s.event_data, '$.landing_page') as landing_page,
+                json_extract(s.event_data, '$.referrer') as referrer,
+                json_extract(s.event_data, '$.utm_source') as utm_source,
+
+                (SELECT CAST(json_extract(e2.event_data, '$.duration_ms') AS INTEGER)
+                 FROM analytics_events e2
+                 WHERE e2.session_id = s.session_id AND e2.event_type = 'session_end'
+                 ORDER BY e2.created_at DESC LIMIT 1) as duration_ms,
+
+                (SELECT COUNT(*) FROM analytics_events e3
+                 WHERE e3.session_id = s.session_id AND e3.event_type = 'page_view') as page_views,
+
+                (SELECT COUNT(*) FROM analytics_events e4
+                 WHERE e4.session_id = s.session_id AND e4.event_type = 'banner_click') as goals,
+
+                (SELECT COUNT(*) FROM analytics_events e5
+                 WHERE e5.session_id = s.session_id) as total_events,
+
+                (SELECT COUNT(DISTINCT e6.session_id) FROM analytics_events e6
+                 WHERE e6.event_type = 'session_start'
+                   AND (
+                     (s.user_id IS NOT NULL AND e6.user_id = s.user_id)
+                     OR (s.user_id IS NULL AND e6.ip_address = s.ip_address)
+                   )
+                   AND e6.created_at <= s.created_at) as visit_number,
+
+                (SELECT json_group_array(json_object(
+                    'path', json_extract(e7.event_data, '$.path'),
+                    'duration_ms', CAST(json_extract(e7.event_data, '$.duration_ms') AS INTEGER)
+                 ))
+                 FROM analytics_events e7
+                 WHERE e7.session_id = s.session_id AND e7.event_type = 'page_view'
+                 ORDER BY e7.created_at) as pages_json
+
+            FROM analytics_events s
+            WHERE s.event_type = 'session_start'
+            ORDER BY s.created_at DESC
+            LIMIT :limit OFFSET :offset
+        """
+
+    rows = db.execute(text(sessions_sql), {"limit": limit, "offset": offset}).fetchall()
+
+    # Total count
+    total = db.execute(text(
+        "SELECT COUNT(*) FROM analytics_events WHERE event_type = 'session_start'"
+    )).scalar() or 0
+
+    visits = []
+    for r in rows:
+        # Parse user-agent for OS / browser
+        ua = r[4] or ""
+        os_name = "Unknown"
+        browser = "Unknown"
+        if "Android" in ua:
+            os_name = "Android"
+        elif "iPhone" in ua or "iPad" in ua:
+            os_name = "iOS"
+        elif "Windows" in ua:
+            os_name = "Windows"
+        elif "Mac" in ua:
+            os_name = "macOS"
+        elif "Linux" in ua:
+            os_name = "Linux"
+
+        if "Chrome" in ua and "Edg" not in ua:
+            browser = "Chrome"
+        elif "Safari" in ua and "Chrome" not in ua:
+            browser = "Safari"
+        elif "Firefox" in ua:
+            browser = "Firefox"
+        elif "Edg" in ua:
+            browser = "Edge"
+
+        # Parse pages json
+        pages = []
+        if r[14]:
+            try:
+                pages = _json.loads(r[14]) if isinstance(r[14], str) else r[14]
+                if not isinstance(pages, list):
+                    pages = []
+            except Exception:
+                pages = []
+
+        # Activity level (1-5 dots based on total events)
+        events_count = r[12] or 0
+        if events_count <= 2:
+            activity = 1
+        elif events_count <= 5:
+            activity = 2
+        elif events_count <= 10:
+            activity = 3
+        elif events_count <= 20:
+            activity = 4
+        else:
+            activity = 5
+
+        visits.append({
+            "session_id": r[0],
+            "visit_time": r[1].isoformat() if hasattr(r[1], 'isoformat') else str(r[1]),
+            "user_id": r[2],
+            "country": r[5] or "—",
+            "os": os_name,
+            "browser": browser,
+            "landing_page": r[6] or "/",
+            "referrer": r[7] or "",
+            "utm_source": r[8] or "",
+            "duration_ms": r[9] or 0,
+            "page_views": r[10] or 0,
+            "goals": r[11] or 0,
+            "activity": activity,
+            "visit_number": r[13] or 1,
+            "pages": pages,
+        })
+
+    return {
+        "total": total,
+        "visits": visits,
+    }
