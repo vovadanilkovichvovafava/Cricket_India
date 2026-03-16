@@ -309,7 +309,7 @@ function ReplayModal({ sessionId, onClose }) {
           height: 667,
           autoPlay: true,
           showController: true,
-          speedOption: [1, 1.4, 1.7, 2, 4, 8],
+          speedOption: [1, 1.5, 2],
         },
       })
     }).catch(() => {
