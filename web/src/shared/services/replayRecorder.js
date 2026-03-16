@@ -130,12 +130,14 @@ class ReplayRecorder {
     const token = getToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
+    // NOTE: Do NOT use keepalive:true here — it limits body to 64KB,
+    // which is too small for FullSnapshot (200KB+). keepalive is only
+    // needed in _onLeave() via sendBeacon for tab-close delivery.
     try {
       fetch(url, {
         method: 'POST',
         headers,
         body: payload,
-        keepalive: true,
       }).catch(() => {});
     } catch {
       // silently fail — don't affect user experience
