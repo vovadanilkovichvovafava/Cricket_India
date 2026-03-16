@@ -86,4 +86,6 @@ export const adminApi = {
   getTrafficStats: () => request('/stats/traffic'),
   getRecentVisits: (limit = 50, offset = 0) =>
     request(`/stats/recent-visits?limit=${limit}&offset=${offset}`),
+  getSessionReplay: (sessionId) =>
+    request(`/stats/replay/${sessionId}`),
 }

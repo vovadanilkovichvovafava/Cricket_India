@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { adminApi } from '../api'
 
 function Card({ title, children, className = '' }) {
@@ -145,7 +145,7 @@ function formatReferrer(ref) {
 }
 
 // ── Expandable visit row ──
-function VisitRow({ visit, index, offset }) {
+function VisitRow({ visit, index, offset, onPlayReplay }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
@@ -216,7 +216,7 @@ function VisitRow({ visit, index, offset }) {
         </td>
 
         {/* Goals */}
-        <td className="py-2.5 px-2 pr-3 text-center">
+        <td className="py-2.5 px-2 text-center">
           {visit.goals > 0 ? (
             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border-2 border-green-500 text-green-400 text-xs font-bold">
               {visit.goals}
@@ -225,12 +225,23 @@ function VisitRow({ visit, index, offset }) {
             <span className="text-slate-700">—</span>
           )}
         </td>
+
+        {/* Replay */}
+        <td className="py-2.5 px-2 pr-3 text-center">
+          <button
+            onClick={(e) => { e.stopPropagation(); onPlayReplay?.(visit.session_id) }}
+            className="text-xs px-2 py-1 rounded bg-blue-600/20 text-blue-400 hover:bg-blue-600/40 transition-colors"
+            title="Watch session replay"
+          >
+            ▶
+          </button>
+        </td>
       </tr>
 
       {/* Expanded: page journey */}
       {expanded && (
         <tr className="bg-slate-800/30">
-          <td colSpan={9} className="px-4 py-3">
+          <td colSpan={10} className="px-4 py-3">
             <div className="text-xs text-slate-500 mb-2">
               Session: <span className="font-mono text-slate-400">{visit.session_id?.slice(0, 8)}...</span>
               {visit.user_id && <> · User ID: <span className="text-slate-400">{visit.user_id}</span></>}
@@ -257,12 +268,109 @@ function VisitRow({ visit, index, offset }) {
   )
 }
 
+// ── Replay Modal ──
+function ReplayModal({ sessionId, onClose }) {
+  const [events, setEvents] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const playerRef = useRef(null)
+  const containerRef = useRef(null)
+
+  useEffect(() => {
+    adminApi.getSessionReplay(sessionId)
+      .then(data => {
+        if (data.events?.length) {
+          setEvents(data.events)
+        } else {
+          setError('No replay events recorded')
+        }
+      })
+      .catch(err => setError(err.message || 'No replay data for this session'))
+      .finally(() => setLoading(false))
+  }, [sessionId])
+
+  useEffect(() => {
+    if (!events?.length || !containerRef.current) return
+
+    let destroyed = false
+
+    // Dynamic import — rrweb-player only loads when admin clicks Play
+    Promise.all([
+      import('rrweb-player'),
+      import('rrweb-player/dist/style.css'),
+    ]).then(([mod]) => {
+      if (destroyed) return
+      const RRWebPlayer = mod.default || mod
+      playerRef.current = new RRWebPlayer({
+        target: containerRef.current,
+        props: {
+          events,
+          width: 375,
+          height: 667,
+          autoPlay: true,
+          showController: true,
+          speedOption: [1, 2, 4, 8],
+        },
+      })
+    }).catch(() => {
+      setError('Failed to load replay player')
+    })
+
+    return () => {
+      destroyed = true
+      if (playerRef.current) {
+        try { playerRef.current.$destroy?.() } catch {}
+        playerRef.current = null
+      }
+    }
+  }, [events])
+
+  return (
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+         onClick={onClose}>
+      <div className="bg-slate-900 border border-slate-700 rounded-xl max-w-[500px] w-full max-h-[90vh] overflow-auto"
+           onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+          <div>
+            <h3 className="text-sm font-semibold">Session Replay</h3>
+            <p className="text-xs text-slate-500 font-mono mt-0.5">{sessionId?.slice(0, 12)}...</p>
+          </div>
+          <button onClick={onClose}
+                  className="text-slate-400 hover:text-white text-lg px-2">
+            ✕
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-4">
+          {loading && (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-xs text-slate-500">Loading replay...</p>
+            </div>
+          )}
+          {error && (
+            <div className="text-center py-16">
+              <p className="text-red-400 text-sm">{error}</p>
+              <p className="text-xs text-slate-600 mt-2">Session may be too short or still recording</p>
+            </div>
+          )}
+          <div ref={containerRef} className="replay-container" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
 // ── Recent Visits Table ──
 function RecentVisits() {
   const [visits, setVisits] = useState([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
+  const [replaySession, setReplaySession] = useState(null)
   const perPage = 30
 
   const load = useCallback(() => {
@@ -281,6 +389,7 @@ function RecentVisits() {
   const totalPages = Math.ceil(total / perPage)
 
   return (
+    <>
     <Card title={`Recent Visits (${total})`} className="overflow-hidden">
       {loading ? (
         <div className="flex justify-center py-10">
@@ -302,12 +411,13 @@ function RecentVisits() {
                   <th className="pb-2 px-2 text-center">Views</th>
                   <th className="pb-2 px-2">Source</th>
                   <th className="pb-2 px-2 text-center">Visit #</th>
-                  <th className="pb-2 px-2 pr-3 text-center">Goals</th>
+                  <th className="pb-2 px-2 text-center">Goals</th>
+                  <th className="pb-2 px-2 pr-3 text-center">Replay</th>
                 </tr>
               </thead>
               <tbody>
                 {visits.map((v, i) => (
-                  <VisitRow key={v.session_id} visit={v} index={i} offset={page * perPage} />
+                  <VisitRow key={v.session_id} visit={v} index={i} offset={page * perPage} onPlayReplay={setReplaySession} />
                 ))}
               </tbody>
             </table>
@@ -338,6 +448,11 @@ function RecentVisits() {
         </>
       )}
     </Card>
+    {/* Replay modal */}
+    {replaySession && (
+      <ReplayModal sessionId={replaySession} onClose={() => setReplaySession(null)} />
+    )}
+    </>
   )
 }
 

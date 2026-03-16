@@ -13,6 +13,7 @@ from app.api.support import router as support_router
 from app.api.match_chat import router as match_chat_router
 from app.api.postbacks import router as postbacks_router
 from app.api.analytics import router as analytics_router
+from app.api.replay import router as replay_router
 
 api_router = APIRouter()
 
@@ -25,6 +26,7 @@ api_router.include_router(support_router)
 api_router.include_router(match_chat_router)
 api_router.include_router(postbacks_router)
 api_router.include_router(analytics_router)
+api_router.include_router(replay_router)
 
 
 @api_router.get("/health", tags=["health"])

@@ -832,6 +832,40 @@ async def get_traffic_stats(
     }
 
 
+# ── Session Replay (rrweb) ───
+
+@router.get("/replay/{session_id}")
+async def get_session_replay(
+    session_id: str,
+    admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Return decompressed rrweb events for admin playback."""
+    import gzip
+    import json as _json
+    from app.models.session_replay import SessionReplay
+
+    replay = db.query(SessionReplay).filter(
+        SessionReplay.session_id == session_id
+    ).first()
+
+    if not replay or not replay.events_gz:
+        raise HTTPException(status_code=404, detail="No replay data for this session")
+
+    try:
+        events = _json.loads(gzip.decompress(replay.events_gz))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to decompress replay data")
+
+    return {
+        "session_id": session_id,
+        "events": events,
+        "events_count": replay.events_count,
+        "size_bytes": replay.uncompressed_size,
+        "is_complete": replay.is_complete,
+    }
+
+
 # ── Recent visits (Yandex Metrika-style table) ───
 
 # Own domains to filter from referrer display

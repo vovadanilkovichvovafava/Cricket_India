@@ -6,6 +6,7 @@ import { ThemeProvider } from './shared/context/ThemeContext';
 import NotificationPrompt from './shared/components/NotificationPrompt';
 import SupportChat from './shared/components/SupportChat';
 import analyticsTracker from './shared/services/analyticsTracker';
+import replayRecorder from './shared/services/replayRecorder';
 
 // Eagerly loaded
 import Home from './features/matches/pages/Home';
@@ -107,7 +108,11 @@ function AnalyticsProvider({ children }) {
 
   useEffect(() => {
     analyticsTracker.init();
-    return () => analyticsTracker.destroy();
+    replayRecorder.init(analyticsTracker.sessionId);
+    return () => {
+      replayRecorder.destroy();
+      analyticsTracker.destroy();
+    };
   }, []);
 
   useEffect(() => {
