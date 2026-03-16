@@ -88,7 +88,6 @@ async def get_overview(
         "ai_chats_today": ai_chats_today,
         "cricket_api": {
             "used": _get_cricket_api_usage(),
-            "limit": 100,
         },
     }
 

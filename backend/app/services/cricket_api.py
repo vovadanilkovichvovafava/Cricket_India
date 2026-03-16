@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────────
 
 CRICAPI_BASE = "https://api.cricapi.com/v1"
-CACHE_TTL = 300  # 5 min cache (free tier: 100 hits/day)
+CACHE_TTL = 300  # 5 min cache
 
 _cache: dict[str, tuple] = {}
 
