@@ -85,6 +85,23 @@ def _run_migrations():
     """Add missing columns to existing tables (works for both SQLite and PostgreSQL)."""
     is_postgres = not settings.DATABASE_URL.startswith("sqlite")
 
+    # Drop old session_replays table (schema changed: events_gz → chunk-based)
+    # This is safe: replay data is ephemeral (7-day retention) and table was just created.
+    pre_migrations = [
+        "DROP TABLE IF EXISTS session_replays",
+    ]
+    with engine.connect() as conn:
+        for stmt in pre_migrations:
+            try:
+                conn.execute(text(stmt))
+                conn.commit()
+                logger.info(f"Pre-migration OK: {stmt}")
+            except Exception:
+                pass
+
+    # Re-run create_all to create session_replays (new schema) + replay_chunks
+    Base.metadata.create_all(bind=engine)
+
     if is_postgres:
         # PostgreSQL: use IF NOT EXISTS or check information_schema
         migrations = [
