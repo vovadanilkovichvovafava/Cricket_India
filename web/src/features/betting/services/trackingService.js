@@ -62,3 +62,27 @@ export function addTrackingToUrl(url, userId, banner = 'default') {
 export function getOfferUrl() {
   return ENV.OFFER_URL || ENV.BOOKMAKER_LINK || FALLBACK_OFFER;
 }
+
+/**
+ * Track a banner/affiliate link click for admin analytics.
+ * Fire-and-forget — never blocks the user.
+ */
+export function trackBannerClick(banner = 'default', page = '', matchId = '') {
+  try {
+    const url = `${ENV.API_URL}/analytics/banner-click`;
+    const token = localStorage.getItem('auth_token');
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        banner_id: banner,
+        bookmaker: ENV.BOOKMAKER_NAME || 'partner',
+        page,
+        match_id: matchId || null,
+      }),
+    }).catch(() => {});
+  } catch { /* fire and forget */ }
+}

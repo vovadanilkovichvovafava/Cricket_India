@@ -144,6 +144,30 @@ def _log_ai_request(db: Session, user_id: Optional[int], message: str):
         db.rollback()
 
 
+def _log_ai_response(db: Session, user_id: Optional[int], response, match_id: Optional[str] = None):
+    """Log AI assistant response for admin analytics."""
+    try:
+        value_bets_json = None
+        if response.value_bets:
+            value_bets_json = [
+                {"market": vb.market, "pick": vb.pick, "odds": vb.odds, "confidence": vb.confidence, "risk": vb.risk}
+                for vb in response.value_bets
+            ]
+        record = AIChatMessage(
+            user_id=user_id,
+            role="assistant",
+            message=response.response[:5000],
+            match_context=match_id or response.match_context,
+            value_bets=value_bets_json,
+            model_used=response.model_used,
+        )
+        db.add(record)
+        db.commit()
+    except Exception as e:
+        logger.warning(f"Failed to log AI response: {e}")
+        db.rollback()
+
+
 def _save_prediction(db: Session, match_id: str, prediction: MatchPrediction):
     """Save prediction to DB for accuracy tracking (upsert by match_id)."""
     try:
@@ -166,6 +190,38 @@ def _save_prediction(db: Session, match_id: str, prediction: MatchPrediction):
     except Exception as e:
         logger.warning(f"Failed to save prediction history: {e}")
         db.rollback()
+
+
+def _collect_ml_training_data(db: Session, record: PredictionHistory, match, winner: str):
+    """Save match result as ML training data for future model training."""
+    from app.models.ml import MLTrainingData
+    try:
+        existing = db.query(MLTrainingData).filter(MLTrainingData.match_id == record.match_id).first()
+        if existing:
+            return  # already collected
+
+        features = {
+            "home_team": record.home_team,
+            "away_team": record.away_team,
+            "ai_predicted_winner": record.predicted_winner,
+            "ai_confidence": record.confidence,
+            "ai_was_correct": record.is_correct,
+            "venue": getattr(match, 'venue', None),
+            "match_type": getattr(match, 'match_type', 't20'),
+            "status_text": getattr(match, 'status_text', ''),
+        }
+
+        training = MLTrainingData(
+            match_id=record.match_id,
+            match_type=features.get("match_type", "t20"),
+            features=features,
+            winner=winner,
+            venue=features.get("venue"),
+            match_date=record.created_at.strftime("%Y-%m-%d") if record.created_at else None,
+        )
+        db.add(training)
+    except Exception as e:
+        logger.debug(f"ML data collection skip {record.match_id}: {e}")
 
 
 async def _verify_pending(db: Session):
@@ -202,6 +258,9 @@ async def _verify_pending(db: Session):
                 record.actual_winner = winner
                 record.is_correct = (record.predicted_winner.upper() == winner.upper())
                 record.verified_at = datetime.now(timezone.utc)
+
+                # Collect ML training data
+                _collect_ml_training_data(db, record, match, winner)
         except Exception as e:
             logger.debug(f"Verify skip {record.match_id}: {e}")
             continue
@@ -321,4 +380,8 @@ async def chat(
             raise HTTPException(status_code=404, detail="Match not found")
 
     response = await chat_about_cricket(chat_request.message, match)
+
+    # Save assistant response for admin analytics
+    _log_ai_response(db, current_user.id, response, chat_request.match_id)
+
     return response

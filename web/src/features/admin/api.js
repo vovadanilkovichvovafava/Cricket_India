@@ -77,6 +77,11 @@ export const adminApi = {
     request(`/stats/chats/support-sessions?limit=${limit}&offset=${offset}`),
   getSupportSessionMessages: (sessionId) =>
     request(`/stats/chats/support-sessions/${sessionId}`),
+  getAIChatStats: () => request('/stats/chats/ai-stats'),
+  getAIChatSessions: (limit = 30, offset = 0) =>
+    request(`/stats/chats/ai-sessions?limit=${limit}&offset=${offset}`),
+  getAIChatMessages: (userId) =>
+    request(`/stats/chats/ai-sessions/${userId}`),
   getMLStats: () => request('/stats/ml'),
   getTrafficStats: () => request('/stats/traffic'),
 }

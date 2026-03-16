@@ -319,9 +319,11 @@ async def get_predictions_stats(
     db: Session = Depends(get_db),
 ):
     from app.models.prediction_history import PredictionHistory
+    from app.models.chat import AIChatMessage
 
     now = datetime.now(timezone.utc)
     thirty_days_ago = now - timedelta(days=30)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     # Daily predictions
     daily_rows = db.execute(text("""
@@ -354,6 +356,19 @@ async def get_predictions_stats(
         PredictionHistory.confidence < 0.5
     ).scalar() or 0
 
+    # AI Chat stats
+    ai_chat_total = db.query(func.count(AIChatMessage.id)).filter(
+        AIChatMessage.role == "user"
+    ).scalar() or 0
+    ai_chat_today = db.query(func.count(AIChatMessage.id)).filter(
+        AIChatMessage.role == "user",
+        AIChatMessage.created_at >= today_start,
+    ).scalar() or 0
+    ai_with_bets = db.query(func.count(AIChatMessage.id)).filter(
+        AIChatMessage.role == "assistant",
+        AIChatMessage.value_bets.isnot(None),
+    ).scalar() or 0
+
     return {
         "daily_predictions": daily_predictions,
         "total": total,
@@ -365,7 +380,11 @@ async def get_predictions_stats(
             "medium": med_conf,
             "low": low_conf,
         },
-        "by_bet_type": [],  # TODO: track by market type
+        "ai_chat": {
+            "total_requests": ai_chat_total,
+            "today": ai_chat_today,
+            "with_value_bets": ai_with_bets,
+        },
     }
 
 
@@ -463,6 +482,92 @@ async def get_support_session_messages(
             "id": m.id,
             "role": m.role,
             "message": m.message,
+            "created_at": m.created_at.isoformat() if m.created_at else None,
+        }
+        for m in messages
+    ]
+
+
+# ── AI Chat stats ──────────────────────────────────
+
+@router.get("/chats/ai-stats")
+async def get_ai_chat_stats(
+    admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    from app.models.chat import AIChatMessage
+
+    total_messages = db.query(func.count(AIChatMessage.id)).scalar() or 0
+    total_user_msgs = db.query(func.count(AIChatMessage.id)).filter(
+        AIChatMessage.role == "user"
+    ).scalar() or 0
+    unique_users = db.query(func.count(func.distinct(AIChatMessage.user_id))).scalar() or 0
+
+    return {
+        "total_messages": total_messages,
+        "total_conversations": total_user_msgs,
+        "unique_users": unique_users,
+    }
+
+
+@router.get("/chats/ai-sessions")
+async def get_ai_sessions(
+    limit: int = Query(30, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """List AI chat sessions grouped by user."""
+    rows = db.execute(text("""
+        SELECT a.user_id,
+               COALESCE(u.phone, CAST(a.user_id AS VARCHAR)) as user_phone,
+               COALESCE(u.name, '') as user_name,
+               COUNT(*) as msg_count,
+               SUM(CASE WHEN a.role = 'user' THEN 1 ELSE 0 END) as user_msgs,
+               MIN(a.created_at) as first_msg,
+               MAX(a.created_at) as last_msg
+        FROM ai_chat_messages a
+        LEFT JOIN users u ON u.id = a.user_id
+        GROUP BY a.user_id, u.phone, u.name
+        ORDER BY last_msg DESC
+        LIMIT :limit OFFSET :offset
+    """), {"limit": limit, "offset": offset}).fetchall()
+
+    return [
+        {
+            "user_id": r[0],
+            "phone": r[1],
+            "name": r[2],
+            "message_count": r[3],
+            "user_messages": r[4],
+            "first_message_at": r[5],
+            "last_message_at": r[6],
+        }
+        for r in rows
+    ]
+
+
+@router.get("/chats/ai-sessions/{user_id}")
+async def get_ai_session_messages(
+    user_id: int,
+    admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Get all AI chat messages for a specific user."""
+    from app.models.chat import AIChatMessage
+
+    messages = db.query(AIChatMessage).filter(
+        AIChatMessage.user_id == user_id
+    ).order_by(AIChatMessage.created_at).limit(200).all()
+
+    return [
+        {
+            "id": m.id,
+            "role": m.role,
+            "message": m.message,
+            "match_context": m.match_context,
+            "value_bets": m.value_bets,
+            "model_used": m.model_used,
             "created_at": m.created_at.isoformat() if m.created_at else None,
         }
         for m in messages

@@ -41,7 +41,21 @@ export default function AdminPredictions() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: 'Total', value: stats?.total || 0, color: 'text-slate-100' },
+          { label: 'Match Predictions', value: stats?.total || 0, color: 'text-slate-100' },
+          { label: 'AI Chat Requests', value: stats?.ai_chat?.total_requests || 0, color: 'text-blue-400' },
+          { label: 'Chat Today', value: stats?.ai_chat?.today || 0, color: 'text-cyan-400' },
+          { label: 'With Value Bets', value: stats?.ai_chat?.with_value_bets || 0, color: 'text-purple-400' },
+        ].map(s => (
+          <div key={s.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <p className="text-xs text-slate-500">{s.label}</p>
+            <p className={`text-2xl font-bold mt-1 ${s.color}`}>{typeof s.value === 'number' ? s.value.toLocaleString() : s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Accuracy cards */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
           { label: 'Verified', value: stats?.verified || 0, color: 'text-amber-400' },
           { label: 'Correct', value: stats?.correct || 0, color: 'text-green-400' },
           { label: 'Accuracy', value: `${stats?.accuracy || 0}%`, color: 'text-emerald-400' },

@@ -386,6 +386,7 @@ class ChatResponse(BaseModel):
 
 class SupportChatRequest(BaseModel):
     message: str
+    session_id: Optional[str] = None
 
 
 class SupportChatResponse(BaseModel):

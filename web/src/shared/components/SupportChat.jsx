@@ -22,6 +22,7 @@ export default function SupportChat() {
   const [pulse, setPulse] = useState(true);
   const messagesEnd = useRef(null);
   const inputRef = useRef(null);
+  const sessionId = useRef(`sup_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
 
   const scrollToBottom = () => {
     messagesEnd.current?.scrollIntoView({ behavior: 'smooth' });
@@ -62,7 +63,7 @@ export default function SupportChat() {
     setLoading(true);
 
     try {
-      const data = await api.supportChat({ message: text.trim() });
+      const data = await api.supportChat({ message: text.trim(), session_id: sessionId.current });
       const reply = data.response || data.message || t('support.fallback');
       setMessages(prev => [...prev, { role: 'ai', text: reply }]);
     } catch {
