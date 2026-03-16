@@ -834,6 +834,27 @@ async def get_traffic_stats(
 
 # ── Recent visits (Yandex Metrika-style table) ───
 
+# Own domains to filter from referrer display
+_OWN_DOMAINS = {"prescoreai.app", "www.prescoreai.app", "cricketbaazi.com",
+                "www.cricketbaazi.com", "localhost"}
+
+
+def _is_own_referrer(ref: str) -> bool:
+    """Check if referrer is from own domain or Cloudflare Tunnel."""
+    if not ref:
+        return False
+    try:
+        from urllib.parse import urlparse
+        host = urlparse(ref).hostname or ""
+        if host in _OWN_DOMAINS:
+            return True
+        if host.endswith(".trycloudflare.com") or host.endswith(".cloudflare.com"):
+            return True
+    except Exception:
+        pass
+    return False
+
+
 @router.get("/recent-visits")
 async def get_recent_visits(
     limit: int = Query(50, ge=1, le=200),
@@ -849,6 +870,9 @@ async def get_recent_visits(
     from app.models.analytics import AnalyticsEvent
     import json as _json
 
+    now = datetime.now(timezone.utc)
+    live_threshold = now - timedelta(minutes=30)
+
     # Get distinct recent sessions from session_start events
     if _is_pg:
         sessions_sql = """
@@ -863,7 +887,7 @@ async def get_recent_visits(
                 s.event_data->>'referrer' as referrer,
                 s.event_data->>'utm_source' as utm_source,
 
-                -- Duration from session_end event
+                -- Duration from session_end event (NULL if still live)
                 (SELECT (e2.event_data->>'duration_ms')::int
                  FROM analytics_events e2
                  WHERE e2.session_id = s.session_id AND e2.event_type = 'session_end'
@@ -881,14 +905,9 @@ async def get_recent_visits(
                 (SELECT COUNT(*) FROM analytics_events e5
                  WHERE e5.session_id = s.session_id) as total_events,
 
-                -- Visit number: how many sessions this user/ip had before
-                (SELECT COUNT(DISTINCT e6.session_id) FROM analytics_events e6
-                 WHERE e6.event_type = 'session_start'
-                   AND (
-                     (s.user_id IS NOT NULL AND e6.user_id = s.user_id)
-                     OR (s.user_id IS NULL AND e6.ip_address = s.ip_address)
-                   )
-                   AND e6.created_at <= s.created_at) as visit_number,
+                -- Has session_end? (for is_live detection)
+                (SELECT COUNT(*) FROM analytics_events e_end
+                 WHERE e_end.session_id = s.session_id AND e_end.event_type = 'session_end') as has_end,
 
                 -- Pages list (for expandable detail)
                 (SELECT json_agg(json_build_object(
@@ -896,7 +915,12 @@ async def get_recent_visits(
                     'duration_ms', (e7.event_data->>'duration_ms')::int
                  ) ORDER BY e7.created_at)
                  FROM analytics_events e7
-                 WHERE e7.session_id = s.session_id AND e7.event_type = 'page_view') as pages_json
+                 WHERE e7.session_id = s.session_id AND e7.event_type = 'page_view') as pages_json,
+
+                -- Last activity time (most recent event in session)
+                (SELECT MAX(e8.created_at)
+                 FROM analytics_events e8
+                 WHERE e8.session_id = s.session_id) as last_activity
 
             FROM analytics_events s
             WHERE s.event_type = 'session_start'
@@ -930,13 +954,8 @@ async def get_recent_visits(
                 (SELECT COUNT(*) FROM analytics_events e5
                  WHERE e5.session_id = s.session_id) as total_events,
 
-                (SELECT COUNT(DISTINCT e6.session_id) FROM analytics_events e6
-                 WHERE e6.event_type = 'session_start'
-                   AND (
-                     (s.user_id IS NOT NULL AND e6.user_id = s.user_id)
-                     OR (s.user_id IS NULL AND e6.ip_address = s.ip_address)
-                   )
-                   AND e6.created_at <= s.created_at) as visit_number,
+                (SELECT COUNT(*) FROM analytics_events e_end
+                 WHERE e_end.session_id = s.session_id AND e_end.event_type = 'session_end') as has_end,
 
                 (SELECT json_group_array(json_object(
                     'path', json_extract(e7.event_data, '$.path'),
@@ -944,7 +963,11 @@ async def get_recent_visits(
                  ))
                  FROM analytics_events e7
                  WHERE e7.session_id = s.session_id AND e7.event_type = 'page_view'
-                 ORDER BY e7.created_at) as pages_json
+                 ORDER BY e7.created_at) as pages_json,
+
+                (SELECT MAX(e8.created_at)
+                 FROM analytics_events e8
+                 WHERE e8.session_id = s.session_id) as last_activity
 
             FROM analytics_events s
             WHERE s.event_type = 'session_start'
@@ -958,6 +981,79 @@ async def get_recent_visits(
     total = db.execute(text(
         "SELECT COUNT(*) FROM analytics_events WHERE event_type = 'session_start'"
     )).scalar() or 0
+
+    # --- Compute visit numbers with 30-min gap logic ---
+    # Group all user_id/ip combos, then count distinct "real visits"
+    # by checking time gaps between session_starts (>30min = new visit).
+    # We do this in Python to avoid complex SQL window functions.
+    visitor_sessions = {}  # key: (user_id or ip) -> list of (session_id, created_at)
+    for r in rows:
+        key = f"u:{r[2]}" if r[2] else f"ip:{r[3]}"
+        visitor_sessions.setdefault(key, [])
+
+    # Fetch ALL session_starts for these visitors (to count real visits)
+    visitor_keys_user = [r[2] for r in rows if r[2]]
+    visitor_keys_ip = [r[3] for r in rows if not r[2] and r[3]]
+
+    # Build visit_number cache: session_id -> visit_number
+    visit_number_cache = {}
+
+    if visitor_keys_user or visitor_keys_ip:
+        # Fetch historical session starts for these visitors
+        conditions = []
+        params = {}
+        if visitor_keys_user:
+            # Use IN with individual params for PG compatibility
+            user_placeholders = ", ".join(f":uid_{i}" for i in range(len(visitor_keys_user)))
+            conditions.append(f"(user_id IN ({user_placeholders}))")
+            for i, uid in enumerate(visitor_keys_user):
+                params[f"uid_{i}"] = uid
+        if visitor_keys_ip:
+            ip_placeholders = ", ".join(f":ip_{i}" for i in range(len(visitor_keys_ip)))
+            conditions.append(f"(user_id IS NULL AND ip_address IN ({ip_placeholders}))")
+            for i, ip in enumerate(visitor_keys_ip):
+                params[f"ip_{i}"] = ip
+
+        where_clause = " OR ".join(conditions)
+        hist_sql = f"""
+            SELECT session_id, user_id, ip_address, created_at
+            FROM analytics_events
+            WHERE event_type = 'session_start' AND ({where_clause})
+            ORDER BY created_at ASC
+        """
+        hist_rows = db.execute(text(hist_sql), params).fetchall()
+
+        # Group by visitor key
+        visitor_history = {}
+        for hr in hist_rows:
+            key = f"u:{hr[1]}" if hr[1] else f"ip:{hr[2]}"
+            visitor_history.setdefault(key, []).append((hr[0], hr[3]))
+
+        # Assign visit numbers: each session >30min after previous = new visit
+        GAP_MINUTES = 30
+        for key, sessions in visitor_history.items():
+            visit_num = 1
+            prev_time = None
+            for sid, created_at in sessions:
+                if prev_time:
+                    # Parse if string
+                    if isinstance(created_at, str):
+                        try:
+                            created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+                        except Exception:
+                            pass
+                    if isinstance(prev_time, str):
+                        try:
+                            prev_time = datetime.fromisoformat(prev_time.replace("Z", "+00:00"))
+                        except Exception:
+                            pass
+                    try:
+                        if (created_at - prev_time).total_seconds() > GAP_MINUTES * 60:
+                            visit_num += 1
+                    except Exception:
+                        visit_num += 1
+                visit_number_cache[sid] = visit_num
+                prev_time = created_at
 
     visits = []
     for r in rows:
@@ -985,7 +1081,7 @@ async def get_recent_visits(
         elif "Edg" in ua:
             browser = "Edge"
 
-        # Parse pages json
+        # Parse pages json (index 14 in old query, now 14 = pages_json)
         pages = []
         if r[14]:
             try:
@@ -1008,6 +1104,38 @@ async def get_recent_visits(
         else:
             activity = 5
 
+        # Detect "live" session: no session_end AND last activity within 30 min
+        has_end = (r[13] or 0) > 0  # has_end count
+        last_activity = r[15]  # last_activity timestamp
+        is_live = False
+        if not has_end:
+            try:
+                if isinstance(last_activity, str):
+                    last_activity_dt = datetime.fromisoformat(last_activity.replace("Z", "+00:00"))
+                else:
+                    last_activity_dt = last_activity
+                if last_activity_dt and last_activity_dt >= live_threshold:
+                    is_live = True
+            except Exception:
+                pass
+
+        # For live sessions without duration, calculate from session_start to now
+        duration_ms = r[9] or 0
+        if is_live and not duration_ms:
+            try:
+                visit_time = r[1]
+                if isinstance(visit_time, str):
+                    visit_time = datetime.fromisoformat(visit_time.replace("Z", "+00:00"))
+                if visit_time:
+                    duration_ms = int((now - visit_time).total_seconds() * 1000)
+            except Exception:
+                pass
+
+        # Filter own-domain referrer
+        referrer = r[7] or ""
+        if _is_own_referrer(referrer):
+            referrer = ""
+
         visits.append({
             "session_id": r[0],
             "visit_time": r[1].isoformat() if hasattr(r[1], 'isoformat') else str(r[1]),
@@ -1016,13 +1144,14 @@ async def get_recent_visits(
             "os": os_name,
             "browser": browser,
             "landing_page": r[6] or "/",
-            "referrer": r[7] or "",
+            "referrer": referrer,
             "utm_source": r[8] or "",
-            "duration_ms": r[9] or 0,
+            "duration_ms": duration_ms,
             "page_views": r[10] or 0,
             "goals": r[11] or 0,
             "activity": activity,
-            "visit_number": r[13] or 1,
+            "visit_number": visit_number_cache.get(r[0], 1),
+            "is_live": is_live,
             "pages": pages,
         })
 

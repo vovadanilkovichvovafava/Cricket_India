@@ -93,8 +93,17 @@ async def track_events_batch(
         return {"ok": True, "count": 0}
 
     user_id = _extract_user_id(request)
-    ip = request.client.host if request.client else None
+    ip = (
+        request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        or (request.client.host if request.client else None)
+    )
     ua = request.headers.get("user-agent", "")[:500]
+    # Country from Cloudflare header (CF-IPCountry) or Saturn/proxy header
+    country = (
+        request.headers.get("cf-ipcountry")
+        or request.headers.get("x-country-code")
+        or None
+    )
 
     try:
         rows = []
@@ -110,6 +119,7 @@ async def track_events_batch(
                 event_data=event_data,
                 ip_address=ip,
                 user_agent=ua,
+                country=country,
                 platform="web",
             )
             rows.append(row)

@@ -32,6 +32,30 @@ function getUTMParams() {
   } catch { return {}; }
 }
 
+// Own domains to filter out from referrer
+const OWN_DOMAINS = [
+  'prescoreai.app',
+  'www.prescoreai.app',
+  'cricketbaazi.com',
+  'www.cricketbaazi.com',
+  'localhost',
+];
+
+function cleanReferrer() {
+  try {
+    const ref = document.referrer;
+    if (!ref) return undefined;
+    const hostname = new URL(ref).hostname;
+    // Filter own domains and Cloudflare Tunnel random subdomains
+    if (OWN_DOMAINS.includes(hostname)) return undefined;
+    if (hostname.endsWith('.trycloudflare.com')) return undefined;
+    if (hostname.endsWith('.cloudflare.com')) return undefined;
+    return ref;
+  } catch {
+    return undefined;
+  }
+}
+
 class AnalyticsTracker {
   constructor() {
     this.sessionId = null;
@@ -65,7 +89,7 @@ class AnalyticsTracker {
     // Session start event
     this._push('session_start', {
       landing_page: window.location.pathname,
-      referrer: document.referrer || undefined,
+      referrer: cleanReferrer(),
       ...getUTMParams(),
     });
 

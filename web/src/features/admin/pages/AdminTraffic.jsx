@@ -183,8 +183,15 @@ function VisitRow({ visit, index, offset }) {
         </td>
 
         {/* Time on site */}
-        <td className="py-2.5 px-2 text-sm text-slate-300 font-mono text-right">
-          {formatDuration(visit.duration_ms)}
+        <td className="py-2.5 px-2 text-sm font-mono text-right">
+          {visit.is_live ? (
+            <span className="text-green-400 flex items-center justify-end gap-1">
+              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              {visit.duration_ms > 0 ? formatDuration(visit.duration_ms) : 'live'}
+            </span>
+          ) : (
+            <span className="text-slate-300">{formatDuration(visit.duration_ms)}</span>
+          )}
         </td>
 
         {/* Page views */}
