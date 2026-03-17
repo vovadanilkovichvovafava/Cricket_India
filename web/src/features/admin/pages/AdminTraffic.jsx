@@ -305,8 +305,8 @@ function ReplayModal({ sessionId, onClose }) {
         target: containerRef.current,
         props: {
           events,
-          width: 375,
-          height: 667,
+          width: 410,
+          height: 680,
           autoPlay: true,
           showController: true,
           speedOption: [1, 1.5, 2],
@@ -326,12 +326,12 @@ function ReplayModal({ sessionId, onClose }) {
   }, [events])
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-start justify-center pt-6 pb-6 overflow-y-auto"
          onClick={onClose}>
-      <div className="bg-slate-900 border border-slate-700 rounded-xl max-w-[500px] w-full max-h-[90vh] overflow-auto"
+      <div className="bg-slate-900 border border-slate-700 rounded-xl w-[440px] flex flex-col"
            onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-800 shrink-0">
           <div>
             <h3 className="text-sm font-semibold">Session Replay</h3>
             <p className="text-xs text-slate-500 font-mono mt-0.5">{sessionId?.slice(0, 12)}...</p>
@@ -342,8 +342,8 @@ function ReplayModal({ sessionId, onClose }) {
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-4">
+        {/* Body — fixed height for phone viewport + controls */}
+        <div className="px-2 py-2">
           {loading && (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -356,7 +356,7 @@ function ReplayModal({ sessionId, onClose }) {
               <p className="text-xs text-slate-600 mt-2">Session may be too short or still recording</p>
             </div>
           )}
-          <div ref={containerRef} className="replay-container" />
+          <div ref={containerRef} className="replay-container flex flex-col items-center [&_.rr-player]:!w-full [&_.rr-player__frame]:!w-full [&_.rr-controller]:!w-full" />
         </div>
       </div>
     </div>
