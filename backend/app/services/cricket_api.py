@@ -48,19 +48,21 @@ CRICAPI_BASE = "https://api.cricapi.com/v1"
 CACHE_TTL = 300  # 5 min cache
 
 _cache: dict[str, tuple] = {}
+_NOT_FOUND = object()  # sentinel for caching "not found" responses
+NOT_FOUND_TTL = 3600  # cache "not found" for 1 hour to avoid repeated API calls
 
 
 def _cache_get(key: str):
     if key in _cache:
-        data, ts = _cache[key]
-        if time.time() - ts < CACHE_TTL:
+        data, ts, ttl = _cache[key]
+        if time.time() - ts < ttl:
             return data
         del _cache[key]
     return None
 
 
-def _cache_set(key: str, data):
-    _cache[key] = (data, time.time())
+def _cache_set(key: str, data, ttl: int = CACHE_TTL):
+    _cache[key] = (data, time.time(), ttl)
 
 
 # ──────────────────────────────────────────────
@@ -579,11 +581,15 @@ class CricketDataService:
         """Get detailed match info from CricAPI."""
         cache_key = f"match_{match_id}"
         cached = _cache_get(cache_key)
+        if cached is _NOT_FOUND:
+            return None
         if cached is not None:
             return cached
 
         data = await _cricapi_request("match_info", {"id": match_id})
         if not data or not data.get("data"):
+            # Cache "not found" for 1 hour to stop hammering the API
+            _cache_set(cache_key, _NOT_FOUND, NOT_FOUND_TTL)
             return None
 
         m = data["data"]
@@ -792,11 +798,14 @@ class CricketDataService:
         """Get full match scorecard — batting & bowling stats per player."""
         cache_key = f"scorecard_{match_id}"
         cached = _cache_get(cache_key)
+        if cached is _NOT_FOUND:
+            return None
         if cached is not None:
             return cached
 
         data = await _cricapi_request("match_scorecard", {"id": match_id})
         if not data or not data.get("data"):
+            _cache_set(cache_key, _NOT_FOUND, NOT_FOUND_TTL)
             return None
 
         m = data["data"]
@@ -856,11 +865,14 @@ class CricketDataService:
         """Get squad/lineup for a match."""
         cache_key = f"squad_{match_id}"
         cached = _cache_get(cache_key)
+        if cached is _NOT_FOUND:
+            return None
         if cached is not None:
             return cached
 
         data = await _cricapi_request("match_squad", {"id": match_id})
         if not data or not data.get("data"):
+            _cache_set(cache_key, _NOT_FOUND, NOT_FOUND_TTL)
             return None
 
         m = data["data"]
@@ -913,11 +925,14 @@ class CricketDataService:
         """Get fantasy points for each player in a match (Top Performers)."""
         cache_key = f"fantasy_{match_id}"
         cached = _cache_get(cache_key)
+        if cached is _NOT_FOUND:
+            return None
         if cached is not None:
             return cached
 
         data = await _cricapi_request("match_points", {"id": match_id})
         if not data or not data.get("data"):
+            _cache_set(cache_key, _NOT_FOUND, NOT_FOUND_TTL)
             return None
 
         d = data["data"]
