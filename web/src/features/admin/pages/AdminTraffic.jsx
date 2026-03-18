@@ -501,10 +501,10 @@ function TrafficSourcesSection() {
       {/* 14-day registration trend chart */}
       <Card title="Registrations by Source (14 days)">
         {trend.length > 0 ? (
-          <div className="flex items-end gap-1 h-40">
+          <div className="flex items-end gap-1.5 h-52">
             {trend.map((day, i) => {
               const total = allSrcKeys.reduce((sum, k) => sum + (day[k] || 0), 0)
-              const heightPct = (total / maxDay) * 100
+              const heightPct = maxDay > 0 ? (total / maxDay) * 100 : 0
               return (
                 <div key={day.date} className="flex-1 flex flex-col items-center group relative">
                   {/* Tooltip */}
@@ -516,16 +516,19 @@ function TrafficSourcesSection() {
                         <span className="text-slate-400">{k}: {day[k] || 0}</span>
                       </div>
                     ))}
+                    <div className="border-t border-slate-700 mt-1 pt-1 text-slate-300 font-semibold">Total: {total}</div>
                   </div>
                   {/* Stacked bar */}
-                  <div className="w-full flex flex-col-reverse rounded-t" style={{ height: `${Math.max(heightPct, total > 0 ? 4 : 0)}%` }}>
+                  <div className="w-full flex flex-col-reverse rounded-t" style={{ height: `${Math.max(heightPct, total > 0 ? 8 : 0)}%` }}>
                     {allSrcKeys.map(k => {
                       const val = day[k] || 0
                       if (!val) return null
                       const segPct = (val / total) * 100
-                      return <div key={k} className={`${barColors[k] || barColors.unknown} first:rounded-b last:rounded-t`} style={{ height: `${segPct}%`, minHeight: val > 0 ? 2 : 0 }} />
+                      return <div key={k} className={`${barColors[k] || barColors.unknown} first:rounded-b last:rounded-t`} style={{ height: `${segPct}%`, minHeight: val > 0 ? 4 : 0 }} />
                     })}
                   </div>
+                  {/* Value label on top of bar */}
+                  {total > 0 && <span className="text-[10px] text-slate-400 font-mono mb-0.5 absolute bottom-full">{total}</span>}
                   {/* Date label */}
                   <span className="text-[9px] text-slate-600 mt-1 leading-none">{i % 2 === 0 ? day.date.slice(5) : ''}</span>
                 </div>

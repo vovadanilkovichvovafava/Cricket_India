@@ -137,3 +137,17 @@ def _run_migrations():
                 logger.info(f"Migration OK: {stmt[:60]}...")
             except Exception as e:
                 logger.debug(f"Migration skip: {stmt[:40]}... ({e})")
+
+    # Data migrations (idempotent)
+    data_migrations = [
+        "UPDATE users SET traffic_source = 'organic' WHERE traffic_source IS NULL",
+    ]
+    with engine.connect() as conn:
+        for stmt in data_migrations:
+            try:
+                result = conn.execute(text(stmt))
+                conn.commit()
+                if result.rowcount > 0:
+                    logger.info(f"Data migration: {stmt[:60]}... ({result.rowcount} rows)")
+            except Exception as e:
+                logger.debug(f"Data migration skip: {stmt[:40]}... ({e})")
