@@ -107,6 +107,7 @@ def _run_migrations():
         migrations = [
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT FALSE",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS premium_until TIMESTAMP",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS traffic_source VARCHAR(50)",
             "ALTER TABLE postback_logs ADD COLUMN IF NOT EXISTS user_db_id INTEGER",
             "ALTER TABLE postback_logs ADD COLUMN IF NOT EXISTS source VARCHAR(50)",
             "ALTER TABLE postback_logs ADD COLUMN IF NOT EXISTS transaction_id VARCHAR(100)",
@@ -119,6 +120,7 @@ def _run_migrations():
         migrations = [
             "ALTER TABLE users ADD COLUMN is_premium BOOLEAN DEFAULT 0",
             "ALTER TABLE users ADD COLUMN premium_until DATETIME",
+            "ALTER TABLE users ADD COLUMN traffic_source VARCHAR(50)",
             "ALTER TABLE postback_logs ADD COLUMN user_db_id INTEGER",
             "ALTER TABLE postback_logs ADD COLUMN source VARCHAR(50)",
             "ALTER TABLE postback_logs ADD COLUMN transaction_id VARCHAR(100)",

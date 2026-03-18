@@ -457,6 +457,100 @@ function RecentVisits() {
 }
 
 // ── Main page ──
+// ── Traffic Sources Section ──
+function TrafficSourcesSection() {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    adminApi.getTrafficSources()
+      .then(setData)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) return <Card><div className="flex justify-center py-6"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div></Card>
+  if (!data) return null
+
+  const { sources = [], trend = [] } = data
+  const sourceColors = { google: 'from-blue-600 to-blue-500', organic: 'from-slate-600 to-slate-500', facebook: 'from-indigo-600 to-indigo-500', unknown: 'from-slate-700 to-slate-600' }
+  const barColors = { google: 'bg-blue-500', organic: 'bg-slate-500', facebook: 'bg-indigo-500', unknown: 'bg-slate-600' }
+
+  // Find max daily total for chart scale
+  const allSrcKeys = sources.map(s => s.source)
+  const maxDay = Math.max(1, ...trend.map(d => allSrcKeys.reduce((sum, k) => sum + (d[k] || 0), 0)))
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold">Traffic Sources</h2>
+
+      {/* Source summary cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {sources.map(s => (
+          <div key={s.source} className={`bg-gradient-to-br ${sourceColors[s.source] || sourceColors.unknown} rounded-xl p-4`}>
+            <p className="text-xs text-white/60 uppercase tracking-wider font-semibold">{s.source}</p>
+            <p className="text-2xl font-bold text-white mt-1">{s.total}</p>
+            <div className="flex items-center gap-3 mt-1.5">
+              <span className="text-xs text-white/70">+{s.today} today</span>
+              <span className="text-xs text-white/70">{s.total > 0 ? Math.round((s.premium / s.total) * 100) : 0}% PRO</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 14-day registration trend chart */}
+      <Card title="Registrations by Source (14 days)">
+        {trend.length > 0 ? (
+          <div className="flex items-end gap-1 h-40">
+            {trend.map((day, i) => {
+              const total = allSrcKeys.reduce((sum, k) => sum + (day[k] || 0), 0)
+              const heightPct = (total / maxDay) * 100
+              return (
+                <div key={day.date} className="flex-1 flex flex-col items-center group relative">
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full mb-2 hidden group-hover:block bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs z-10 whitespace-nowrap">
+                    <p className="font-semibold text-slate-300 mb-1">{day.date}</p>
+                    {allSrcKeys.map(k => (
+                      <div key={k} className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${barColors[k] || barColors.unknown}`} />
+                        <span className="text-slate-400">{k}: {day[k] || 0}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Stacked bar */}
+                  <div className="w-full flex flex-col-reverse rounded-t" style={{ height: `${Math.max(heightPct, total > 0 ? 4 : 0)}%` }}>
+                    {allSrcKeys.map(k => {
+                      const val = day[k] || 0
+                      if (!val) return null
+                      const segPct = (val / total) * 100
+                      return <div key={k} className={`${barColors[k] || barColors.unknown} first:rounded-b last:rounded-t`} style={{ height: `${segPct}%`, minHeight: val > 0 ? 2 : 0 }} />
+                    })}
+                  </div>
+                  {/* Date label */}
+                  <span className="text-[9px] text-slate-600 mt-1 leading-none">{i % 2 === 0 ? day.date.slice(5) : ''}</span>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <p className="text-center text-sm text-slate-600 py-6">No registration data yet</p>
+        )}
+        {/* Legend */}
+        {allSrcKeys.length > 0 && (
+          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-800">
+            {allSrcKeys.map(k => (
+              <div key={k} className="flex items-center gap-1.5">
+                <div className={`w-2.5 h-2.5 rounded-full ${barColors[k] || barColors.unknown}`} />
+                <span className="text-xs text-slate-500">{k}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
+  )
+}
+
 export default function AdminTraffic() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -490,6 +584,9 @@ export default function AdminTraffic() {
         <StatCard label="Banner Click Rate" value={`${funnel.conversion_pct || 0}%`} sub={`${funnel.with_banner_click || 0} clicks`} />
         <StatCard label="Total Shares" value={(refShares.total || 0) + (predShares.total || 0)} sub={`${refShares.total || 0} ref / ${predShares.total || 0} pred`} />
       </div>
+
+      {/* ═══ Traffic Sources ═══ */}
+      <TrafficSourcesSection />
 
       {/* ═══ Recent Visits table (like Yandex Metrika) ═══ */}
       <RecentVisits />

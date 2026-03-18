@@ -19,6 +19,7 @@ class RegisterRequest(BaseModel):
     name: str
     country_code: str = "+91"
     ref: Optional[str] = None  # referral code
+    traffic_source: Optional[str] = None  # "google", "organic", etc.
 
 
 class LoginRequest(BaseModel):

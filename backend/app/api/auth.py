@@ -75,6 +75,7 @@ async def register(body: RegisterRequest, request: Request, db: Session = Depend
         hashed_password=hash_password(body.password),
         name=body.name.strip()[:100],  # Limit name length
         referred_by=referred_by_id,
+        traffic_source=(body.traffic_source or "").strip()[:50] or None,
     )
     db.add(user)
     db.commit()

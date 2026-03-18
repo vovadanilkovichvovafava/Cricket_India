@@ -27,4 +27,5 @@ class User(Base):
     referral_count = Column(Integer, default=0)    # how many people this user referred
     is_premium = Column(Boolean, default=False)      # Pro status (activated via postback)
     premium_until = Column(DateTime, nullable=True)  # Pro expiration date (UTC)
+    traffic_source = Column(String(50), nullable=True)  # e.g. "google", "organic", "facebook"
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

@@ -6,11 +6,8 @@
  * This allows us to match postbacks to users and activate premium.
  */
 
-import { ENV } from '../../../shared/config/env';
+import { ENV, TRAFFIC_SOURCE } from '../../../shared/config/env';
 import analyticsTracker from '../../../shared/services/analyticsTracker';
-
-// Hardcoded fallback — used when OFFER_URL / BOOKMAKER_LINK not set in env
-const FALLBACK_OFFER = 'https://siteofficialred.com/Qhs6z2nP';
 
 /**
  * Build a tracked affiliate link for a user.
@@ -19,9 +16,9 @@ const FALLBACK_OFFER = 'https://siteofficialred.com/Qhs6z2nP';
  * @returns {string} Full affiliate URL with tracking params
  */
 export function getTrackingLink(userId, banner = 'default') {
-  const base = ENV.OFFER_URL || ENV.BOOKMAKER_LINK || FALLBACK_OFFER;
+  const base = ENV.OFFER_URL || ENV.BOOKMAKER_LINK;
 
-  if (!base || base === '#') return '#';
+  if (!base || base === '#') return '';
 
   return addTrackingToUrl(base, userId, banner);
 }
@@ -47,12 +44,13 @@ export function addTrackingToUrl(url, userId, banner = 'default') {
     u.searchParams.set('utm_source', 'prescoreai');
     u.searchParams.set('utm_medium', banner);
     u.searchParams.set('utm_campaign', 'ipl2026');
+    u.searchParams.set('utm_content', TRAFFIC_SOURCE);
 
     return u.toString();
   } catch {
     // If URL parsing fails, append manually
     const sep = url.includes('?') ? '&' : '?';
-    return `${url}${sep}external_id=${userId}&sub_id_10=${userId}&utm_source=prescoreai&utm_medium=${banner}`;
+    return `${url}${sep}external_id=${userId}&sub_id_10=${userId}&utm_source=prescoreai&utm_medium=${banner}&utm_content=${TRAFFIC_SOURCE}`;
   }
 }
 
@@ -61,7 +59,7 @@ export function addTrackingToUrl(url, userId, banner = 'default') {
  * @returns {string}
  */
 export function getOfferUrl() {
-  return ENV.OFFER_URL || ENV.BOOKMAKER_LINK || FALLBACK_OFFER;
+  return ENV.OFFER_URL || ENV.BOOKMAKER_LINK || '';
 }
 
 /**

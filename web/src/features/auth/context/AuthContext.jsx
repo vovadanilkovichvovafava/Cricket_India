@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../../../shared/api';
+import { TRAFFIC_SOURCE } from '../../../shared/config/env';
 
 const AuthContext = createContext(null);
 
@@ -35,7 +36,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const register = useCallback(async (phone, password, name, countryCode = '+91', ref = null) => {
-    const data = { phone, password, name, country_code: countryCode };
+    const data = { phone, password, name, country_code: countryCode, traffic_source: TRAFFIC_SOURCE };
     if (ref) data.ref = ref;
     const res = await api.register(data);
     localStorage.setItem('token', res.token);

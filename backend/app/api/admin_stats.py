@@ -1207,3 +1207,88 @@ async def get_recent_visits(
         "total": total,
         "visits": visits,
     }
+
+
+# ── Traffic Sources (registrations by source) ──────────────────────
+
+@router.get("/traffic-sources")
+async def get_traffic_sources(
+    admin: dict = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Registrations breakdown by traffic_source: totals, today, premium, 14-day trend."""
+    from app.models.user import User
+
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # --- Summary per source ---
+    rows = db.query(
+        func.coalesce(User.traffic_source, "unknown"),
+        func.count(User.id),
+        func.sum(case((User.created_at >= today_start, 1), else_=0)),
+        func.sum(case((User.is_premium == True, 1), else_=0)),
+    ).group_by(func.coalesce(User.traffic_source, "unknown")).all()
+
+    sources = []
+    for source, total, today, premium in rows:
+        sources.append({
+            "source": source,
+            "total": total or 0,
+            "today": int(today or 0),
+            "premium": int(premium or 0),
+        })
+
+    # Sort: most users first
+    sources.sort(key=lambda s: s["total"], reverse=True)
+
+    # --- 14-day trend per source ---
+    fourteen_days_ago = now - timedelta(days=14)
+
+    if _is_pg:
+        trend_sql = """
+            SELECT
+                DATE(created_at) as day,
+                COALESCE(traffic_source, 'unknown') as src,
+                COUNT(*) as cnt
+            FROM users
+            WHERE created_at >= :since
+            GROUP BY DATE(created_at), COALESCE(traffic_source, 'unknown')
+            ORDER BY day
+        """
+    else:
+        trend_sql = """
+            SELECT
+                DATE(created_at) as day,
+                COALESCE(traffic_source, 'unknown') as src,
+                COUNT(*) as cnt
+            FROM users
+            WHERE created_at >= :since
+            GROUP BY DATE(created_at), COALESCE(traffic_source, 'unknown')
+            ORDER BY day
+        """
+
+    trend_rows = db.execute(text(trend_sql), {"since": fourteen_days_ago}).fetchall()
+
+    # Build day -> {source: count} map
+    all_sources = {s["source"] for s in sources}
+    trend = []
+    day_map = {}
+    for day, src, cnt in trend_rows:
+        day_str = str(day)
+        if day_str not in day_map:
+            day_map[day_str] = {"date": day_str}
+        day_map[day_str][src] = cnt
+
+    # Fill missing days
+    for i in range(14):
+        d = (now - timedelta(days=13 - i)).strftime("%Y-%m-%d")
+        entry = day_map.get(d, {"date": d})
+        for s in all_sources:
+            entry.setdefault(s, 0)
+        trend.append(entry)
+
+    return {
+        "sources": sources,
+        "trend": trend,
+    }

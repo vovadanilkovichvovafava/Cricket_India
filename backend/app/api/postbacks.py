@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/postbacks", tags=["postbacks"])
 
 # Events that qualify for premium activation
-QUALIFYING_EVENTS = {"deposit", "ftd", "first_deposit", "qualified", "sale", "confirmed"}
+QUALIFYING_EVENTS = {"deposit", "ftd", "first_deposit", "qualified", "sale", "confirmed", "approved", "paid"}
 
 PREMIUM_DAYS = 15
 
